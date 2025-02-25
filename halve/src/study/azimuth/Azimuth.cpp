@@ -14,6 +14,7 @@ Azimuth::Azimuth(const QString &name, const CameraInfo &pos, QObject *parent)
     :m_name(name)
 {
     setPosition(pos.getPosition());
+    setViewUp(pos.getViewUp());
 }
 
 void Azimuth::fromJson(const QJsonObject &json) {
