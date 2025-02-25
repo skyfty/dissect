@@ -76,12 +76,24 @@ void MappingReseauChecker::setMappingSetting(MappingSetting *newMeltSetting)
         return;
     QObject::disconnect(m_mappingSetting, nullptr, nullptr, nullptr);
     m_mappingSetting = newMeltSetting;
-    QObject::connect(m_mappingSetting, &MappingSetting::outsideThrowChanged, this, &MappingReseauChecker::onMappingOptionsChanged);
-    QObject::connect(m_mappingSetting, &MappingSetting::insideThrowChanged, this, &MappingReseauChecker::onMappingOptionsChanged);
-    QObject::connect(m_mappingSetting, &MappingSetting::gapChanged, this, [this] {
-        m_checkOvercomTimer->start(std::chrono::milliseconds(1000));
-    });
+    QObject::connect(m_mappingSetting, &MappingSetting::outsideThrowChanged, this, &MappingReseauChecker::onMappingOptionsThrowChanged);
+    QObject::connect(m_mappingSetting, &MappingSetting::insideThrowChanged, this, &MappingReseauChecker::onMappingOptionsThrowChanged);
+    QObject::connect(m_mappingSetting, &MappingSetting::useDuplicatePointsChanged, this, &MappingReseauChecker::onMappingOptionsChanged);
+    QObject::connect(m_mappingSetting, &MappingSetting::gapChanged, this, &MappingReseauChecker::onMappingOptionsChanged);
     emit mappingSettingChanged();
+}
+
+void MappingReseauChecker::onMappingOptionsThrowChanged() {
+    m_reseauTimer->start(std::chrono::milliseconds(300));
+}
+
+void MappingReseauChecker::onMappingOptionsChanged() {
+    m_checkOvercomTimer->start(std::chrono::milliseconds(500));
+}
+
+void MappingReseauChecker::onReseauChanged(Reseau* reseau) {
+    m_reseauTimer->start(std::chrono::milliseconds(1500));
+    m_checkOvercomTimer->start(std::chrono::milliseconds(2000));
 }
 
 QList<MappingPoint>::iterator MappingReseauChecker::getMappingPointCompIterator(QList<MappingPoint> &mappingPointList) {
@@ -194,13 +206,4 @@ void MappingReseauChecker::onReseauChangedTimerEvent() {
     if (currentMappingChanged) {
         emit m_profile->currentMappingPointIdChanged();
     }
-}
-
-void MappingReseauChecker::onMappingOptionsChanged() {
-    m_reseauTimer->start(std::chrono::milliseconds(300));
-}
-
-void MappingReseauChecker::onReseauChanged(Reseau *reseau) {
-    m_reseauTimer->start(std::chrono::milliseconds(1500));
-    m_checkOvercomTimer->start(std::chrono::milliseconds(2000));
 }
