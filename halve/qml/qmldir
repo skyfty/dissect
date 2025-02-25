@@ -1,0 +1,4 @@
+singleton AppSettings 1.0 AppSettings.qml
+singleton InterfaceSettings 1.0 InterfaceSettings.qml
+singleton DevelopSettings 1.0 DevelopSettings.qml
+singleton NotebookSettings 1.0 NotebookSettings.qml

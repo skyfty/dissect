@@ -1,0 +1,34 @@
+[
+    {
+        "id":1,
+        "notebookType":2,
+        "buildin":true,
+        "name":"Snapshots"
+    },
+    {
+        "id":2,
+        "notebookType":3,
+        "buildin":true,
+        "name":"Auto Record Screen"
+    },
+    {
+        "id":3,
+        "notebookType":4,
+        "buildin":true,
+        "name":"Screen Shot"
+    },
+
+    {
+        "id":4,
+        "notebookType":6,
+        "buildin":true,
+        "name":"Mapping Group"
+    },
+
+    {
+        "id":5,
+        "notebookType":5,
+        "buildin":true,
+        "name":"Record Screen"
+    }
+]

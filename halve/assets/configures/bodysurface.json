@@ -1,0 +1,115 @@
+
+{
+    "id":"bodysurface.bodysurface",
+    "name":"bodysurface",
+    "manufacturer":"bodysurface",
+    "amount":12,
+    "version":"1.0",
+    "type":"RV",
+    "electrode":2,
+    "reserved":1,
+    "builtin": true,
+    "dyestuff":"yellow",
+    "single":[
+        {
+            "id":"bodysurface.bodysurface.ecg1",
+            "type":3,
+            "name":"ECG I",
+            "seat": 0,
+            "dyestuff":"yellow",
+            "d1":0,
+            "d2":1
+        },
+        {
+            "id":"bodysurface.bodysurface.ecg2",
+            "type":3,
+            "name":"ECG II",
+            "dyestuff":"yellow",
+            "seat": 1,
+            "d1":2,
+            "d2":1
+        },
+        {
+            "id":"bodysurface.bodysurface.ecg3",
+            "type":3,
+            "name":"ECG III",
+            "dyestuff":"yellow",
+            "seat": 2,
+            "d1":2,
+            "d2":0
+        },
+        {
+            "id":"bodysurface.bodysurface.ecgavr",
+            "type":3,
+            "seat": 3,
+            "dyestuff":"yellow",
+            "name":"ECG aVR",
+            "d1":3
+        },
+        {
+            "id":"bodysurface.bodysurface.ecgavl",
+            "type":3,
+            "seat": 4,
+            "dyestuff":"yellow",
+            "name":"ECG aVL",
+            "d1":1
+        },
+        {
+            "id":"bodysurface.bodysurface.ecgavf",
+            "type":3,
+            "seat": 5,
+            "dyestuff":"yellow",
+            "name":"ECG aVF",
+            "d1":0
+        },
+        {
+            "id":"bodysurface.bodysurface.ecgv1",
+            "type":3,
+            "seat": 6,
+            "dyestuff":"yellow",
+            "name":"ECG V1",
+            "d1":2
+        },
+        {
+            "id":"bodysurface.bodysurface.ecgv2",
+            "type":3,
+            "seat": 7,
+            "dyestuff":"yellow",
+            "name":"ECG V2",
+            "d1":3
+        },
+        {
+            "id":"bodysurface.bodysurface.ecgv3",
+            "type":3,
+            "seat": 8,
+            "dyestuff":"yellow",
+            "name":"ECG V3",
+            "d1":4
+        },
+        {
+            "id":"bodysurface.bodysurface.ecgv4",
+            "type":3,
+            "seat": 9,
+            "dyestuff":"yellow",
+            "name":"ECG V4",
+            "d1":5
+        },
+        {
+            "id":"bodysurface.bodysurface.ecgv5",
+            "type":3,
+            "seat": 10,
+            "dyestuff":"yellow",
+            "name":"ECG V5",
+            "d1":6
+        },
+        {
+            "id":"bodysurface.bodysurface.ecgv6",
+            "type":3,
+            "seat": 11,
+            "dyestuff":"yellow",
+            "name":"ECG V6",
+            "d1":7
+        }
+    ]
+}
+

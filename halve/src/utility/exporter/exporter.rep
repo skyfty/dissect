@@ -1,0 +1,13 @@
+#include <QtCore>
+#include <QList>
+
+class Exporter
+{
+    ENUM State {
+               State_Shutdown,
+               State_Ready}
+    PROP(State state = State_Shutdown READWRITE)
+    SIGNAL(finished(const QString &srcPath, const QString &destPath))
+
+    SLOT(void copy(const QString &srcPath, const QString &destPath))
+};

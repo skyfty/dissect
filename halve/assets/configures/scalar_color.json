@@ -1,0 +1,26 @@
+[
+    {
+        "begin":0.0,
+        "beginColor":"#0000ff",
+        "end":0.25,
+        "endColor":"#00ffff"
+    },
+    {
+        "begin":0.25,
+        "beginColor":"#00ffff",
+        "end":0.50,
+        "endColor":"#00ff00"
+    },
+    {
+        "begin":0.50,
+        "beginColor":"#00ff00",
+        "end":0.75,
+        "endColor":"#ffff00"
+    },
+    {
+        "begin":0.75,
+        "beginColor":"#ffff00",
+        "end":1.0,
+        "endColor":"#ff0000"
+    }
+]

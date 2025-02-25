@@ -1,0 +1,43 @@
+{
+  "id": "pant.pant",
+  "name": "Respiration",
+  "manufacturer": "pant",
+  "amount": 3,
+  "version": "1.0",
+  "type": 4,
+  "electrode": 2,
+  "reserved": 1,
+  "builtin": true,
+  "bseat": 0,
+  "mesh": "catheter_pant.json",
+  "gap": [0,0],
+  "single": [
+    {
+      "d1": 0,
+      "d2": 0,
+      "id": "pant.id.0",
+      "name": "Amplitude",
+      "seat": 0,
+      "type": 4,
+      "ensconced": true
+    },
+    {
+      "d1": 1,
+      "d2": 0,
+      "id": "pant.id.1",
+      "name": "Mag Amplitude",
+      "seat": 1,
+      "type": 4,
+      "basis": 40
+    },
+    {
+      "d1": 2,
+      "d2": 0,
+      "id": "pant.id.2",
+      "name": "Gating",
+      "seat": 2,
+      "type": 4,
+      "basis": 2
+    }
+  ]
+}

@@ -1,0 +1,290 @@
+{
+    "d0": {
+        "name":"D1",
+        "seat":0,
+        "index":0,
+        "box":0
+    },
+    "d1": {
+        "name":"D2",
+        "seat":1,
+        "index":1,
+        "box":0
+    },
+    "d2": {
+        "name":"D3",
+        "seat":2,
+        "index":2,
+        "box":0
+    },
+    "d3": {
+        "name":"D4",
+        "seat":3,
+        "index":3,
+        "box":0
+    },
+    "d4": {
+        "name":"D5",
+        "seat":4,
+        "index":4,
+        "box":0
+    },
+    "d5": {
+        "name":"D6",
+        "seat":5,
+        "index":5,
+        "box":0
+    },
+    "d6": {
+        "name":"D7",
+        "seat":6,
+        "index":6,
+        "box":0
+    },
+    "d7": {
+        "name":"D8",
+        "seat":7,
+        "index":7,
+        "box":0
+    },
+    "d8": {
+        "name":"D9",
+        "seat":8,
+        "index":8,
+        "box":0
+    },
+    "d9": {
+        "name":"D10",
+        "seat":9,
+        "index":9,
+        "box":0
+    },
+    "d10": {
+        "name":"D11",
+        "seat":10,
+        "index":10,
+        "box":0
+    },
+    "d11": {
+        "name":"D12",
+        "seat":11,
+        "index":11,
+        "box":0
+    },
+    "d12": {
+        "name":"D13",
+        "seat":12,
+        "index":12,
+        "box":0
+    },
+    "d13": {
+        "name":"D14",
+        "seat":13,
+        "index":13,
+        "box":0
+    },
+    "d14": {
+        "name":"D15",
+        "seat":14,
+        "index":14,
+        "box":0
+    },
+    "d15": {
+        "name":"D16",
+        "seat":15,
+        "index":15,
+        "box":0
+    },
+    "d16": {
+        "name":"D17",
+        "seat":16,
+        "index":16,
+        "box":0
+    },
+    "d17": {
+        "name":"D18",
+        "seat":17,
+        "index":17,
+        "box":0
+    },
+    "d18": {
+        "name":"D19",
+        "seat":18,
+        "index":18,
+        "box":0
+    },
+    "d19": {
+        "name":"D20",
+        "seat":19,
+        "index":19,
+        "box":0
+    },
+    "d20": {
+        "name":"D21",
+        "seat":20,
+        "index":20,
+        "box":0
+    },
+    "d21": {
+        "name":"D22",
+        "seat":21,
+        "index":21,
+        "box":0
+    },
+    "d22": {
+        "name":"D23",
+        "seat":22,
+        "index":22,
+        "box":0
+    },
+    "d23": {
+        "name":"D24",
+        "seat":23,
+        "index":23,
+        "box":0
+    },
+    "d24": {
+        "name":"D25",
+        "seat":0,
+        "index":24,
+        "box":1
+    },
+    "d25": {
+        "name":"D26",
+        "seat":1,
+        "index":25,
+        "box":1
+    },
+    "d26": {
+        "name":"D27",
+        "seat":2,
+        "index":26,
+        "box":1
+    },
+    "d27": {
+        "name":"D28",
+        "seat":3,
+        "index":27,
+        "box":1
+    },
+    "d28": {
+        "name":"D29",
+        "seat":4,
+        "index":28,
+        "box":1
+    },
+    "d29": {
+        "name":"D30",
+        "seat":5,
+        "index":29,
+        "box":1
+    },
+    "d30": {
+        "name":"D31",
+        "seat":6,
+        "index":30,
+        "box":1
+    },
+    "d31": {
+        "name":"D32",
+        "seat":7,
+        "index":31,
+        "box":1
+    },
+    "d32": {
+        "name":"D33",
+        "seat":8,
+        "index":32,
+        "box":1
+    },
+    "d33": {
+        "name":"D34",
+        "seat":9,
+        "index":33,
+        "box":1
+    },
+    "d34": {
+        "name":"D35",
+        "seat":10,
+        "index":34,
+        "box":1
+    },
+    "d35": {
+        "name":"D36",
+        "seat":11,
+        "index":35,
+        "box":1
+    },
+    "d36": {
+        "name":"D37",
+        "seat":12,
+        "index":36,
+        "box":1
+    },
+    "d37": {
+        "name":"D38",
+        "seat":13,
+        "index":37,
+        "box":1
+    },
+    "d38": {
+        "name":"D39",
+        "seat":14,
+        "index":38,
+        "box":1
+    },
+    "d39": {
+        "name":"D40",
+        "seat":15,
+        "index":39,
+        "box":1
+    },
+    "d40": {
+        "name":"D41",
+        "seat":16,
+        "index":40,
+        "box":1
+    },
+    "d41": {
+        "name":"D42",
+        "seat":17,
+        "index":41,
+        "box":1
+    },
+    "d42": {
+        "name":"D43",
+        "seat":18,
+        "index":42,
+        "box":1
+    },
+    "d43": {
+        "name":"D44",
+        "seat":19,
+        "index":43,
+        "box":1
+    },
+    "d44": {
+        "name":"D45",
+        "seat":20,
+        "index":44,
+        "box":1
+    },
+    "d45": {
+        "name":"D46",
+        "seat":21,
+        "index":45,
+        "box":1
+    },
+    "d46": {
+        "name":"D47",
+        "seat":22,
+        "index":46,
+        "box":1
+    },
+    "d47": {
+        "name":"D48",
+        "seat":23,
+        "index":47,
+        "box":1
+    }
+}

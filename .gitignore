@@ -52,3 +52,13 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+out
+/.vs
+/CMakeSettings.json
+docs
+tools/raw.o.sender
+tools/ndi
+/CMakePresets.json
+/CMakeUserPresets.json
+/build

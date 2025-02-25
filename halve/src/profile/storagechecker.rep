@@ -1,0 +1,11 @@
+#include "HalveType.h"
+
+class StorageChecker
+{
+    PROP(Halve::StorageState state  READWRITE)
+    PROP(qint32 threshold = 0 READWRITE)
+    PROP(qint32 frequency = 1 READWRITE)
+    PROP(QString path READWRITE)
+    PROP(qint32 availableSpace = 0 READONLY)
+    SIGNAL(alarm())
+};

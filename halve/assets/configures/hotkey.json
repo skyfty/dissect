@@ -1,0 +1,31 @@
+[
+    {
+        "name":"standMapping",
+        "key":"F11"
+    },
+
+    {
+        "name":"tadkMapping",
+        "key":"F12"
+    },
+
+    {
+        "name":"previousConsult",
+        "key":"left"
+    },
+
+    {
+        "name":"nextConsult",
+        "key":"right"
+    },
+
+    {
+        "name":"snapshot",
+        "key":"F7"
+    },
+
+    {
+        "name":"strikDissolve",
+        "key":"F10"
+    }
+]

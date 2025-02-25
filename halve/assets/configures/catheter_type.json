@@ -1,0 +1,22 @@
+[
+    {
+        "name":"ABL",
+        "buildin":true
+    },
+    {
+        "name":"CS",
+        "buildin":true
+    },
+    {
+        "name":"HRA",
+        "buildin":true
+    },
+    {
+        "name":"HIS",
+        "buildin":true
+    },
+    {
+        "name":"RV",
+        "buildin":true
+    }
+]

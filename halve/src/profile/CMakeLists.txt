@@ -1,0 +1,41 @@
+﻿# CMakeList.txt : CMake project for halve, include source and define
+# project specific logic here.
+#
+
+set(SRCS
+    "Profile.cpp"
+    "Profile.h"
+    "ProfileData.cpp"
+    "ProfileData.h"
+    "ProfileFile.cpp"
+    "ProfileFile.h"
+    "ProfileTest.cpp"
+    "ProfileTest.h"
+    "ProfileManager.cpp"
+    "ProfileManager.h"
+    "ProfileListModel.cpp"
+    "ProfileListModel.h"
+    "FilterOptionItem.h"
+    "FilterOptionItem.cpp"
+    "FilterOptions.h"
+    "FilterOptions.cpp"
+    "EcgOptions.h"
+    "EcgOptions.cpp"
+    "ExposedElectrode.cpp"
+    "ExposedElectrode.h"
+    "LayoutSaver.cpp"
+    "LayoutSaver.h"
+    "Mapping.h"
+    "Mapping.cpp"
+    "ProfileTestCleaner.cpp"
+    "ProfileTestCleaner.h"
+    "ProfileStorageWorker.cpp"
+    "ProfileStorageWorker.h"
+    "ProfileSnapshot.cpp"
+    "ProfileSnapshot.h"
+    "StorageChekcerHost.cpp"
+    "StorageChekcerHost.h"
+    "StorageChecker.cpp"
+    "StorageChecker.h"
+)
+target_sources(halve PRIVATE ${SRCS})

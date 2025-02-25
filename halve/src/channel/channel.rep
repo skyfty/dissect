@@ -1,0 +1,37 @@
+#include <QtCore>
+#include <QList>
+#include "channel/ChannelData.h"
+#include "channel/ChannelTrackData.h"
+#include "combined/TrackData.h"
+
+
+class Channel
+{
+    ENUM State {
+        State_Shutdown,
+        State_Ready,
+        State_Disconect,
+        State_Connecting,
+        State_Connected,
+        State_Tracking,
+        State_ConnectFailed
+    }
+    PROP(State state = State_Shutdown READWRITE)
+    PROP(bool connected = false READWRITE)
+    PROP(qint32 size = 0 READWRITE)
+    PROP(qint32 index = -1 READWRITE)
+    PROP(qint32 lookbackSpeed = 30 READWRITE)
+    PROP(bool keepSave = false READWRITE)
+    PROP(qint32 trainInterval = 5 READWRITE)
+
+    SIGNAL(sampleChanged(QList<ChannelData> data))
+    SIGNAL(shipChanged(QList<ChannelData> data))
+    SIGNAL(lookbacked())
+    SIGNAL(trackData(const ChannelTrackData &data))
+
+    SLOT(void connect(quint16 host))
+    SLOT(void reconnect())
+    SLOT(void disconnect())
+    SLOT(void lookback(qint64 beginTime, qint64 endTime))
+    SLOT(void ship(qint64 idx, qint64 count))
+};

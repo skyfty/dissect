@@ -1,0 +1,31 @@
+#include <QtCore>
+#include <QList>
+#include "combined/Detector.h"
+#include "combined/TrackData.h"
+
+class Combined
+{
+    ENUM State { State_Shutdown,
+        State_Ready,
+        State_Disconect,
+        State_Connecting,
+        State_Connected,
+        State_TrackError,
+        State_ConnectFailed,
+        State_Tracking,
+        State_Stop}
+    PROP(State state = State_Disconect READWRITE)
+    PROP(bool tracking = false READWRITE)
+    PROP(bool connected = false READWRITE)
+    PROP(bool keepSave = false READWRITE)
+
+    SIGNAL(detectorChanged())
+    SIGNAL(trackDataChanged(const TrackData::List &data))
+    SIGNAL(pinged(bool state))
+
+    SLOT(void connect(const QString& host))
+    SLOT(void startTracking(int interval))
+    SLOT(void stopTracking())
+    SLOT(void ping())
+    SLOT(Detector::List getDetectors())
+};

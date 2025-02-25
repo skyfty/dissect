@@ -1,0 +1,14 @@
+[
+    {
+        "name":"Map #0",
+        "id":"0",
+        "meltSetting": {
+            "max":10000,
+            "baseIndex":5065,
+            "rightIndex":6667,
+            "leftIndex":3333,
+            "refurbishSpeed":1000,
+            "meltAxisLine":false
+        }
+    }
+]

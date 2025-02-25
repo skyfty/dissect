@@ -1,0 +1,34 @@
+module Dark
+
+Button 1.0 Button.qml
+ApplicationWindow 1.0 ApplicationWindow.qml
+ToolBar 1.0 ToolBar.qml
+ToolButton 1.0 ToolButton.qml
+ComboBox 1.0 ComboBox.qml
+TextField 1.0 TextField.qml
+CheckBox 1.0 CheckBox.qml
+ItemDelegate 1.0 ItemDelegate.qml
+TabBar 1.0 TabBar.qml
+TabButton 1.0 TabButton.qml
+SplitView 1.0 SplitView.qml
+Menu 1.0 Menu.qml
+Label 1.0 Label.qml
+Switch 1.0 Switch.qml
+SwitchDelegate 1.0 SwitchDelegate.qml
+MessageDialog 1.0 MessageDialog.qml
+Popup 1.0 Popup.qml
+ToolSeparator 1.0 ToolSeparator.qml
+Dialog 1.0 Dialog.qml
+DialogButtonBox 1.0 DialogButtonBox.qml
+RadioDelegate 1.0 RadioDelegate.qml
+RadioButton 1.0 RadioButton.qml
+RadioIndicator 1.0 RadioIndicator.qml
+GroupBox 1.0 GroupBox.qml
+SpinBox 1.0 SpinBox.qml
+RoundButton 1.0 RoundButton.qml
+Pane 1.0 Pane.qml
+MenuItem 1.0 MenuItem.qml
+ScrollBar 1.0 ScrollBar.qml
+ScrollIndicator 1.0 ScrollIndicator.qml
+CheckIndicator 1.0 CheckIndicator.qml
+MenuSeparator 1.0 MenuSeparator.qml
