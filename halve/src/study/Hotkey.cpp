@@ -99,7 +99,7 @@ Profile *Hotkey::profile() const {
 bool Hotkey::nativeEventFilter(const QByteArray& eventType, void* message, qintptr* result) {
     if (eventType == "windows_generic_MSG" || eventType == "windows_dispatcher_MSG") {
         MSG* msg = static_cast<MSG*>(message);
-        if (msg->message == WM_HOTKEY) {
+        if (msg != nullptr && msg->message == WM_HOTKEY) {
             int id = msg->wParam;
             if (m_shortcuts.contains(id)) {
                 QString name = m_shortcuts[id];
