@@ -9,15 +9,15 @@
         "key":"F12"
     },
 
-    {
-        "name":"previousConsult",
-        "key":"left"
-    },
+  {
+    "name": "previousConsult",
+    "key": "LEFT"
+  },
 
-    {
-        "name":"nextConsult",
-        "key":"right"
-    },
+  {
+    "name": "nextConsult",
+    "key": "RIGHT"
+  },
 
     {
         "name":"snapshot",
