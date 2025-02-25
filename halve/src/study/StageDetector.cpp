@@ -75,6 +75,9 @@ void Stage::createPantDetector() {
     vtkSmartPointer<PantPair> pantPair = createPantDetector(pantCatheter,m_stageOptions->showPant());
     dispatch_async([this,pantPair = std::move(pantPair)](vtkRenderWindow*, vtkUserData vtkObject) {
         StageData* userData = StageData::SafeDownCast(vtkObject);
+        if (userData == nullptr || userData->renderer == nullptr || m_profile == nullptr) {
+            return;
+        }
         addPantDetector(userData, pantPair);
         userData->pantActor = pantPair;
     });
@@ -142,6 +145,9 @@ void Stage::createDetector() {
     }
     dispatch_async([this,detectors = std::move(detectors)](vtkRenderWindow*, vtkUserData vtkObject) {
         StageData* userData = StageData::SafeDownCast(vtkObject);
+        if (userData == nullptr || userData->renderer == nullptr || m_profile == nullptr) {
+            return;
+        }
         for(const auto &detectorPair:detectors) {
             addDetector(userData, detectorPair);
         }
@@ -272,7 +278,7 @@ void Stage::onCatheterMeshChanged(Catheter *catheter) {
 
     dispatch_async([this, catheter,points, mesh](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->pantActor == nullptr) {
+        if (userData == nullptr || userData->renderer == nullptr || userData->pantActor == nullptr || m_profile == nullptr) {
             return;
         }
         setDetectorTubeMesh(userData, catheter, points, mesh);
@@ -290,7 +296,7 @@ void Stage::onCatheterEmployChanged(Catheter *catheter) {
         vtkSmartPointer<DetectorPair> detectorPair = createDetector(catheter);
         dispatch_async([&, catheter, detectorPair](vtkRenderWindow*, vtkUserData vtkObject) {
             auto* userData = StageData::SafeDownCast(vtkObject);
-            if (userData->pantActor == nullptr) {
+            if (userData == nullptr || userData->renderer == nullptr || userData->pantActor == nullptr || m_profile == nullptr) {
                 return;
             }
             addDetector(userData, detectorPair);
@@ -299,7 +305,7 @@ void Stage::onCatheterEmployChanged(Catheter *catheter) {
     } else {
         dispatch_async([&, catheter](vtkRenderWindow*, vtkUserData vtkObject) {
             auto* userData = StageData::SafeDownCast(vtkObject);
-            if (userData->pantActor == nullptr) {
+            if (userData == nullptr || userData->renderer == nullptr || userData->pantActor == nullptr || m_profile == nullptr) {
                 return;
             }
             removeDetector(StageData::SafeDownCast(vtkObject), catheter);
@@ -314,7 +320,7 @@ void Stage::onCatheterDeleted(Catheter *catheter) {
     }
     dispatch_async([this, catheter](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->pantActor == nullptr) {
+        if (userData == nullptr || userData->renderer == nullptr || userData->pantActor == nullptr || m_profile == nullptr) {
             return;
         }
         removeDetector(StageData::SafeDownCast(vtkObject), catheter);
@@ -345,7 +351,7 @@ void Stage::onCatheterApparentChangedChanged(Catheter *catheter) {
     Q_ASSERT(catheter != nullptr);
     dispatch_async([this, catheter](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->pantActor == nullptr) {
+        if (userData == nullptr || userData->renderer == nullptr || userData->pantActor == nullptr || m_profile == nullptr) {
             return;
         }
         setDetectorVisibility(userData, catheter);

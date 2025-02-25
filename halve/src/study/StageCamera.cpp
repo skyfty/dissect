@@ -5,6 +5,7 @@
 #include "study/MouseInteractorStyle.h"
 #include <vtkRenderer.h>
 #include <vtkCamera.h>
+#include <QPointer>
 #include <vtkObjectFactory.h>
 #include <vtkCallbackCommand.h>
 #include <vtkRenderWindowInteractor.h>
@@ -52,6 +53,9 @@ void Stage::setCameraAzimuth(const QString &name) {
     }
     dispatch_async([this, azimuth](vtkRenderWindow* renderWindow, vtkUserData vtkObject) {
         StageData* userData = StageData::SafeDownCast(vtkObject);
+        if (userData == nullptr || userData->renderer == nullptr || m_profile.isNull()) {
+            return;
+        }
         setCameraAzimuth(userData, azimuth);
         setCameraInfo(userData);
         saveCameraInfo();
@@ -62,8 +66,11 @@ void Stage::resetCameraAzimuth() {
     if (VtkRenderThreadHandle == nullptr) {
         return;
     }
-    dispatch_async([](vtkRenderWindow*, vtkUserData vtkObject) {
+    dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         StageData* userData = StageData::SafeDownCast(vtkObject);
+        if (userData == nullptr || userData->renderer == nullptr || m_profile.isNull()) {
+            return;
+        }
         auto camera = userData->renderer->GetActiveCamera();
         camera->SetFocalPoint(0, 0, 0);
     });

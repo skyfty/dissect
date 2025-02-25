@@ -183,6 +183,9 @@ void Stage::setPeep(bool newPeep)
     }
     dispatch_async([this, reseau](vtkRenderWindow* renderWindow, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
+        if (m_profile == nullptr) {
+            return;
+        }
         if (m_peep && userData->meshs.size() > 0 && userData->meshs.contains(reseau)) {
             vtkSmartPointer<MeshPair> meshPair =  userData->meshs[reseau];
             userData->ipw = vtkNew<vtkIPWCallback>();
@@ -223,6 +226,9 @@ void Stage::setGauge(bool newGauge)
 
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
+        if (m_profile == nullptr) {
+            return;
+        }
         if (m_gauge) {
             applyGauge(userData);
         } else if (userData->distanceWidget != nullptr) {
@@ -245,6 +251,9 @@ void Stage::applyGauge(StageData *userData) {
 void Stage::applyDissolve(int x, int y) {
     dispatch_async([this,x,y](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
+        if (userData == nullptr || m_profile == nullptr) {
+            return;
+        }
         applyDissolve(userData, x, y);
     });
 }
@@ -261,6 +270,9 @@ void Stage::setApproach(const Stage::Approach &newApproach)
     m_approach = newApproach;
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
+        if (userData == nullptr || m_profile == nullptr) {
+            return;
+        }
         if (m_approach != Drag) {
             setPeep(false);
             setGauge(false);
@@ -399,7 +411,7 @@ void Stage::resetOptions(StageData* userData) {
 void Stage::resetOptions() {
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->renderer == nullptr) {
+        if (userData == nullptr || userData->renderer == nullptr || m_profile == nullptr) {
             return;
         }
         resetOptions(userData);

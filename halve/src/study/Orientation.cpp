@@ -106,7 +106,7 @@ void Orientation::setActorMatrix(OrientationData *userData, vtkMatrix4x4* matrix
 void Orientation::setCameraInfo(const CameraInfo &cameraInfo) {
     dispatch_async([this, cameraInfo](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = OrientationData::SafeDownCast(vtkObject);
-        if (userData->follower == nullptr) {
+        if (userData == nullptr || userData->follower == nullptr || m_profile == nullptr) {
             return;
         }
         setCameraInfo(userData, cameraInfo);
@@ -122,7 +122,7 @@ void Orientation::setCameraInfo(OrientationData *userData, const CameraInfo &cam
 void Orientation::resetAP() {
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = OrientationData::SafeDownCast(vtkObject);
-        if (userData->follower == nullptr) {
+        if (userData == nullptr || userData->follower == nullptr || m_profile == nullptr) {
             return;
         }
         vtkMatrix4x4* orientaionMatrix = userData->follower->GetMatrix();

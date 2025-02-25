@@ -38,7 +38,7 @@ extern Qt::HANDLE VtkRenderThreadHandle;
 void Stage::resetPoint() {
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->renderer == nullptr) {
+        if (userData == nullptr || userData->renderer == nullptr || m_profile == nullptr) {
             return;
         }
         resetPoint(userData);
@@ -128,6 +128,9 @@ void Stage::applyPick(int x, int y) {
     }
     dispatch_async([this, x, y](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
+        if (userData == nullptr || userData->renderer == nullptr || m_profile == nullptr) {
+            return;
+        }
         double picked[3]{};
         getPickPosition(userData, x, y, picked);
         emit pointPicked(picked[0], picked[1], picked[2]);
@@ -147,6 +150,9 @@ void Stage::applyPickPolyDataPointId(vtkPolyData* polyData, double x, double y, 
 void Stage::applyPick(double x, double y, double z) {
     dispatch_async([this, x, y,z](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
+        if (userData == nullptr || userData->renderer == nullptr || m_profile == nullptr) {
+            return;
+        }
         double picked[3]{x,y,z};
         if (m_stageOptions->showSurfacePoints()) {
             vtkPolyData* polyData = vtkPolyData::SafeDownCast(userData->mappingPointVisbleFilter->GetOutput());
@@ -216,6 +222,9 @@ void Stage::refreshHighlight() {
     }
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
+        if (userData == nullptr || userData->renderer == nullptr || m_profile == nullptr) {
+            return;
+        }
         m_highlightTimerTick++;
         if (userData->highlightPointActor != nullptr) {
             vtkProperty* property = userData->highlightPointActor->GetProperty();
@@ -229,9 +238,12 @@ void Stage::refreshHighlight() {
 }
 
 void Stage::onCurrentPointIdChanged() {
+    if (VtkRenderThreadHandle == nullptr) {
+        return;
+    }
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->renderer == nullptr) {
+        if (userData == nullptr || userData->renderer == nullptr || m_profile == nullptr) {
             return;
         }
         userData->highlightPointFilter->SetCurrentDissolvePointId(m_profile->currentDissolvePointId());

@@ -57,9 +57,9 @@ void Stage::showSelectActor(vtkSmartPointer<vtkPolyData> polyData) {
     if (VtkRenderThreadHandle == nullptr) {
         return;
     }
-    dispatch_async([polyData](vtkRenderWindow*, vtkUserData vtkObject) {
+    dispatch_async([this, polyData](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->meshs.isEmpty()) {
+        if (userData->meshs.isEmpty() || m_profile == nullptr) {
             return;
         }
         vtkNew<vtkPolyDataMapper> mapper;
@@ -84,7 +84,7 @@ void Stage::applySelectArea(const QList<QPoint> &points) {
     dispatch_async([this, points, currentReseau](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
         vtkSmartPointer<MeshPair> meshPair = userData->meshs[currentReseau];
-        if (meshPair->actor->GetVisibility() == 0) {
+        if (meshPair->actor->GetVisibility() == 0 || m_profile == nullptr) {
             return;
         }
         vtkVector2i windowSize(userData->renderer->GetRenderWindow()->GetSize());
@@ -149,7 +149,7 @@ void Stage::wound(int x, int y, int radius, SelectState state){
     }
     dispatch_async([this,x, y, radius, state](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->meshs.isEmpty() || state == SelectState::Pressed) {
+        if (userData->meshs.isEmpty() || state == SelectState::Pressed || m_profile == nullptr) {
             return;
         }
         vtkVector2i windowSize(userData->renderer->GetRenderWindow()->GetSize());
@@ -170,7 +170,7 @@ void Stage::wound(int x, int y, int radius, SelectState state){
 void Stage::cleanSelectArea() {
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->selectedActor == nullptr) {
+        if (userData->selectedActor == nullptr || m_profile == nullptr) {
             return;
         }
         hideSelectActor(userData);
@@ -181,7 +181,7 @@ void Stage::cleanSelectArea() {
 void Stage::deleteSelectArea() {
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->selectedActor == nullptr) {
+        if (userData->selectedActor == nullptr || m_profile == nullptr) {
             return;
         }
         if (m_selectedIds) {
