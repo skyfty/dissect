@@ -32,6 +32,7 @@ signals:
 
 public slots:
     void onReseauChanged(Reseau *reseau);
+    void onMappingOptionsThrowChanged();
     void onMappingOptionsChanged();
     void onReseauChangedTimerEvent();
     void onCheckOvercomTimerEvent();

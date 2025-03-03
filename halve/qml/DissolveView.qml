@@ -155,7 +155,7 @@ Pane {
                                     enableDetails:false
                                     enableAlphaChannel:false
                                     onColorChanged: (changedColor) => {
-                                        dissolveModel.setData(childButtonGroup.getCheckedRowIds(), changedColor, DissolveListModel.DYESTUFF);
+                                        dissolveModel.setDatas(childButtonGroup.getCheckedRowIds(), changedColor, DissolveListModel.DYESTUFF);
                                     }
                                 }
                             }

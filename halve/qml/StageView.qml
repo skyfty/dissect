@@ -645,8 +645,6 @@ Item {
                             from: 0.00
                             value: root.options.transparency
                             to: 1.00
-
-
                             stepSize:0.01
                             onMoved: {
                                 root.options.transparency = value

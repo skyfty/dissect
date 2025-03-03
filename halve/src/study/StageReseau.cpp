@@ -70,7 +70,7 @@ void Stage::onReseauChanged(Reseau* reseau) {
 
     dispatch_async([this, reseau, polyData](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->renderer == nullptr || !userData->meshs.contains(reseau)) {
+        if (userData == nullptr || userData->renderer == nullptr || m_profile == nullptr || !userData->meshs.contains(reseau)) {
             return;
         }
         vtkSmartPointer<MeshPair> meshPair = userData->meshs.value(reseau);
@@ -82,7 +82,7 @@ void Stage::onReseauPropertyChanged(Reseau* reseau) {
     Q_ASSERT(reseau != nullptr);
     dispatch_async([this, reseau](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->renderer == nullptr || !userData->meshs.contains(reseau)) {
+        if (userData->renderer == nullptr || m_profile == nullptr || !userData->meshs.contains(reseau)) {
             return;
         }
         vtkSmartPointer<MeshPair> meshPair = userData->meshs.value(reseau);
@@ -95,7 +95,7 @@ void Stage::onReseauDeleted(Reseau* reseau) {
     Q_ASSERT(reseau != m_profile->getCurrentReseau());
     dispatch_async([this, reseau](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->renderer == nullptr || !userData->meshs.contains(reseau)) {
+        if (userData->renderer == nullptr || m_profile == nullptr || !userData->meshs.contains(reseau)) {
             return;
         }
         vtkSmartPointer<MeshPair> meshPair = userData->meshs.value(reseau);
@@ -111,7 +111,7 @@ void Stage::onReseauAdded(Reseau* reseau) {
 
     dispatch_async([this, reseau, polyData](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->renderer == nullptr || userData->meshs.contains(reseau)) {
+        if (userData->renderer == nullptr || m_profile == nullptr || userData->meshs.contains(reseau)) {
             return;
         }
         vtkSmartPointer<MeshPair> meshPair = createMeshPair(userData, reseau, polyData);
@@ -128,7 +128,7 @@ void Stage::onCurrentReseauChanged() {
     }
     dispatch_async([this, reseau](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->renderer == nullptr ) {
+        if (userData->renderer == nullptr || m_profile == nullptr) {
             return;
         }
         hideSelectActor(userData);
@@ -181,7 +181,7 @@ vtkSmartPointer<MeshPair> Stage::createMeshPair(StageData* userData,Reseau* rese
 void Stage::onMappingGapChanged() {
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->renderer == nullptr) {
+        if (userData->renderer == nullptr || m_profile == nullptr) {
             return;
         }
         userData->voronoiKernel->SetRadius(m_mappingSetting->gap());
@@ -197,7 +197,7 @@ void Stage::resetMesh() {
     }
     dispatch_async([this, reseauPolyData](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
-        if (userData->renderer == nullptr) {
+        if (userData->renderer == nullptr || m_profile == nullptr) {
             return;
         }
         for (auto iter = reseauPolyData.begin(); iter != reseauPolyData.end(); ++iter) {

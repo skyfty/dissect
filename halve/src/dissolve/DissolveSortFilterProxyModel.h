@@ -29,8 +29,8 @@ public:
     Q_INVOKABLE qint32 rowOfId(qint64 id) const;
     Q_INVOKABLE qint64 idOfRow(qint32 row) const;
     Q_INVOKABLE void removeRows(const QList<qint64> &ids);
-    Q_INVOKABLE void setData(const QList<qint64> &ids, const QVariant &value, int role = Qt::EditRole);
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+    Q_INVOKABLE void setDatas(const QList<qint64> &ids, const QVariant &value, int role = Qt::EditRole);
+    Q_INVOKABLE bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
     bool onlyValid() const;
     void setOnlyValid(bool newOnlyValid);

@@ -93,7 +93,7 @@ void DissolveSortFilterProxyModel::removeRows(const QList<qint64> &ids) {
     }
     tableModel->removeRows(ids);
 }
-void DissolveSortFilterProxyModel::setData(const QList<qint64> &ids, const QVariant &value, int role) {
+void DissolveSortFilterProxyModel::setDatas(const QList<qint64> &ids, const QVariant &value, int role) {
     DissolveListModel *tableModel = static_cast<DissolveListModel*>(sourceModel());
     if (tableModel == nullptr) {
         return;
