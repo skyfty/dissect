@@ -247,7 +247,7 @@ Study {
                                 width:30
                             }
                             visible: root.profile.type !== Profile.SNAPSHOT
-                            onClicked: resetCenterPointConfirmDialog.open()
+
                             ConfirmDialog {
                                 id: resetCenterPointConfirmDialog
                                 text: qsTr("Confirm that you want to reset the center point location?")
@@ -257,6 +257,40 @@ Study {
                                     notebookDataSource.autoRecord("CPC " + new Date().toLocaleString(locale, "hh:mm:ss"));
                                 }
                             }
+
+                            Menu {
+                                id: centerPopup
+                                y: parent.height
+                                contentItem:Pane {
+                                    focusPolicy: Qt.ClickFocus
+
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        CheckBox {
+                                            text:qsTr("Use the back for reference")
+                                            Layout.fillHeight: true
+                                            Layout.fillWidth: true
+                                            checked: root.profile.useBackReference
+                                            onCheckedChanged: {
+                                                root.profile.useBackReference = checked;
+                                            }
+                                        }
+                                    }
+                                }
+                                onAboutToHide: root.profile.save()
+                            }
+
+                            TapHandler {
+                                acceptedButtons: Qt.RightButton|Qt.LeftButton
+                                onTapped:function(eventPoint, button) {
+                                    if (button === Qt.RightButton) {
+                                        centerPopup.open()
+                                    } else {
+                                       resetCenterPointConfirmDialog.open()
+                                    }
+                                }
+                            }
+
                             enabled: root.profile.catheterAlined && root.combined.reproductCatheterStatus === Halve.TrackStatus_Valid && root.combined.state === ChannelReplica.State_Tracking
                             hoverEnabled: true
                             ToolTip.visible: hovered

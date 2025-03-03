@@ -678,6 +678,18 @@ void Profile::setRenovating(bool newRenovating)
 }
 
 
+bool Profile::useBackReference() const
+{
+    return m_useBackReference;
+}
+
+void Profile::setUseBackReference(bool newUseBackReference)
+{
+    if (m_useBackReference == newUseBackReference)
+        return;
+    m_useBackReference = newUseBackReference;
+    emit useBackReferenceChanged();
+}
 bool Profile::catheterAlined()
 {
     auto catheterId = reproduceOptions()->catheterId();
@@ -733,6 +745,7 @@ QJsonValue Profile::toJson() {
     json["stageSettings"] = stageSettings()->toJson();
     json["notebookOptions"] = notebookOptions()->toJson();
     json["channelMode"] = m_channelMode;
+    json["useBackReference"] = m_useBackReference;
 
     QJsonObject enterPoint;
     enterPoint["x"] = m_centerPoint.GetX();
@@ -835,6 +848,9 @@ void Profile::fromJson(const QJsonObject &json) {
     if (json.contains("centerPoint")) {
         auto enterPoint = json["centerPoint"].toObject();
         m_centerPoint.Set(enterPoint["x"].toDouble(), enterPoint["y"].toDouble(), enterPoint["z"].toDouble());
+    }
+    if (json.contains("useBackReference")) {
+        m_useBackReference = json["useBackReference"].toBool();
     }
 
     if (json.contains("orientaionMatrix")) {

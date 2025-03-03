@@ -100,7 +100,6 @@ public:
 private:
     vtkSmartPointer<vtkPoints> produceElectricityPoints(vtkUnstructuredGrid* grid, vtkVector3d &position, const vtkQuaterniond& quaternion);
     CatheterTrack createCatheterTrack(quint16 seat, Halve::CatheterElectrodeType type, Halve::TrackStatus status, const vtkVector3d &position, const vtkQuaterniond& quaternion, const QString &id);
-    bool getPant0TrackDataPosition(const TrackData::List &currentTrackDataList,vtkVector3d &position, vtkQuaterniond& quaternion);
     void appendElectrodeTrackData(const TrackData &trackData,
                                     Halve::TrackStatus status,
                                   Catheter* catheter,
@@ -180,7 +179,7 @@ private:
     vtkVector3d m_centerPolemicsPosition{0,0,0};
     vtkVector3d m_lastCenterPolemicsPosition{ -1,-1,-1 };
     double m_displacement = 20;
-    vtkVector3d m_electricCenterShifting;
+    vtkVector3d m_electricCenterShifting{0.0,0.0,0.0};
     qint32 m_magnetismTrainRate = 5;
     quint64 m_environmentFlags = 0;
     quint32 m_reproductCatheterMissedCount = 0;
