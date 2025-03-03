@@ -4,6 +4,7 @@
 #include <vtkSmartPointer.h>
 #include <vtkVector.h>
 #include <vtkQuaternion.h>
+#include <DynamicNearestNeighbor.h>
 #include "TrackData.h"
 #include "vtkBoundingBox.h"
 #include "CatheterTrack.h"
@@ -187,4 +188,7 @@ private:
 
     QList<QPair<Catheter*, QSharedPointer<BlendMagnetism>>> m_blendsMagnetism;
     QList<QPair<Catheter*, QSharedPointer<BlendDint>>> m_blendsDint;
+
+    QList<ChannelTrackData> m_inputBuffer;
+    ys::DynamicNearestNeighbor m_dnn;
 };

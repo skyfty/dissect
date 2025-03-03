@@ -12,6 +12,7 @@ set(SRCS
     "test.cpp"
     "ElecIdentify/ElecIdentify.cpp"
     "ElecIdentify/Elec2WorldUpdater.cpp"
+    "ElecIdentify/DynamicNearestNeighbor.cpp"
 )
 add_library(ys ${SRCS})
 target_link_libraries(ys
@@ -33,3 +34,4 @@ target_include_directories(ys PUBLIC "HeartRate")
 target_include_directories(ys PUBLIC "EcgMethod/Neurokit")
 target_include_directories(ys PUBLIC "3rd-party/findpeaks")
 target_include_directories(ys PUBLIC "ElecIdentify")
+target_include_directories(ys PUBLIC "3rd-party/hnswlib")

@@ -2,16 +2,18 @@
 #define CHANNELBLENDMAGNETISM_H
 
 #include "combined/Blend.h"
+#include <channel/ChannelTrack.h>
+#include <DynamicNearestNeighbor.h>
+
 class ChannelTrackData;
 class CatheterMagnetism;
-
 
 class BlendMagnetism : public Blend
 {
     Q_OBJECT
 public:
-    BlendMagnetism(Catheter *catheter, QObject *parent = nullptr);
-    QList<TrackData> process(const ChannelTrackData &dataBuffer);
+    BlendMagnetism(Profile* profile, Catheter *catheter, QObject *parent = nullptr);
+    QList<TrackData> process(const ChannelTrackData &dataBuffer, ys::DynamicNearestNeighbor& dnn);
     std::shared_ptr<ys::ElecIdentify> getElecIdentify();
     std::shared_ptr<ys::Elec2WorldUpdater> getUpdater();
 
@@ -27,11 +29,24 @@ private:
     void timerEvent(QTimerEvent *event) override;
     bool train(QVector<ys::InputParameter> &trainDatas);
     void initUpdater(const ChannelTrackData& dataBuffer, quint16 consultSeat, quint16 targetSeat);
-    QList<TrackData> convert_20250221(
-        quint16 portIdx,
+    QList<TrackData> convert_20250226(
+        quint16 port,
         quint16 consultSeat,
         quint16 targetSeat,
-        const ChannelTrackData& dataBuffer);
+        const ChannelTrackData& dataBuffer,
+        ys::DynamicNearestNeighbor& dnn);
+
+    bool fillCell(
+        quint16 port,
+        quint16 consultSeat,
+        quint16 targetSeat,
+        const ChannelTrackData& dataBuffer,
+        ys::DynamicNearestNeighbor::KNNCell& refCell,
+        ys::DynamicNearestNeighbor::KNNCell& tgtCell);
+    void addPoints(
+        ys::DynamicNearestNeighbor& dnn,
+        const ys::DynamicNearestNeighbor::KNNCell& addCell,
+        const float distanceThreshold);
 private:
     bool m_trained = false;
     int m_timerId = -1;
@@ -40,7 +55,6 @@ private:
     std::shared_ptr<ys::Elec2WorldUpdater> m_updater;
     QVector<ys::InputParameter> m_trainDatas;
     CatheterMagnetism *m_magnetism;
-    QList<ChannelTrackData> m_inputBuffer;
 };
 
 #endif // CHANNELBLENDMAGNETISM_H

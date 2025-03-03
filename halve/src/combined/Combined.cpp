@@ -511,12 +511,12 @@ void Combined::addBlendCatheter(const QList<Catheter *> &catheters) {
     for(Catheter *catheter:catheters) {
         if (catheter->magnetism()) {
             if (isValidBlendCatheter(catheter)) {
-                auto magnetismBlend = QSharedPointer<BlendMagnetism>::create(catheter);
+                auto magnetismBlend = QSharedPointer<BlendMagnetism>::create(m_profile, catheter);
                 magnetismBlend->startTrainTimer(std::chrono::seconds(m_magnetismTrainRate));
                 m_blendsMagnetism.append(std::make_pair(catheter,magnetismBlend));
             }
         } else {
-            m_blendsDint.append(std::make_pair(catheter,QSharedPointer<BlendDint>::create(catheter)));
+            m_blendsDint.append(std::make_pair(catheter, QSharedPointer<BlendDint>::create(m_profile, catheter)));
         }
     }
 }
@@ -557,7 +557,23 @@ void Combined::setMagnetismTrainRate(qint32 newMagnetismTrainRate)
     emit magnetismTrainRateChanged();
 }
 
-void Combined::onChannelTrackData(const ChannelTrackData &dataBuffer) {
+void Combined::onChannelTrackData(const ChannelTrackData &dataInput) {
+    const int delay = 1;  // 电落后磁1个周期
+    m_inputBuffer.push_back(dataInput);
+    if (m_inputBuffer.size() > delay + 1)
+        m_inputBuffer.pop_front();
+    if (m_inputBuffer.size() < delay + 1)
+        return;
+    const auto& d1 = m_inputBuffer.front();
+    const auto& d2 = m_inputBuffer.back();
+
+    // 重新拼接数据
+    ChannelTrackData dataBuffer;
+    dataBuffer.m_id = d2.m_id;
+    dataBuffer.m_time = d2.m_time;
+    std::memcpy(dataBuffer.m, d2.m, sizeof(d2.m));
+    std::memcpy(dataBuffer.n, d1.n, sizeof(d1.n));
+
     m_currentTrackDataList = convertTrackData(dataBuffer);
     switch(m_channel->mode()) {
     case Halve::CHANNELMODE_MAGNETIC: {

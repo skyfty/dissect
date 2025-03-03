@@ -9,10 +9,13 @@ class BlendDint : public Blend
 {
     Q_OBJECT
 public:
-    BlendDint(Catheter *catheter, QObject *parent = nullptr);
+    BlendDint(Profile* profile, Catheter *catheter, QObject *parent = nullptr);
     QList<TrackData> process(
-        const std::shared_ptr<ys::ElecIdentify> &elecIdentify,const std::shared_ptr<ys::Elec2WorldUpdater> &updater,
-        qint32 port, quint16 consultSeat, quint16 targetSeat, const ChannelTrackData &dataBuffer);
+        const std::shared_ptr<ys::ElecIdentify> &elecIdentify,
+        const std::shared_ptr<ys::Elec2WorldUpdater> &updater,
+        qint32 port, quint16 consultSeat, quint16 targetSeat,
+        const ChannelTrackData &dataBuffer,
+        ys::DynamicNearestNeighbor& dnn);
 
 private:
     static bool isValidSeat(quint16 consultSeat) ;

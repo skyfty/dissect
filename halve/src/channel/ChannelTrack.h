@@ -32,7 +32,7 @@ struct ChannelTrackN {
     }
     vtkVector3<float> reversal() const {
         //磁场数据和电场的z不一致
-        return vtkVector3<float>(x, y, -z);
+        return vtkVector3<float>(x, y, z);
     }
 };
 
@@ -64,7 +64,7 @@ struct ChannelTrackM {
 
     vtkVector3<float> reversal() const {
         //磁场数据和电场的z不一致
-        return vtkVector3<float>(x, y, -z);
+        return vtkVector3<float>(x, y, z);
     }
     bool valid() const {
         return x != 0 && y != 0 && z != 0;

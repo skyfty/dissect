@@ -1,10 +1,11 @@
 #include "combined/Blend.h"
 #include "catheter/Catheter.h"
 #include <channel/ChannelTrackData.h>
+#include <profile/Profile.h>
 #include <vtkMath.h>
 
-Blend::Blend(Catheter *catheter, QObject* parent)
-    : QObject{ parent }, m_catheter(catheter)
+Blend::Blend(Profile* profile, Catheter *catheter, QObject* parent)
+    : QObject{ parent }, m_catheter(catheter), m_profile(profile)
 {
 }
 
@@ -21,55 +22,60 @@ ys::InputParameter Blend::makeInputParameter(const ChannelTrackData &dataBuffer,
     return ip;
 }
 
-QList<TrackData> Blend::convert(
-    std::shared_ptr<ys::ElecIdentify> elecIdentify,
-    std::shared_ptr<ys::Elec2WorldUpdater> updater,
-    quint16 port,  quint16 consultSeat, quint16 targetSeat, const ChannelTrackData &dataBuffer) {
-    if (elecIdentify == nullptr || m_catheter == nullptr || updater == nullptr){
-        return QList<TrackData>();
+Blend::ReliabilityLevel Blend::extractPosition(
+    ys::DynamicNearestNeighbor &dnn,
+    const ChannelTrackM &currentE,
+    const float distanceThreshold,
+    vtkeigen::Vector3f &outPosition)
+{
+    //如果没有近邻，直接用现在的k值算，状态低可靠1
+    //如果有近邻，但是距离远，用近邻k值算，状态中可靠2
+    //如果近邻距离近，用近邻k值算，状态高可靠3
+    //数值越大，可靠性越高
+
+    ReliabilityLevel reliablity = ReliabilityLevel::None;
+    Eigen::Map<Eigen::Vector3f> ep((float*)currentE.pos.GetData());
+    auto cell = dnn.Query(ep);
+    if (!cell)
+    {
+        return ReliabilityLevel::None;
     }
-    Item item;
-    ys::InputParameter ip = makeInputParameter(dataBuffer, port, consultSeat, targetSeat);
-    ip.ePoint = ip.eReference;
-    Eigen::Vector3d mpos = elecIdentify->E2W(ip);
-    updater->SetRefValue(ip.ePoint(0), ip.ePoint(1), ip.ePoint(2), mpos(0), mpos(1), mpos(2));
-    if (!updater->GetRefValueValid()) {
-        return QList<TrackData>();
+    else
+    {
+        qDebug() << "ep: " << ep.x() << ep.y() << ep.z();
+        qDebug() << "cell:" << cell->k << cell->ep.x() << cell->ep.y() << cell->ep.z() << cell->mp.x() << cell->mp.y() << cell->mp.z();
+        outPosition = (ep - cell->ep) * cell->k + cell->mp;
+
+        auto distance = (ep - cell->ep).norm();
+        if (distance > distanceThreshold)
+            reliablity = ReliabilityLevel::Medium;
+        else
+            reliablity = ReliabilityLevel::High;
     }
+    return reliablity;
+}
+
+QList<TrackData> Blend::convert(const ChannelTrackData &cd, ys::DynamicNearestNeighbor &dnn)
+{
+    const float distanceThreshold = 20;
+    QList<TrackData> newData;
     auto bseat = m_catheter->bseat();
-    for (quint16 idx = 0; idx < m_catheter->getAmount(); idx++) {
+    for (quint16 idx = 0; idx < m_catheter->getAmount(); idx++)
+    {
         quint16 seat = bseat + idx;
-        const ChannelTrackM& m = dataBuffer.m[seat];
+        const ChannelTrackM& m = cd.m[seat];
+        qDebug() << "ep " << idx << ": " << m.x << m.y << m.z;
+        Eigen::Vector3f newPos;
+        auto reliablity = extractPosition(dnn, m, distanceThreshold, newPos);
+        if (reliablity == ReliabilityLevel::None)
+            continue;
+        qDebug() << "point " << idx << ": " << newPos.x() << newPos.y() << newPos.z();
+        // if (isModelingCatheter && reliablity < ReliabilityLevel::Medium)
+        //     continue;
         TrackData trackData(m_catheter, seat);
         trackData.setStatus(m.valid() ? Halve::TrackStatus_Valid : Halve::TrackStatus_Invalid);
-
-        ip.ePoint << m.x, m.y, m.z;
-        const auto& param = updater->GetMagXYZ(seat, ip.ePoint.x(), ip.ePoint.y(), ip.ePoint.z());
-        trackData.setPosition(param.mcurr.x(), param.mcurr.y(), -param.mcurr.z());
-
-        item.convertedData.push_back(trackData);
-
-        Eigen::Map<Eigen::Vector3d> a((double*)trackData.getPosition());
-        item.center += a;
+        trackData.setPosition(newPos.x(), newPos.y(), newPos.z());
+        newData.push_back(trackData);
     }
-    item.center /= m_catheter->getAmount();
-
-    m_trackDataBuffer.push_back(item);
-    if (m_trackDataBuffer.size() > 5)
-        m_trackDataBuffer.pop_front();
-    if (m_trackDataBuffer.size() < 5)
-    {
-        return QList<TrackData>();
-    }
-
-    auto minIt = std::min_element(m_trackDataBuffer.begin(), m_trackDataBuffer.end(), [&](const auto& a, const auto& b)
-      {
-          return (a.center - this->m_prevCenter).norm() < (b.center - this->m_prevCenter).norm();
-      });
-
-    if (minIt == m_trackDataBuffer.end()) {
-        return QList<TrackData>();
-    }
-    m_prevCenter = minIt->center;//更新中心
-    return minIt->convertedData;
+    return newData;
 }

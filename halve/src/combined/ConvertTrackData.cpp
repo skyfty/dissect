@@ -101,7 +101,7 @@ QList<TrackData> Combined::convertBlendTrackData(const ChannelTrackData &dataBuf
         if (TrackData::convertStatus(dataBuffer.n[port].status) != Halve::TrackStatus_Valid) {
             continue;
         }
-        trackDataList.append(channelBlend.second->process(dataBuffer));
+        trackDataList.append(channelBlend.second->process(dataBuffer, m_dnn));
     }
     if (m_blendsMagnetism.size() > 0 && m_blendsDint.size() > 0) {
         auto magnetism = m_blendsMagnetism.front();
@@ -113,7 +113,7 @@ QList<TrackData> Combined::convertBlendTrackData(const ChannelTrackData &dataBuf
                 auto [consultSeat, targetSeat] = magnetism.second->getMagnetismSeat();
                 qint32 port = magnetism.first->port();
                 for (auto& channelBlend : m_blendsDint) {
-                    trackDataList.append(channelBlend.second->process(elecIdentify, updater, port, consultSeat,targetSeat, dataBuffer));
+                    trackDataList.append(channelBlend.second->process(elecIdentify, updater, port, consultSeat,targetSeat, dataBuffer, m_dnn));
                 }
             }
         }
