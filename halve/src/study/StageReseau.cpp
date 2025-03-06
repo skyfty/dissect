@@ -188,6 +188,16 @@ void Stage::onMappingGapChanged() {
     });
 }
 
+void Stage::onMappingTypeChanged() {
+    dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
+        auto* userData = StageData::SafeDownCast(vtkObject);
+        if (userData->renderer == nullptr || m_profile == nullptr) {
+            return;
+        }
+        userData->voronoiKernel->Modified();
+    });
+}
+
 void Stage::resetMesh() {
     QHash<Reseau*, vtkSmartPointer<vtkPolyData>> reseauPolyData;
     for (Reseau* reseau: m_reseauDb->getDatas()) {
