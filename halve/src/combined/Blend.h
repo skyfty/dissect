@@ -1,20 +1,20 @@
 #ifndef CHANNELBLEND_H
 #define CHANNELBLEND_H
 
-#include <DynamicNearestNeighbor.h>
 #include <QObject>
-
 #include <channel/ChannelTrack.h>
-
 #include "ElecIdentify/ElecIdentify.h"
 #include "ElecIdentify/Elec2WorldUpdater.h"
 #include "combined/TrackData.h"
 
-namespace ys {
-class ElecIdentify;
-class Elec2WorldUpdater;
+namespace ys
+{
+    struct KNNCell;
+    class DynamicNearestNeighbor;
+    class ElecIdentify;
+    class Elec2WorldUpdater;
 }
-
+class CatheterMagnetism;
 class ChannelTrackData;
 class Catheter;
 class Profile;
@@ -34,7 +34,10 @@ public:
     Blend(Profile* profile, Catheter *catheter, QObject *parent = nullptr);
 
     QList<TrackData> convert(const ChannelTrackData &dataBuffer,
-                             ys::DynamicNearestNeighbor& dnn);
+                             ys::DynamicNearestNeighbor* dnn);
+
+    QList<TrackData> convert(const ChannelTrackData &dataBuffer,
+                             ys::KNNCell* cell);
 
 protected:
     ys::InputParameter makeInputParameter(const ChannelTrackData &dataBuffer,quint16 portIdx, quint16 consultSeat, quint16 targetSeat)  const ;
@@ -49,13 +52,17 @@ protected:
     /// \param outPosition
     ///     返回的坐标值
     /// \return
-    ///     返回值1-可靠性低; 返回值2-可靠性中; 返回值3-可靠性高
+    ///     0-不能用; 1-可靠性低; 2-可靠性中; 3-可靠性高
     ///
     ReliabilityLevel extractPosition(
-        ys::DynamicNearestNeighbor& dnn,
+        ys::DynamicNearestNeighbor* dnn,
         const ChannelTrackM &currentE,
         const float distanceThreshold,
         Eigen::Vector3f &outPosition);
+
+    bool getK(qint32 port, quint16 consultSeat, quint16 targetSeat,
+              CatheterMagnetism *mag, const ChannelTrackData &dataBuffer,
+              ys::KNNCell* outCell);
 protected:
     Catheter *m_catheter;
     Profile* m_profile;

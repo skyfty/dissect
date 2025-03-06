@@ -8,22 +8,14 @@
 
 namespace ys
 {
+    struct KNNCell
+    {
+        Eigen::Vector3f ep, mp;    // 电坐标，磁坐标
+        Eigen::Vector3f k;
+    };
+
     class DynamicNearestNeighbor
     {
-    public:
-        struct KNNCell
-        {
-            Eigen::Vector3f ep, mp;    // 电坐标，磁坐标
-            float k {0};               // k值
-
-            void CopyValue(const KNNCell& rv)
-            {
-                ep = rv.ep;
-                mp = rv.mp;
-                k = rv.k;
-            }
-        };
-
     private:
         int dimension;                              // 数据维度
         std::unique_ptr<hnswlib::L2Space> space;    // HNSW空间（欧氏距离）

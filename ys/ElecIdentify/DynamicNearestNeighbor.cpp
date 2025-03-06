@@ -46,17 +46,17 @@ void DynamicNearestNeighbor::AddPoint(const vtkeigen::Vector3f &point, const KNN
     AddPoint(point.data(), attribute_value);
 }
 
-const DynamicNearestNeighbor::KNNCell* DynamicNearestNeighbor::Query(const vtkeigen::Vector3f &query_point, int k)
+const KNNCell* DynamicNearestNeighbor::Query(const vtkeigen::Vector3f &query_point, int k)
 {
     return Query(query_point.data(), k);
 }
 
-const DynamicNearestNeighbor::KNNCell* DynamicNearestNeighbor::Query(const std::vector<float> &query_point, int k)
+const KNNCell* DynamicNearestNeighbor::Query(const std::vector<float> &query_point, int k)
 {
     return Query(query_point.data(), k);
 }
 
-const DynamicNearestNeighbor::KNNCell* DynamicNearestNeighbor::Query(const float *query_point, int k)
+const KNNCell* DynamicNearestNeighbor::Query(const float *query_point, int k)
 {
     std::lock_guard<std::mutex> lock(indexMutex);                              // 确保线程安全
     std::priority_queue<std::pair<float, hnswlib::labeltype>> result =

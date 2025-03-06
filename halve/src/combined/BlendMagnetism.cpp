@@ -4,7 +4,7 @@
 #include <catheter/Catheter.h>
 #include <vtkMath.h>
 #include <DynamicNearestNeighbor.h>
-#include <algorithm>
+#include <ScaleFactorGetter.h>
 
 BlendMagnetism::BlendMagnetism(Profile* profile, Catheter* catheter, QObject* parent)
     : Blend(profile, catheter, parent)
@@ -16,6 +16,8 @@ BlendMagnetism::BlendMagnetism(Profile* profile, Catheter* catheter, QObject* pa
     m_elecIdentify->SetE2W(matrix);
     m_elecIdentify->SetMReference({ 0, 0, m_magnetism->consultDistance() });
     m_elecIdentify->SetMTarget({ 0, 0, m_magnetism->targetDistance() });
+
+    m_scaleFactor = std::make_unique<ys::ScaleFactorGetter>();
 }
 
 bool BlendMagnetism::train(QVector<ys::InputParameter>& trainDatas) {
@@ -48,7 +50,12 @@ std::pair<quint16, quint16> BlendMagnetism::getMagnetismSeat() const {
     return std::make_pair(bseat + m_magnetism->consult(), bseat + m_magnetism->target());
 }
 
-QList<TrackData> BlendMagnetism::process(const ChannelTrackData& dataBuffer, ys::DynamicNearestNeighbor& dnn) {
+CatheterMagnetism *BlendMagnetism::getMagnetism() const
+{
+    return m_magnetism;
+}
+
+QList<TrackData> BlendMagnetism::process(const ChannelTrackData& dataBuffer, ys::DynamicNearestNeighbor *dnn) {
     QList<TrackData> trackDatas;
     auto [consultSeat, targetSeat] = getMagnetismSeat();
     quint16 port = m_catheter->port();
@@ -61,7 +68,7 @@ QList<TrackData> BlendMagnetism::convert_20250226(
     quint16 consultSeat,
     quint16 targetSeat,
     const ChannelTrackData &cd,
-    ys::DynamicNearestNeighbor& dnn)
+    ys::DynamicNearestNeighbor *dnn)
 {
     if (m_catheter == nullptr ||
         m_profile == nullptr)
@@ -69,69 +76,86 @@ QList<TrackData> BlendMagnetism::convert_20250226(
 
     bool isModelingCatheter = m_catheter->id() == m_profile->reproduceOptions()->catheterId();
 
-    ys::DynamicNearestNeighbor::KNNCell refCell, tgtCell;
-    if (!fillCell(port, consultSeat, targetSeat, cd, refCell, tgtCell))
+    ys::KNNCell refCell, tgtCell;
+    if (!fillCell(port, consultSeat, targetSeat, cd, &refCell, &tgtCell))
         return QList<TrackData>();
 
     //传入的电坐标是否已经还算过？适当调整阈值
     const float distanceThreshold = 20;
-    addPoints(dnn, refCell, distanceThreshold);
-    addPoints(dnn, tgtCell, distanceThreshold);
+    addPoints(dnn, &refCell, distanceThreshold);
+    addPoints(dnn, &tgtCell, distanceThreshold);
 
+    // //用本包数据计算k值，用参考点作为基准来计算其他电极坐标
+    // ys::KNNCell cell;
+    // if (!getK(port, consultSeat, targetSeat, getMagnetism(), cd, &cell))
+    //     return QList<TrackData>();
+    // return convert(cd, &cell);
     return convert(cd, dnn);
 }
 
 bool BlendMagnetism::fillCell(
     quint16 port, quint16 consultSeat, quint16 targetSeat,
     const ChannelTrackData &cd,
-    ys::DynamicNearestNeighbor::KNNCell &refCell,
-    ys::DynamicNearestNeighbor::KNNCell &tgtCell)
+    ys::KNNCell *refCell,
+    ys::KNNCell *tgtCell)
 {
     //参考电
     const auto& refE = cd.m[consultSeat];
-    refCell.ep << refE.x, refE.y, refE.z;
+    refCell->ep << refE.x, refE.y, refE.z;
     //参考磁
     const auto& refM = cd.n[port];
     Eigen::Quaternionf q(refM.quaternion(0), refM.quaternion(1), refM.quaternion(2), refM.quaternion(3));
     Eigen::Vector3f refPosInM(0, 0, (float)m_magnetism->consultDistance());
     Eigen::Vector3f m0InW(refM.x, refM.y, refM.z);
-    refCell.mp = q * refPosInM + m0InW;
+    refCell->mp = q * refPosInM + m0InW;
 
     //目标电
     const auto& tgtE = cd.m[targetSeat];
-    tgtCell.ep << tgtE.x, tgtE.y, tgtE.z;
+    tgtCell->ep << tgtE.x, tgtE.y, tgtE.z;
     //目标磁
     Eigen::Vector3f tgtPosInM(0, 0, (float)m_magnetism->targetDistance());
-    tgtCell.mp = q * tgtPosInM + m0InW;
+    tgtCell->mp = q * tgtPosInM + m0InW;
 
     //参考、目标k
-    auto de = (refCell.ep - tgtCell.ep).norm();
-    if (de < 0.1)
+    const float delta = 0.01;
+    auto de = tgtCell->ep - refCell->ep;
+    auto dm = tgtCell->mp - refCell->mp;
+    if (std::abs(de.x()) < delta ||
+        std::abs(de.y()) < delta ||
+        std::abs(de.z()) < delta ||
+        std::abs(dm.x()) < delta ||
+        std::abs(dm.y()) < delta ||
+        std::abs(dm.z()) < delta)
         return false;
-    double k = (refCell.mp - tgtCell.mp).norm() / de;
-    refCell.k = tgtCell.k = (float)k;
+    Eigen::Vector3f k = dm.cwiseQuotient(de);
+    if (!m_scaleFactor->AddKToQueue(k))
+        return false;
+    if (!m_scaleFactor->SmoothK(k))
+        return false;
+    refCell->k = tgtCell->k = k;
 
+    std::cout << k.transpose() << std::endl;
     return true;
 }
 
 void BlendMagnetism::addPoints(
-    ys::DynamicNearestNeighbor& dnn,
-    const ys::DynamicNearestNeighbor::KNNCell &addCell,
+    ys::DynamicNearestNeighbor *dnn,
+    ys::KNNCell *inCell,
     const float distanceThreshold)
 {
-    // auto cell = dnn.Query(addCell.ep);
-    // if (cell)
-    // {
-    //     auto distance = (addCell.ep - cell->ep).norm();
-    //     if (distance <= distanceThreshold)
-    //     {
-    //         //查到近邻点，且距离小于阈值，不更新
-    //         return;
-    //     }
-    // }
+    auto cell = dnn->Query(inCell->ep);
+    if (cell)
+    {
+        auto distance = (inCell->ep - cell->ep).norm();
+        if (distance <= distanceThreshold)
+        {
+            //查到近邻点，且距离小于阈值，不更新
+            return;
+        }
+    }
 
     //添加新点
-    dnn.AddPoint(addCell.ep, addCell);
+    dnn->AddPoint(inCell->ep, *inCell);
 }
 
 void BlendMagnetism::appendTrainData(const ChannelTrackData &dataBuffer) {

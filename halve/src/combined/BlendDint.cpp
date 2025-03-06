@@ -1,5 +1,9 @@
 #include "combined/BlendDint.h"
+#include "DynamicNearestNeighbor.h"
 #include <channel/ChannelTrackData.h>
+#include <catheter/CatheterMagnetism.h>
+#include <catheter/Catheter.h>
+#include <qdebug.h>
 
 BlendDint::BlendDint(Profile* profile, Catheter *catheter, QObject* parent)
     : Blend(profile, catheter,parent)
@@ -11,9 +15,11 @@ QList<TrackData> BlendDint::process(
     const std::shared_ptr<ys::Elec2WorldUpdater> &updater,
     qint32 port, quint16 consultSeat, quint16 targetSeat,
     const ChannelTrackData &dataBuffer,
-    ys::DynamicNearestNeighbor& dnn) {
+    ys::DynamicNearestNeighbor *dnn)
+{
     QList<TrackData> trackDatas;
-    if (isValidSeat(consultSeat)) {
+    if (isValidSeat(consultSeat))
+    {
         trackDatas = convert(dataBuffer, dnn);
     }
     return trackDatas;
@@ -22,3 +28,4 @@ QList<TrackData> BlendDint::process(
 bool BlendDint::isValidSeat(quint16 consultSeat) {
     return consultSeat < ElectricalPortAmount;
 }
+

@@ -3,8 +3,13 @@
 
 #include "combined/Blend.h"
 #include <channel/ChannelTrack.h>
-#include <DynamicNearestNeighbor.h>
 
+namespace ys
+{
+    struct KNNCell;
+    class DynamicNearestNeighbor;
+    class ScaleFactorGetter;
+}
 class ChannelTrackData;
 class CatheterMagnetism;
 
@@ -13,7 +18,7 @@ class BlendMagnetism : public Blend
     Q_OBJECT
 public:
     BlendMagnetism(Profile* profile, Catheter *catheter, QObject *parent = nullptr);
-    QList<TrackData> process(const ChannelTrackData &dataBuffer, ys::DynamicNearestNeighbor& dnn);
+    QList<TrackData> process(const ChannelTrackData &dataBuffer, ys::DynamicNearestNeighbor *dnn);
     std::shared_ptr<ys::ElecIdentify> getElecIdentify();
     std::shared_ptr<ys::Elec2WorldUpdater> getUpdater();
 
@@ -24,6 +29,7 @@ public:
     bool trained() const;
     void startTrainTimer(std::chrono::milliseconds interval);
     std::pair<quint16, quint16> getMagnetismSeat() const;
+    CatheterMagnetism* getMagnetism() const;
 
 private:
     void timerEvent(QTimerEvent *event) override;
@@ -34,18 +40,18 @@ private:
         quint16 consultSeat,
         quint16 targetSeat,
         const ChannelTrackData& dataBuffer,
-        ys::DynamicNearestNeighbor& dnn);
+        ys::DynamicNearestNeighbor *dnn);
 
     bool fillCell(
         quint16 port,
         quint16 consultSeat,
         quint16 targetSeat,
         const ChannelTrackData& dataBuffer,
-        ys::DynamicNearestNeighbor::KNNCell& refCell,
-        ys::DynamicNearestNeighbor::KNNCell& tgtCell);
+        ys::KNNCell *refCell,
+        ys::KNNCell *tgtCell);
     void addPoints(
-        ys::DynamicNearestNeighbor& dnn,
-        const ys::DynamicNearestNeighbor::KNNCell& addCell,
+        ys::DynamicNearestNeighbor *dnn,
+        ys::KNNCell *cell,
         const float distanceThreshold);
 private:
     bool m_trained = false;
@@ -55,6 +61,7 @@ private:
     std::shared_ptr<ys::Elec2WorldUpdater> m_updater;
     QVector<ys::InputParameter> m_trainDatas;
     CatheterMagnetism *m_magnetism;
+    std::unique_ptr<ys::ScaleFactorGetter> m_scaleFactor;
 };
 
 #endif // CHANNELBLENDMAGNETISM_H

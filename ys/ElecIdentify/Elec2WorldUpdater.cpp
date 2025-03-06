@@ -46,6 +46,29 @@ void Elec2WorldUpdater::InitValue(int index, double ex, double ey, double ez, do
     auto& param = elecParams[index];
     param.eprev << ex, ey, ez;
     param.mprev << mx, my, mz;
+    param.inited = true;
+}
+
+void Elec2WorldUpdater::ResetInitFlag()
+{
+    for (auto& e : elecParams)
+    {
+        e.inited = false;
+    }
+}
+
+void Elec2WorldUpdater::ResetInitFlag(int index)
+{
+    if (index < 0 || index >= elecParams.size())
+        return;
+    elecParams[index].inited = false;
+}
+
+bool Elec2WorldUpdater::IsInited(int index) const
+{
+    if (index < 0 || index >= elecParams.size())
+        return false;
+    return elecParams[index].inited;
 }
 
 const ElecParameter &Elec2WorldUpdater::GetMagXYZ(int index, double ex, double ey, double ez)

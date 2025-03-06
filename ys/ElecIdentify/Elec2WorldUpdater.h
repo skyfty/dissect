@@ -23,6 +23,7 @@ struct ElecParameter
     Eigen::Vector3d mcurr;         //本次电极的世界坐标。参考电极需要设置，其他非参考电极无磁极，没有该参数。
     Eigen::Vector3d eprev;         //上一次电极的电场坐标。
     Eigen::Vector3d ecurr;         //本次电极的电场坐标。
+    bool inited {false};           //是否初始化过
 };
 
 class Elec2WorldUpdater
@@ -71,6 +72,9 @@ public:
     /// \param mz
     ///
     void InitValue(int index, double ex, double ey, double ez, double mx, double my, double mz);
+    void ResetInitFlag();
+    void ResetInitFlag(int index);
+    bool IsInited(int index) const;
 
     const ElecParameter& GetMagXYZ(int index, double ex, double ey, double ez);
 

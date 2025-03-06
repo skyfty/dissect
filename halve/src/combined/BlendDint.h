@@ -3,6 +3,10 @@
 
 #include "combined/Blend.h"
 
+namespace ys
+{
+    class DynamicNearestNeighbor;
+}
 class ChannelTrackData;
 
 class BlendDint : public Blend
@@ -15,7 +19,7 @@ public:
         const std::shared_ptr<ys::Elec2WorldUpdater> &updater,
         qint32 port, quint16 consultSeat, quint16 targetSeat,
         const ChannelTrackData &dataBuffer,
-        ys::DynamicNearestNeighbor& dnn);
+        ys::DynamicNearestNeighbor *dnn);
 
 private:
     static bool isValidSeat(quint16 consultSeat) ;
