@@ -290,6 +290,7 @@ void Stage::setProfile(Profile* profile) {
     QObject::connect(m_profile, &Profile::currentMappingPointIdChanged, this, &Stage::onCurrentPointIdChanged);
     QObject::connect(m_profile, &Profile::currentMappingPointGroupChanged, this, &Stage::onCurrentPointIdChanged);
     QObject::connect(m_profile, &Profile::currentReseauIdChanged, this, &Stage::onCurrentReseauChanged);
+    QObject::connect(m_profile, &Profile::mappingTypeChanged, this, &Stage::onMappingTypeChanged);
 
     m_azimuthDb = m_profile->azimuthDb();
     QObject::connect(m_azimuthDb, &AzimuthDb::deleted, this, &Stage::onAzimuthDeleted);
