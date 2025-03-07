@@ -54,7 +54,7 @@ private:
         ys::KNNCell *cell,
         const float distanceThreshold);
 private:
-    bool m_trained = false;
+    bool m_trained = true;
     int m_timerId = -1;
     std::chrono::milliseconds m_trainInterval{std::chrono::seconds(5)};
     std::shared_ptr<ys::ElecIdentify> m_elecIdentify;

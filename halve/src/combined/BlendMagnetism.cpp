@@ -12,7 +12,7 @@ BlendMagnetism::BlendMagnetism(Profile* profile, Catheter* catheter, QObject* pa
     m_magnetism = catheter->catheterMagnetism();
     m_elecIdentify = std::make_shared<ys::ElecIdentify>();
     Eigen::Matrix3d matrix = m_magnetism->matrix();
-    m_trained = matrix != Eigen::Matrix3d::Identity();
+    // m_trained = matrix != Eigen::Matrix3d::Identity();
     m_elecIdentify->SetE2W(matrix);
     m_elecIdentify->SetMReference({ 0, 0, m_magnetism->consultDistance() });
     m_elecIdentify->SetMTarget({ 0, 0, m_magnetism->targetDistance() });

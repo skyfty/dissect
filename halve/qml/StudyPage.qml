@@ -262,66 +262,66 @@ Study {
                             ToolTip.visible: hovered
                             ToolTip.text: qsTr("Reset center point")
                         }
-                        ToolButton {
-                            id:btnTraining
-                            icon {
-                                source: "qrc:/assets/images/train.svg"
-                                height: 30
-                                width:30
-                            }
-                            enabled: root.profile.catheterAlined && root.combined.state === ChannelReplica.State_Tracking
-                            visible: root.profile.channelMode === Halve.CHANNELMODE_BLEND &&  root.profile.type !== Profile.SNAPSHOT
+                        // ToolButton {
+                        //     id:btnTraining
+                        //     icon {
+                        //         source: "qrc:/assets/images/train.svg"
+                        //         height: 30
+                        //         width:30
+                        //     }
+                        //     enabled: root.profile.catheterAlined && root.combined.state === ChannelReplica.State_Tracking
+                        //     visible: root.profile.channelMode === Halve.CHANNELMODE_BLEND &&  root.profile.type !== Profile.SNAPSHOT
 
-                            onClicked: trainConfirmDialog.open()
-                            ConfirmDialog {
-                                id: trainConfirmDialog
-                                text: root.combined.training?qsTr("Are you sure you want to complete the training?"):qsTr("Are you sure you want to retrain?")
-                                prompt: qsTr("This will clear the model and mapping data")
-                                onAccepted: {
-                                    root.combined.training = !root.combined.training;
-                                    statePane.state = root.profile.state = root.combined.training ? Profile.Reproduce : Profile.Melt;
-                                }
-                            }
-                            background: Rectangle {
-                                implicitWidth: 20
-                                implicitHeight: 20
-                                visible: btnTraining.down || btnTraining.visualFocus || (btnTraining.enabled && btnTraining.hovered) || root.combined.training
-                                color: btnTraining.down? "#46607c": btnTraining.enabled && btnTraining.hovered?"#464646":"#3c3c3c"
-                                radius: 2
-                                Rectangle {
-                                    id: btnAnimatedRectangle
-                                    x: 1; y: 1
-                                    width: parent.width - 2
-                                    height: parent.height - 2
-                                    border.color: Fusion.innerContrastLine
-                                    color: "transparent"
-                                    visible: root.combined.training
-                                    radius: 2
-                                    SequentialAnimation {
-                                        running: root.combined.training
-                                        loops: Animation.Infinite
-                                        ColorAnimation {
-                                            target: btnAnimatedRectangle
-                                            property: "color"
-                                            from: "transparent"
-                                            to: "red"
-                                            duration: 2000
-                                        }
-                                        ColorAnimation {
-                                            target: btnAnimatedRectangle
-                                            property: "color"
-                                            from: "red"
-                                            to: "transparent"
-                                            duration: 2000
-                                        }
-                                    }
-                                }
-                            }
-                            hoverEnabled: true
-                            ToolTip.visible: hovered
-                            ToolTip.text: qsTr("Start training")
+                        //     onClicked: trainConfirmDialog.open()
+                        //     ConfirmDialog {
+                        //         id: trainConfirmDialog
+                        //         text: root.combined.training?qsTr("Are you sure you want to complete the training?"):qsTr("Are you sure you want to retrain?")
+                        //         prompt: qsTr("This will clear the model and mapping data")
+                        //         onAccepted: {
+                        //             root.combined.training = !root.combined.training;
+                        //             statePane.state = root.profile.state = root.combined.training ? Profile.Reproduce : Profile.Melt;
+                        //         }
+                        //     }
+                        //     background: Rectangle {
+                        //         implicitWidth: 20
+                        //         implicitHeight: 20
+                        //         visible: btnTraining.down || btnTraining.visualFocus || (btnTraining.enabled && btnTraining.hovered) || root.combined.training
+                        //         color: btnTraining.down? "#46607c": btnTraining.enabled && btnTraining.hovered?"#464646":"#3c3c3c"
+                        //         radius: 2
+                        //         Rectangle {
+                        //             id: btnAnimatedRectangle
+                        //             x: 1; y: 1
+                        //             width: parent.width - 2
+                        //             height: parent.height - 2
+                        //             border.color: Fusion.innerContrastLine
+                        //             color: "transparent"
+                        //             visible: root.combined.training
+                        //             radius: 2
+                        //             SequentialAnimation {
+                        //                 running: root.combined.training
+                        //                 loops: Animation.Infinite
+                        //                 ColorAnimation {
+                        //                     target: btnAnimatedRectangle
+                        //                     property: "color"
+                        //                     from: "transparent"
+                        //                     to: "red"
+                        //                     duration: 2000
+                        //                 }
+                        //                 ColorAnimation {
+                        //                     target: btnAnimatedRectangle
+                        //                     property: "color"
+                        //                     from: "red"
+                        //                     to: "transparent"
+                        //                     duration: 2000
+                        //                 }
+                        //             }
+                        //         }
+                        //     }
+                        //     hoverEnabled: true
+                        //     ToolTip.visible: hovered
+                        //     ToolTip.text: qsTr("Start training")
 
-                        }
+                        // }
 
                         ToolButton {
                             id:sensorSettingButton
