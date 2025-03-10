@@ -84,12 +84,7 @@ void Pulse::createDefaultFilter()
     m_channelDataFilter = new ChannelDataFilter(this);
     m_channelDataFilter->setSamplingRate(m_samplingRate);
 
-    m_filterOptions = new FilterOptions(this);
-    auto ect = m_filterOptions->getEcg();
-    ect->setHighPass(0.05);
-    ect->setLowPass(60);
-    ect->setNoise(true);
-    ect->setMagnetic(true);
+    m_filterOptions = m_profile->filterOptions();
     m_channelDataFilter->setFilterOptions(m_filterOptions);
 }
 
@@ -101,6 +96,7 @@ void Pulse::setProfile(Profile *newProfile)
     m_profile = newProfile;
     m_catheterDb = m_profile->catheterDb();
     QObject::connect(m_profile, &Profile::pulseElectrodeIdChanged, this, &Pulse::onPulseElectrodeIdChanged);
+
     onPulseElectrodeIdChanged();
     emit profileChanged();
 
