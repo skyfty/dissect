@@ -39,15 +39,6 @@ void Stage::initCubeAxesActor(StageData* userData) {
     userData->axesActor->YAxisMinorTickVisibilityOn();
     userData->axesActor->ZAxisMinorTickVisibilityOn();
     userData->axesActor->SetBounds(combined::getHoldingBound());
-
-    vtkNew<vtkStringArray> labels;
-    labels->SetNumberOfValues(5);
-    labels->SetValue(0, "100");
-    labels->SetValue(1, "50");
-    labels->SetValue(2, "0");
-    labels->SetValue(3, "-50");
-    labels->SetValue(4, "-100");
-    userData->axesActor->SetAxisLabels(0, labels);
 }
 
 constexpr double lineWidth = 1;
