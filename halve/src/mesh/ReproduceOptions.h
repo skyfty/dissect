@@ -38,8 +38,8 @@ signals:
     void centerPointChanged();
     void catheterIdChanged();
 private:
-    int m_iterations = 20;
-    int m_kernelSize = 5;
+    int m_iterations = 50;
+    int m_kernelSize = 11;
     double m_holeSize = 500.00;
     QString m_catheterId;
     QVector3D m_centerPoint;

@@ -86,9 +86,6 @@ Hotkey::Hotkey(QObject *parent)
 }
 
 Hotkey::~Hotkey() {
-    for (auto id : m_shortcuts.keys()) {
-        UnregisterHotKey(nullptr, id);
-    }
     qApp->removeNativeEventFilter(this);
 }
 
@@ -99,7 +96,7 @@ Profile *Hotkey::profile() const {
 bool Hotkey::nativeEventFilter(const QByteArray& eventType, void* message, qintptr* result) {
     if (eventType == "windows_generic_MSG" || eventType == "windows_dispatcher_MSG") {
         MSG* msg = static_cast<MSG*>(message);
-        if (msg != nullptr && msg->message == WM_HOTKEY) {
+        if (msg != nullptr && msg->message == WM_KEYUP) {
             int id = msg->wParam;
             if (m_shortcuts.contains(id)) {
                 QString name = m_shortcuts[id];
@@ -131,8 +128,6 @@ void Hotkey::load() {
 void Hotkey::load(const QJsonObject &json) {
     QString key = json["key"].toString();
     if (KeysMap.contains(key)) {
-        auto shortcutId = GlobalAddAtomA(key.toStdString().c_str());
-        m_shortcuts[shortcutId] = json["name"].toString();
-        RegisterHotKey(nullptr, shortcutId, 0, KeysMap[key]);
+        m_shortcuts[KeysMap[key]] = json["name"].toString();
     }
 }
