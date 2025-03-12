@@ -60,6 +60,7 @@ void Combined::onCatheterImported() {
     addBlendCatheter(m_catheterDb->getEmployDatas());
 }
 
+
 double Combined::displacement() const
 {
     return m_displacement;
@@ -110,17 +111,6 @@ int Combined::interval() const
     return m_interval;
 }
 
-
-bool Combined::getPant0TrackDataPosition(const TrackData::List &currentTrackDataList, vtkVector3d &position, vtkQuaterniond& quaternion) {
-    for(const TrackData &trackData:currentTrackDataList) {
-        if (trackData.getStatus() == Halve::TrackStatus_Valid && trackData.port() == MagnetismPant0Port) {
-            trackData.getPosition(position);
-            trackData.getQuaternion(quaternion);
-            return true;
-        }
-    }
-    return false;
-}
 CatheterTrack Combined::createCatheterTrack(quint16 seat, Halve::CatheterElectrodeType type, Halve::TrackStatus status, const vtkVector3d &position, const vtkQuaterniond& quaternion, const QString &electrodeId) {
     CatheterTrack track;
     track.setSeat(seat);
@@ -179,9 +169,9 @@ void Combined::inspectPantCatheterPort(const QSharedPointer<CatheterTrackPackage
 }
 
 void Combined::abruptionTrackData(TrackData::List &currentTrackDataList) {
-    vtkVector3d pant0Position;
-    vtkQuaterniond pant0Quaternion;
-    bool pantResult = getPant0TrackDataPosition(currentTrackDataList, pant0Position, pant0Quaternion);
+    vtkVector3d pant0Position{0.0,0.0,0.0};
+    vtkQuaterniond pant0Quaternion{0.0,0.0,0.0,0.0};
+    bool pantResult = m_profile->useBackReference() ? getPant0TrackData(currentTrackDataList, pant0Position, pant0Quaternion):true;
     if (m_centerPoint[0] != -1) {
         vtkMath::Subtract(m_centerPoint.GetData(), pant0Position, m_centerPolemicsPosition.GetData());
     }
@@ -307,9 +297,10 @@ void Combined::setTrackCenterPoint(const TrackData &trackData, const vtkVector3d
 }
 
 void Combined::blendTrackData(const TrackData::List &currentTrackDataList) {
-    vtkVector3d pant0Position;
-    vtkQuaterniond pant0Quaternion;
-    if (getPant0TrackData(currentTrackDataList, pant0Position, pant0Quaternion)) {
+    vtkVector3d pant0Position{0.0,0.0,0.0};
+    vtkQuaterniond pant0Quaternion{0.0,0.0,0.0,0.0};
+    bool pantResult = m_profile->useBackReference() ? getPant0TrackData(currentTrackDataList, pant0Position, pant0Quaternion):true;
+    if (pantResult) {
         if (m_centerPoint[0] != -1) {
             vtkMath::Subtract(m_centerPoint.GetData(), pant0Position, m_centerPolemicsPosition.GetData());
             if (m_lastCenterPolemicsPosition[0] == -1) {

@@ -109,6 +109,7 @@ class Profile : public QObject {
   Q_PROPERTY(AlarmDb *alarmDb READ alarmDb CONSTANT FINAL)
   Q_PROPERTY(Halve::ChannelMode channelMode READ channelMode WRITE setChannelMode NOTIFY channelModeChanged FINAL)
   Q_PROPERTY(Halve::StorageState storageState READ storageState WRITE setStorageState NOTIFY storageStateChanged FINAL)
+  Q_PROPERTY(bool useBackReference READ useBackReference WRITE setUseBackReference NOTIFY useBackReferenceChanged FINAL)
 
 public:
     enum State{
@@ -130,6 +131,8 @@ signals:
 
     void pulseChanged();
     void dissolved();
+
+    void useBackReferenceChanged();
 
     void latPerimeterChanged();
     void currentMappingPointGroupChanged();
@@ -318,6 +321,9 @@ public:
     vtkVector3d getCenterPoint() const;
 
 
+    bool useBackReference() const;
+    void setUseBackReference(bool newUseBackReference);
+
     StageSettings *stageSettings();
 
     vtkMatrix4x4* orientaionMatrix() const;
@@ -381,6 +387,7 @@ protected:
     QPointer<OscillograpOptions> m_oscillograpOptions;
     QPointer<ReseauDb> m_reseauDb;
     qint64 m_currentReseauId = 0;
+    bool m_useBackReference = true;
 
     QPointer<OscillograpElectrode> m_oscillograpElectrode;
     QPointer<MappingPointGroupDb> m_mappingPointGroupDb;
