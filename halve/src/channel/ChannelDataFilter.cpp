@@ -93,13 +93,13 @@ void ChannelDataFilter::setFilterOptions(FilterPipe *filterPipe, FilterOptionIte
 
     if (filterOption->noise()) {
        for(int i =1; i <= 3; ++i) {
-           filterPipe->AddBandStop(4, m_samplingRate, 50, 2,i);
+           filterPipe->AddBandStop(4, m_samplingRate, 50, 0.05, i);
        }
     }
 
     if (filterOption->magnetic()) {
        for(int i =1; i <= 11; ++i) {
-           filterPipe->AddBandStop(4, m_samplingRate, 48.5, 2, i);
+           filterPipe->AddBandStop(4, m_samplingRate, 48.5, 0.05, i);
        }
     }
 
