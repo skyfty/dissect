@@ -145,6 +145,7 @@ void Combined::appendElectrodeTrackData(const TrackData &trackData, Halve::Track
 
 }
 void Combined::adjuestTrackAngle(vtkVector3d &position, const vtkQuaterniond &pant10Quaternion) {
+    return;
     // Manipulate the transform to reflect the rotation
     m_transform->Identity();
     double direction[4]{};

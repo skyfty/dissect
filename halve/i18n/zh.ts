@@ -457,6 +457,10 @@
         <translation>建模参数</translation>
     </message>
     <message>
+        <source>Use the back for reference</source>
+        <translation>使用后背参考</translation>
+    </message>
+    <message>
         <source>Start training</source>
         <translation>开始训练</translation>
     </message>
