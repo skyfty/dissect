@@ -53,9 +53,9 @@ void MappingReseauChecker::setProfile(Profile* profile) {
     }
     m_profile = profile;
     m_mappingPointsDb = m_profile->mappingPointsDb();
-    // connect(m_mappingPointsDb, &MappingPointsDb::sizeChanged, this, [this] {
-    //     m_checkOvercomTimer->start(std::chrono::milliseconds(500));
-    // });
+    connect(m_mappingPointsDb, &MappingPointsDb::sizeChanged, this, [this] {
+        m_checkOvercomTimer->start(std::chrono::milliseconds(500));
+    });
     m_reseauDb = m_profile->reseauDb();
     QObject::connect(m_reseauDb, &ReseauDb::changed, this, &MappingReseauChecker::onReseauChanged);
     QObject::connect(m_reseauDb, &ReseauDb::deleted, this, &MappingReseauChecker::onReseauChanged);
@@ -88,12 +88,12 @@ void MappingReseauChecker::onMappingOptionsThrowChanged() {
 }
 
 void MappingReseauChecker::onMappingOptionsChanged() {
-    // m_checkOvercomTimer->start(std::chrono::milliseconds(500));
+    m_checkOvercomTimer->start(std::chrono::milliseconds(500));
 }
 
 void MappingReseauChecker::onReseauChanged(Reseau* reseau) {
     m_reseauTimer->start(std::chrono::milliseconds(1500));
-    // m_checkOvercomTimer->start(std::chrono::milliseconds(2000));
+    m_checkOvercomTimer->start(std::chrono::milliseconds(2000));
 }
 
 QList<MappingPoint>::iterator MappingReseauChecker::getMappingPointCompIterator(QList<MappingPoint> &mappingPointList) {
