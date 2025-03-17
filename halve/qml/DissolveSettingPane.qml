@@ -49,4 +49,23 @@ ColumnLayout {
             }
         }
     }
+
+    GroupBox {
+        title:qsTr("Ablation radius (mm)")
+        Layout.fillWidth: true
+        ColumnLayout {
+             anchors.fill: parent
+             DoubleSpinBox {
+                 Layout.fillWidth: true
+                 Layout.preferredHeight: 25
+                 from: 1.00
+                 stepSize: 1.00
+                 value: root.dissolveOptions.radius
+                 to: 5.00
+                 onValueModified: {
+                     root.dissolveOptions.radius = value
+                 }
+             }
+         }
+    }
 }

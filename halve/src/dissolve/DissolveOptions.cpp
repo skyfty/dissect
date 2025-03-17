@@ -16,6 +16,8 @@ void DissolveOptions::fromJson(const QJsonObject &json) {
         m_outsideThrow = json["outsideThrow"].toDouble();
     if (json.contains("electrodeIndex"))
         m_electrodeIndex = json["electrodeIndex"].toInt();
+    if (json.contains("radius"))
+        m_radius = json["radius"].toDouble();
 
 }
 
@@ -27,6 +29,7 @@ QJsonValue DissolveOptions::toJson() const {
     json["insideThrow"] = m_insideThrow;
     json["outsideThrow"] = m_outsideThrow;
     json["electrodeIndex"] = m_electrodeIndex;
+    json["radius"] = m_radius;
 
     return json;
 }
@@ -68,6 +71,19 @@ void DissolveOptions::setElectrodeIndex(int newElectrodeIndex)
         return;
     m_electrodeIndex = newElectrodeIndex;
     emit electrodeIndexChanged();
+}
+
+double DissolveOptions::radius() const
+{
+    return m_radius;
+}
+
+void DissolveOptions::setRadius(double newRadius)
+{
+    if (qFuzzyCompare(m_radius, newRadius))
+        return;
+    m_radius = newRadius;
+    emit radiusChanged();
 }
 
 double DissolveOptions::insideThrow() const

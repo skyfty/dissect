@@ -198,6 +198,7 @@ void Stage::onMappingTypeChanged() {
     });
 }
 
+
 void Stage::resetMesh() {
     QHash<Reseau*, vtkSmartPointer<vtkPolyData>> reseauPolyData;
     for (Reseau* reseau: m_reseauDb->getDatas()) {

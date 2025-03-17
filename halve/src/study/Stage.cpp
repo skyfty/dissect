@@ -311,6 +311,7 @@ void Stage::setProfile(Profile* profile) {
 
     m_dissolveDb = m_profile->dissolveDb();
     m_dissolveOptions = m_profile->dissolveOptions();
+    QObject::connect(m_dissolveOptions, &DissolveOptions::radiusChanged, this, &Stage::onDissolveOptionsRadiusChanged);
     m_blackboardDb = m_profile->blackboardDb();
     m_mappingPointsDb = m_profile->mappingPointsDb();
 

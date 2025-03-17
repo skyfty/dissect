@@ -91,9 +91,24 @@ void Stage::resetDissolvePointActor(StageData* userData) {
     mapper->SetInputConnection(userData->dissolvePointSource->GetOutputPort());
     mapper->SetScalarModeToUsePointFieldData();
     mapper->SelectColorArray("Colors");
+    mapper->SetScaleFactor(m_dissolveOptions->radius());
     userData->dissolvePointActor = vtkSmartPointer<vtkActor>::New();
     userData->dissolvePointActor->SetMapper(mapper);
     userData->renderer->AddActor(userData->dissolvePointActor);
+}
+
+void Stage::onDissolveOptionsRadiusChanged()
+{
+    if (VtkRenderThreadHandle == nullptr) {
+        return;
+    }
+    dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
+        auto* userData = StageData::SafeDownCast(vtkObject);
+        if (userData == nullptr || userData->renderer == nullptr || m_profile == nullptr) {
+            return;
+        }
+        dynamic_cast<vtkOpenGLGlyph3DMapper*>(userData->dissolvePointActor->GetMapper())->SetScaleFactor(m_dissolveOptions->radius());
+    });
 }
 
 bool Stage::hightlight() const

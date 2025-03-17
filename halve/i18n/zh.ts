@@ -165,6 +165,10 @@
         <source>Dissolve Electrode</source>
         <translation>消融导管</translation>
     </message>
+    <message>
+        <source>Ablation radius (mm)</source>
+        <translation>消融点半径(毫米)</translation>
+    </message>
 </context>
 <context>
     <name>DissolveForm</name>
