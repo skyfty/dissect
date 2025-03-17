@@ -53,7 +53,7 @@ private:
     double m_insideThrow = 0.5;
     double m_outsideThrow = 0.5;
     int m_electrodeIndex = 0;
-    double m_radius = 1.0;
+    double m_radius = 4.0;
 
 };
 

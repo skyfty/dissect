@@ -61,7 +61,7 @@ ColumnLayout {
                  from: 1.00
                  stepSize: 1.00
                  value: root.dissolveOptions.radius
-                 to: 5.00
+                 to: 10.00
                  onValueModified: {
                      root.dissolveOptions.radius = value
                  }
