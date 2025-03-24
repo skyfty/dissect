@@ -37,15 +37,16 @@ RowLayout {
                              Layout.fillWidth: true
                              Layout.preferredHeight: 25
                              value: root.mappingSetting.duplicateRadius
-                             from: 0.00
-                             to: 20.00
-                             stepSize: 0.5
+                             from: 1.00
+                             to: 40.00
+                             stepSize: 1.0
                              onValueModified: {
                                  root.mappingSetting.duplicateRadius = value
                              }
                          }
 
                      }
+                     Layout.bottomMargin: 4
                  }
                  RadioButton {
                      text: qsTr("The last repeat point")
