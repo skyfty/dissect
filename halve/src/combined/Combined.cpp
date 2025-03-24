@@ -206,10 +206,13 @@ void Combined::abruptionTrackData(TrackData::List &currentTrackDataList) {
                     }
                     return;
                 }
-                adjuestTrackAngle(position, pant0Quaternion);
-                vtkMath::Subtract(position, pant0Position, position);
-                vtkMath::Subtract(position, m_centerPolemicsPosition.GetData(), position);
-                appendElectrodeTrackData(trackData, status,catheter,position, catheterTrackList);
+
+                if (catheter->employ()) {
+                    adjuestTrackAngle(position, pant0Quaternion);
+                    vtkMath::Subtract(position, pant0Position, position);
+                    vtkMath::Subtract(position, m_centerPolemicsPosition.GetData(), position);
+                    appendElectrodeTrackData(trackData, status, catheter, position, catheterTrackList);
+                }
             }
             break;
         }
@@ -234,10 +237,10 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
     QSharedPointer<CatheterTrackPackage> catheterTracks(new CatheterTrackPackage());
     for(const TrackData &trackData:currentTrackDataList) {
         Halve::TrackStatus status = trackData.getStatus();
-        if (status != Halve::TrackStatus_Valid) {
+        Catheter* catheter = trackData.catheter();
+        if (status != Halve::TrackStatus_Valid || !catheter->employ()) {
             continue;
         }
-        Catheter* catheter = trackData.catheter();
         QList<CatheterTrack> &catheterTrackList = catheterTracks->getTracks(catheter);
 
         quint16 port = trackData.port();
@@ -357,7 +360,9 @@ void Combined::blendTrackData(const TrackData::List &currentTrackDataList, const
                 }
                 return;
             }
-            blendTrackData(trackData, pant0Position, pant0Quaternion, catheterTrackList);
+            if (catheter->employ()) {
+                blendTrackData(trackData, pant0Position, pant0Quaternion, catheterTrackList);
+            }
         }
     }
     inspectReproduceCatheter(catheterTracks);
@@ -369,8 +374,9 @@ void Combined::blendTrackData(const TrackData::List &currentTrackDataList, const
 void Combined::blendTraningTrackData(const TrackData::List& currentTrackDataList) {
     QSharedPointer<CatheterTrackPackage> catheterTracks(new CatheterTrackPackage());
     for (const TrackData& trackData : currentTrackDataList) {
-        Halve::TrackStatus status = trackData.getStatus();
-        if (status != Halve::TrackStatus_Valid) {
+        Halve::TrackStatus status = trackData.getStatus();  
+        Catheter* catheter = trackData.catheter();
+        if (status != Halve::TrackStatus_Valid || !catheter->employ()) {
             continue;
         }
         vtkVector3d position;
@@ -382,7 +388,6 @@ void Combined::blendTraningTrackData(const TrackData::List& currentTrackDataList
         vtkMath::Add(position, m_electricCenterShifting, position);
         vtkQuaterniond quaternion;
         trackData.getQuaternion(quaternion);
-        Catheter* catheter = trackData.catheter();
         QList<CatheterTrack>& catheterTrackList = catheterTracks->getTracks(catheter);
         quint16 port = trackData.port();
         quint16 seatIdx = port - catheter->bseat();
