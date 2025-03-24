@@ -20,7 +20,7 @@ QList<TrackData> BlendDint::process(
     QList<TrackData> trackDatas;
     if (isValidSeat(consultSeat))
     {
-        trackDatas = convert(dataBuffer, dnn);
+        trackDatas = convert(dataBuffer, elecIdentify.get());
     }
     return trackDatas;
 }

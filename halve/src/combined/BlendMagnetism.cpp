@@ -11,12 +11,9 @@ BlendMagnetism::BlendMagnetism(Profile* profile, Catheter* catheter, QObject* pa
 {
     m_magnetism = catheter->catheterMagnetism();
     m_elecIdentify = std::make_shared<ys::ElecIdentify>();
-    Eigen::Matrix3d matrix = m_magnetism->matrix();
-    // m_trained = matrix != Eigen::Matrix3d::Identity();
+    auto matrix = m_magnetism->matrix();
+    m_trained = matrix != Matrix3x4d::Zero();
     m_elecIdentify->SetE2W(matrix);
-    m_elecIdentify->SetMReference({ 0, 0, m_magnetism->consultDistance() });
-    m_elecIdentify->SetMTarget({ 0, 0, m_magnetism->targetDistance() });
-
     m_scaleFactor = std::make_unique<ys::ScaleFactorGetter>();
 }
 
@@ -34,9 +31,9 @@ void BlendMagnetism::initUpdater(const ChannelTrackData& dataBuffer, quint16 con
     for (quint16 idx = 0; idx < m_catheter->getAmount(); idx++) {
         quint16 seat = bseat + idx;
         auto pos = dataBuffer.m[seat].pos;
-        ip.ePoint << pos[0], pos[1], pos[2];
+        ip.eRef << pos[0], pos[1], pos[2];
         auto mpos = m_elecIdentify->E2W(ip);
-        m_updater->InitValue(seat, ip.ePoint(0), ip.ePoint(1), ip.ePoint(2), mpos[0], mpos[1], mpos[2]);
+        m_updater->InitValue(seat, ip.eRef(0), ip.eRef(1), ip.eRef(2), mpos[0], mpos[1], mpos[2]);
     }
 }
 
@@ -59,7 +56,7 @@ QList<TrackData> BlendMagnetism::process(const ChannelTrackData& dataBuffer, ys:
     QList<TrackData> trackDatas;
     auto [consultSeat, targetSeat] = getMagnetismSeat();
     quint16 port = m_catheter->port();
-    trackDatas = convert_20250226(port, consultSeat, targetSeat, dataBuffer, dnn);
+    trackDatas = convert_20250319(port, consultSeat, targetSeat, dataBuffer);
     return trackDatas;
 }
 
@@ -91,6 +88,13 @@ QList<TrackData> BlendMagnetism::convert_20250226(
     //     return QList<TrackData>();
     // return convert(cd, &cell);
     return convert(cd, dnn);
+}
+
+QList<TrackData> BlendMagnetism::convert_20250319(quint16 port, quint16 consultSeat, quint16 targetSeat, const ChannelTrackData &dataBuffer)
+{
+    if (m_catheter == nullptr || !m_trained)
+        return QList<TrackData>();
+    return convert(dataBuffer, getElecIdentify().get());
 }
 
 bool BlendMagnetism::fillCell(
@@ -160,7 +164,10 @@ void BlendMagnetism::addPoints(
 
 void BlendMagnetism::appendTrainData(const ChannelTrackData &dataBuffer) {
     auto [consultSeat, targetSeat] = getMagnetismSeat();
-    m_trainDatas.append(makeInputParameter(dataBuffer, m_catheter->port(), consultSeat, targetSeat));
+    auto ip = makeInputParameter(dataBuffer, m_catheter->port(), consultSeat, targetSeat);
+    if (m_magnetism)
+        ip.mLocalRef << 0, 0, m_magnetism->consultDistance();
+    m_trainDatas.append(ip);
 }
 
 std::shared_ptr<ys::ElecIdentify> BlendMagnetism::getElecIdentify() {
