@@ -4,6 +4,7 @@
 #include "MappingPointsListModel.h"
 #include "profile/Profile.h"
 #include "utility/ConnectCheck.h"
+#include "profile/Mapping.h"
 
 #include <QTimer>
 
@@ -20,32 +21,45 @@ void MappingPointSortFilterProxyModel::setProfile(Profile* profile) {
         return;
     }
     m_profile = profile;
+    m_mapping = profile->mapping();
+    connect(m_mapping, &Mapping::onlyValidChanged, this, &MappingPointSortFilterProxyModel::onMappingChanged);
+    connect(m_mapping, &Mapping::showRepeatInvalidChanged, this, &MappingPointSortFilterProxyModel::onMappingChanged);
+    connect(m_mapping, &Mapping::showMappingInvalidChanged, this, &MappingPointSortFilterProxyModel::onMappingChanged);
+
     m_mappingPointsDb = m_profile->mappingPointsDb();
-    connect(m_mappingPointsDb, &MappingPointsDb::overcomeChanged, this, &MappingPointSortFilterProxyModel::onMappingPointsOvercomeChanged, Qt::UniqueConnection);
-    connect(m_mappingPointsDb, &MappingPointsDb::validChanged, this, &MappingPointSortFilterProxyModel::onMappingPointsOvercomeChanged, Qt::UniqueConnection);
+    connect(m_mappingPointsDb, &MappingPointsDb::overcomeChanged, this, &MappingPointSortFilterProxyModel::onMappingPointsOvercomeChanged);
+    connect(m_mappingPointsDb, &MappingPointsDb::validChanged, this, &MappingPointSortFilterProxyModel::onMappingPointsOvercomeChanged);
     emit profileChanged();
 }
 
 Profile *MappingPointSortFilterProxyModel::profile() const {
     return m_profile;
 }
+void MappingPointSortFilterProxyModel::onMappingChanged() {
+    if (m_mapping == nullptr) {
+        return;
+    }
+    emit mappingChanged();
+}
 
 bool MappingPointSortFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const {
-    if (m_onlyValid) {
-        MappingPointsListModel* tableModel = static_cast<MappingPointsListModel*>(sourceModel());
-        QModelIndex index0 = tableModel->index(sourceRow, 0, sourceParent);
-        auto mappingPoint = tableModel->getData(index0.row());
-        if (mappingPoint) {
-            if (!mappingPoint->valid || mappingPoint->overcome != MappingPoint::EFFECTIVE) {
-                return false;
-            }
+    MappingPointsListModel* tableModel = static_cast<MappingPointsListModel*>(sourceModel());
+    QModelIndex index0 = tableModel->index(sourceRow, 0, sourceParent);
+    auto mappingPoint = tableModel->getData(index0.row());
+    if (mappingPoint) {
+        if (m_mapping->onlyValid() && !mappingPoint->valid) {
+            return false;
+        }
+        if (!m_mapping->showRepeatInvalid() && mappingPoint->overcome != MappingPoint::EFFECTIVE) {
+            return false;
         }
     }
+
     return true;
 }
 
 void MappingPointSortFilterProxyModel::onMappingPointsOvercomeChanged(QList<qint64> ids) {
-    if (ids.size() > 0 && m_onlyValid) {
+    if (ids.size() > 0) {
         Q_ASSERT(m_timer != nullptr);
         m_timer->start(std::chrono::milliseconds(400));
     }
@@ -57,18 +71,6 @@ void MappingPointSortFilterProxyModel::onTimerEvent() {
     invalidate();
 }
 
-bool MappingPointSortFilterProxyModel::onlyValid() const
-{
-    return m_onlyValid;
-}
-
-void MappingPointSortFilterProxyModel::setOnlyValid(bool newOnlyValid)
-{
-    if (m_onlyValid == newOnlyValid)
-        return;
-    m_onlyValid = newOnlyValid;
-    emit onlyValidChanged();
-}
 
 qint32 MappingPointSortFilterProxyModel::rowOfId(qint64 id) const
 {

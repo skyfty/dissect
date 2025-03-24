@@ -27,10 +27,9 @@ Pane {
     MappingPointSortFilterProxyModel {
         id:mappingPointsModel
         profile:root.profile
-        onlyValid:mapping.onlyValid
         sortRole:mapping.sortRole
         sourceModel: mappingPointsListModel
-        onOnlyValidChanged: {
+        onMappingChanged: {
             mappingPointsModel.invalidate();
         }
     }

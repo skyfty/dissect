@@ -45,8 +45,8 @@ signals:
 
 private:
     bool m_onlyValid = true;
-    bool m_showRepeatInvalid = true;
-    bool m_showMappingInvalid = true;
+    bool m_showRepeatInvalid = false;
+    bool m_showMappingInvalid = false;
     int m_sortRole = 1;
 };
 

@@ -6,12 +6,11 @@
 class Profile;
 class MappingPointsDb;
 class QTimer;
+class Mapping;
 
 class MappingPointSortFilterProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
-    Q_PROPERTY(bool onlyValid READ onlyValid WRITE setOnlyValid NOTIFY onlyValidChanged FINAL)
-
     Q_PROPERTY(Profile* profile WRITE setProfile READ profile NOTIFY profileChanged);
 public:
     enum SortRole{
@@ -27,8 +26,6 @@ public:
 public:
     explicit MappingPointSortFilterProxyModel(QObject *parent = nullptr);
     ~MappingPointSortFilterProxyModel() = default;
-    bool onlyValid() const;
-    void setOnlyValid(bool newOnlyValid);
     void setProfile(Profile* obscurity);
     Profile *profile() const;
     using QSortFilterProxyModel::removeRows;
@@ -40,19 +37,20 @@ public:
 
 private slots:
     void onMappingPointsOvercomeChanged(QList<qint64> ids);
+    void onMappingChanged();
     void onTimerEvent();
 protected:
     bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
     bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;
     void onMappingPointsChanged(qint64 id);
 signals:
-    void onlyValidChanged();
     void profileChanged();
+    void mappingChanged();
 
 
 private:
-    bool m_onlyValid = true;
     QPointer<Profile> m_profile;
+    QPointer<Mapping> m_mapping;
     QPointer<MappingPointsDb> m_mappingPointsDb;
     QTimer *m_timer = nullptr;
 };
