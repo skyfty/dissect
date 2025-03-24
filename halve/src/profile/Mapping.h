@@ -11,6 +11,8 @@ class Mapping : public QObject
     Q_PROPERTY(bool onlyValid READ onlyValid WRITE setOnlyValid NOTIFY onlyValidChanged FINAL)
     Q_PROPERTY(int sortRole READ sortRole WRITE setSortRole NOTIFY sortRoleChanged FINAL)
 
+    Q_PROPERTY(bool showRepeatInvalid READ showRepeatInvalid WRITE setShowRepeatInvalid NOTIFY showRepeatInvalidChanged FINAL)
+    Q_PROPERTY(bool showMappingInvalid READ showMappingInvalid WRITE setShowMappingInvalid NOTIFY showMappingInvalidChanged FINAL)
 public:
 
 public:
@@ -25,14 +27,26 @@ public:
     int sortRole() const;
     void setSortRole(int newSortRole);
 
+    bool showRepeatInvalid() const;
+    void setShowRepeatInvalid(bool newShowRepeatInvalid);
+
+    bool showMappingInvalid() const;
+    void setShowMappingInvalid(bool newShowMappingInvalid);
+
 signals:
 
     void onlyValidChanged();
 
     void sortRoleChanged();
 
+    void showRepeatInvalidChanged();
+
+    void showMappingInvalidChanged();
+
 private:
     bool m_onlyValid = true;
+    bool m_showRepeatInvalid = true;
+    bool m_showMappingInvalid = true;
     int m_sortRole = 1;
 };
 

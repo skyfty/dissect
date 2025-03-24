@@ -183,6 +183,20 @@
 </context>
 <context>
     <name>MappingSettingPane</name>
+
+    <message>
+        <source>Display invalid test points</source>
+        <translation>显示标测无效点</translation>
+    </message>
+
+    <message>
+        <source>Display repeated invalid points</source>
+        <translation>显示重复无效点</translation>
+    </message>
+    <message>
+        <source>Repeat the point calculation radius(mm)</source>
+        <translation>重复点计算半径(毫米)</translation>
+    </message>
     <message>
         <source>Only the selected points are displayed</source>
         <translation>仅显示选定的点</translation>

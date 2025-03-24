@@ -13,6 +13,8 @@ void MappingSetting::fromJson(const QJsonObject &json) {
     if (json.contains("gap"))
         m_gap = json["gap"].toDouble();
 
+    if (json.contains("duplicateRadius"))
+        m_duplicateRadius = json["duplicateRadius"].toDouble();
     if (json.contains("useDuplicatePoints"))
         m_useDuplicatePoints = (Halve::UseDuplicatePoints)json["useDuplicatePoints"].toInteger();
 }
@@ -23,6 +25,7 @@ QJsonValue MappingSetting::toJson() const {
     json["insideThrow"] = m_insideThrow;
     json["outsideThrow"] = m_outsideThrow;
     json["gap"] = m_gap;
+    json["duplicateRadius"] = m_duplicateRadius;
     json["useDuplicatePoints"] = (int)m_useDuplicatePoints;
     return json;
 }
@@ -77,4 +80,17 @@ void MappingSetting::setUseDuplicatePoints(Halve::UseDuplicatePoints newUserDupl
         return;
     m_useDuplicatePoints = newUserDuplicatePoints;
     emit useDuplicatePointsChanged();
+}
+
+double MappingSetting::duplicateRadius() const
+{
+    return m_duplicateRadius;
+}
+
+void MappingSetting::setDuplicateRadius(double newDuplicateRadius)
+{
+    if (qFuzzyCompare(m_duplicateRadius, newDuplicateRadius))
+        return;
+    m_duplicateRadius = newDuplicateRadius;
+    emit duplicateRadiusChanged();
 }

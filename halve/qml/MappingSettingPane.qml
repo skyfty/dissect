@@ -25,7 +25,28 @@ RowLayout {
             Layout.fillWidth: true
             ColumnLayout {
                  anchors.fill: parent
+                 ColumnLayout {
+                     Label {
+                         text: qsTr("Repeat the point calculation radius(mm)")
+                         Layout.fillWidth: true
+                     }
+                     RowLayout {
+                         Layout.fillWidth: true
+                         DoubleSpinBox {
+                             enabled: root.profile.pointValidCheck
+                             Layout.fillWidth: true
+                             Layout.preferredHeight: 25
+                             value: root.mappingSetting.duplicateRadius
+                             from: 0.00
+                             to: 20.00
+                             stepSize: 0.5
+                             onValueModified: {
+                                 root.mappingSetting.duplicateRadius = value
+                             }
+                         }
 
+                     }
+                 }
                  RadioButton {
                      text: qsTr("The last repeat point")
                      checked: root.mappingSetting.useDuplicatePoints === Halve.Last
@@ -124,6 +145,16 @@ RowLayout {
                     checked: root.mapping.onlyValid
                     text: qsTr("Show only valid points")
                     onClicked:  root.mapping.onlyValid = checked
+                }
+                CheckBox {
+                    checked: root.mapping.showMappingInvalid
+                    text: qsTr("Display invalid test points")
+                    onClicked:  root.mapping.showMappingInvalid = checked
+                }
+                CheckBox {
+                    checked: root.mapping.showRepeatInvalid
+                    text: qsTr("Display repeated invalid points")
+                    onClicked:  root.mapping.showRepeatInvalid = checked
                 }
             }
         }
