@@ -36,7 +36,7 @@ bool MappingPointSortFilterProxyModel::filterAcceptsRow(int sourceRow, const QMo
         QModelIndex index0 = tableModel->index(sourceRow, 0, sourceParent);
         auto mappingPoint = tableModel->getData(index0.row());
         if (mappingPoint) {
-            if (!mappingPoint->valid || mappingPoint->overcome) {
+            if (!mappingPoint->valid || mappingPoint->overcome != MappingPoint::EFFECTIVE) {
                 return false;
             }
         }

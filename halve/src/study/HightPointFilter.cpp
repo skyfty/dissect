@@ -38,7 +38,7 @@ int HightPointFilter::RequestData(vtkInformation * vtkNotUsed(request), vtkInfor
     }
     if (ShowSurface && CurrentMappingPointId != -1) {
         auto mappingPoint = m_mappingPointsDb->getData(CurrentMappingPointId);
-        if (mappingPoint && mappingPoint->valid && !mappingPoint->overcome) {
+        if (mappingPoint && mappingPoint->valid && mappingPoint->overcome ==  MappingPoint::EFFECTIVE) {
             points->InsertNextPoint(mappingPoint->x, mappingPoint->y, mappingPoint->z);
         }
     }

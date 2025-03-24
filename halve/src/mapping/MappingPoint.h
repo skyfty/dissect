@@ -18,6 +18,9 @@ public:
     static constexpr qint16 MANUAL = 1;
     static constexpr qint16 AUTO = 0;
 
+    static constexpr qint16 UNDEFINED = 0;
+    static constexpr qint16 EFFECTIVE = 1;
+    static constexpr qint16 INVALID = 2;
 public:
     qint64 id = -1;
     qint16 type = CONSULT;
@@ -35,7 +38,7 @@ public:
     double maxVoltage = 0.0;
     double minVoltage = 0.0;
     bool valid = true;
-    bool overcome = false;
+    qint16 overcome = UNDEFINED;
     qint32 flags = AUTO;
     union {
         vtkVector3d position{ 0.0,0.0,0.0 };

@@ -191,7 +191,7 @@ QVariant MappingPointsListModel::data(const QModelIndex& index, int role) const 
                 return mappingPoint->flags;
             }
             case OVERCOME:
-                return mappingPoint->overcome;
+                return mappingPoint->overcome != MappingPoint::EFFECTIVE;
             case Time: {
                 return QDateTime::fromMSecsSinceEpoch(mappingPoint->time);
             }

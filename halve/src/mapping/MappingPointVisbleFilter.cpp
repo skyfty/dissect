@@ -46,7 +46,7 @@ int MappingPointVisbleFilter::RequestData(vtkInformation * vtkNotUsed(request),
     idArray->SetNumberOfComponents(1);
     vtkNew<vtkPoints> points;
     for (const MappingPoint& mp : m_mappingPointsDb->getDatas()) {
-        if (mp.type == MappingPoint::SAMPLE && mp.valid && !mp.overcome) {
+        if (mp.type == MappingPoint::SAMPLE && mp.valid && mp.overcome == MappingPoint::EFFECTIVE) {
             idArray->InsertNextValue(mp.id);
             points->InsertNextPoint(mp.position.GetData());
         }

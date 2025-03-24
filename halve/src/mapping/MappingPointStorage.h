@@ -21,7 +21,7 @@ struct MappingPointStorageAdapter {
                    make_column("voltageIndex", &MappingPoint::voltageIndex, default_value(-1)),
                    make_column("valid", &MappingPoint::valid, default_value(true)),
                    make_column("flags", &MappingPoint::flags, default_value(0)),
-                   make_column("overcome", &MappingPoint::overcome, default_value(false)),
+                   make_column("overcome", &MappingPoint::overcome, default_value(MappingPoint::UNDEFINED)),
                    make_column("lat", &MappingPoint::lat, default_value(0)),
                    make_column("x", &MappingPoint::x, default_value(0)),
                    make_column("y", &MappingPoint::y, default_value(0)),

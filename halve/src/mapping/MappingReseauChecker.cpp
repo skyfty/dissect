@@ -79,7 +79,7 @@ void MappingReseauChecker::setMappingSetting(MappingSetting *newMeltSetting)
     QObject::connect(m_mappingSetting, &MappingSetting::outsideThrowChanged, this, &MappingReseauChecker::onMappingOptionsThrowChanged);
     QObject::connect(m_mappingSetting, &MappingSetting::insideThrowChanged, this, &MappingReseauChecker::onMappingOptionsThrowChanged);
     QObject::connect(m_mappingSetting, &MappingSetting::useDuplicatePointsChanged, this, &MappingReseauChecker::onMappingOptionsChanged);
-    QObject::connect(m_mappingSetting, &MappingSetting::gapChanged, this, &MappingReseauChecker::onMappingOptionsChanged);
+    QObject::connect(m_mappingSetting, &MappingSetting::duplicateRadiusChanged, this, &MappingReseauChecker::onMappingOptionsChanged);
     emit mappingSettingChanged();
 }
 
@@ -117,7 +117,7 @@ QList<MappingPoint>::iterator MappingReseauChecker::getMappingPointCompIterator(
 
 void MappingReseauChecker::checkMappingPointOvercome(const MappingPoint &mappingPoint) {
     QList<MappingPoint> mappingPointList;
-    m_mappingPointsDb->getDataPoints(m_mappingSetting->gap(), mappingPoint.position, mappingPointList);
+    m_mappingPointsDb->getDataPoints(m_mappingSetting->duplicateRadius(), mappingPoint.position, mappingPointList);
     if (mappingPointList.isEmpty()) {
         return;
     }
@@ -127,13 +127,13 @@ void MappingReseauChecker::checkMappingPointOvercome(const MappingPoint &mapping
     }
     QList<MappingPoint> changedMappingPointList;
     for (int i = 0; i < mappingPointList.size(); ++i) {
-        if (mappingPointList[i].id != maxIter->id && mappingPointList[i].overcome == false) {
-            mappingPointList[i].overcome = true;
+        if (mappingPointList[i].id != maxIter->id && mappingPointList[i].overcome == MappingPoint::UNDEFINED) {
+            mappingPointList[i].overcome = MappingPoint::INVALID;
             changedMappingPointList.append(mappingPointList[i]);
         }
     }
-    if (maxIter->overcome) {
-        maxIter->overcome = false;
+    if (maxIter->overcome != MappingPoint::EFFECTIVE) {
+        maxIter->overcome = MappingPoint::EFFECTIVE;
         changedMappingPointList.append(*maxIter);
     }
     if (changedMappingPointList.size() > 0) {
