@@ -131,6 +131,18 @@ void Orientation::resetAP() {
     });
 }
 
+void Orientation::setNewAP()
+{
+    auto newMat = vtkNew<vtkMatrix4x4>();
+    newMat->Zero();
+    newMat->SetElement(0, 0, -1);
+    newMat->SetElement(1, 1, 1);
+    newMat->SetElement(2, 2, -1);
+    newMat->SetElement(3, 3, 1);
+    resetAzimuthData(newMat.GetPointer());
+    m_profile->setOrientaionMatrix(newMat.GetPointer());
+}
+
 void Orientation::resetAzimuthData(vtkMatrix4x4* orientaionMatrix) {
     AzimuthBuildinDb azimuthBuildinDb;
     azimuthBuildinDb.initDefault();

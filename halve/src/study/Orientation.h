@@ -30,6 +30,7 @@ public:
     Profile *profile() const;
     void setCameraInfo(const CameraInfo &cameraInfo);
     Q_INVOKABLE void resetAP();
+    Q_INVOKABLE void setNewAP();
 
 signals:
     void profileChanged();

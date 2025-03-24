@@ -676,4 +676,8 @@ Item {
 
         }
     }
+
+    Component.onCompleted: function() {
+        orientation.setNewAP();
+    }
 }
