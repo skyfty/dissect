@@ -132,15 +132,14 @@ void Combined::appendElectrodeTrackData(const TrackData &trackData, Halve::Track
     vtkSmartPointer<vtkPoints> points = produceElectricityPoints(grid, position, quaternion);
     vtkDataArray* types = grid->GetPointData()->GetArray(TypesPointDataName);
 
-    QList<ElectrodeNode*> electrodeNodes = catheter->getElectrodeNodes();
     for (vtkIdType idx = 0; idx < points->GetNumberOfPoints(); ++idx) {
         Halve::CatheterElectrodeType type = (Halve::CatheterElectrodeType)types->GetTuple1(idx);
-        auto maxElectrodIdx = std::min(electrodeNodes.size() - 1, idx);
+        ElectrodeNode* electrodeNode = catheter->getElectrodeNode(idx);
         quint16 seat = catheter->bseat() + idx;
         vtkVector3d position;
         points->GetPoint(idx, position.GetData());
         vtkQuaterniond quaternion;
-        catheterTrackList.append(createCatheterTrack(seat, type, status, position, quaternion, electrodeNodes[maxElectrodIdx]->id()));
+        catheterTrackList.append(createCatheterTrack(seat, type, status, position, quaternion, electrodeNode->id()));
     }
 
 }
@@ -241,9 +240,10 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
         Catheter* catheter = trackData.catheter();
         QList<CatheterTrack> &catheterTrackList = catheterTracks->getTracks(catheter);
 
+        quint16 port = trackData.port();
         vtkVector3d position;
         trackData.getPosition(position);
-        quint16 seatIdx = trackData.port() - catheter->bseat();
+        quint16 seatIdx = port - catheter->bseat();
         if (trackData.catheter()->getType() == CSCatheterType && seatIdx == 0) {
             m_centerPolemicsPosition = position;
             if (m_centerPoint[0] == -1) {
@@ -256,10 +256,9 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
         vtkQuaterniond quaternion;
         trackData.getQuaternion(quaternion);
         Halve::CatheterElectrodeType type = catheter->catheterMould()->getType(seatIdx);
-        QList<ElectrodeNode*> electrodeNodes = catheter->getElectrodeNodes();
-        auto maxElectrodIdx = std::min(electrodeNodes.size() - 1, (qsizetype)seatIdx);
+        ElectrodeNode* electrodeNode = catheter->getElectrodeNode(port);
         vtkMath::Subtract(position, m_centerPoint.GetData(), position);
-        catheterTrackList.append(createCatheterTrack(trackData.port(), type, status, position, quaternion, electrodeNodes[maxElectrodIdx]->id()));
+        catheterTrackList.append(createCatheterTrack(port, type, status, position, quaternion, electrodeNode->id()));
     }
 
     if (m_centerPoint[0] != -1) {
@@ -320,11 +319,11 @@ void Combined::blendTrackData(const TrackData &trackData,const vtkVector3d &pant
     vtkMath::Subtract(position, m_centerPolemicsPosition.GetData(), position);
     vtkQuaterniond quaternion;
     trackData.getQuaternion(quaternion);
-    QList<ElectrodeNode*> electrodeNodes = catheter->getElectrodeNodes();
-    quint16 seatIdx = trackData.port() - catheter->bseat();
+    quint16 port = trackData.port();
+    quint16 seatIdx = port - catheter->bseat();
+    ElectrodeNode* electrodeNode = catheter->getElectrodeNode(port);
     Halve::CatheterElectrodeType type = catheter->catheterMould()->getType(seatIdx);
-    auto maxElectrodIdx = std::min(electrodeNodes.size() - 1, (qsizetype)seatIdx);
-    catheterTrackList.append(createCatheterTrack(trackData.port(), type, trackData.getStatus(), position, quaternion, electrodeNodes[maxElectrodIdx]->id()));
+    catheterTrackList.append(createCatheterTrack(port, type, trackData.getStatus(), position, quaternion, electrodeNode->id()));
 }
 
 void Combined::blendTrackData(const TrackData::List &currentTrackDataList, const vtkVector3d & pant0Position, const vtkQuaterniond &pant0Quaternion) {
@@ -385,12 +384,12 @@ void Combined::blendTraningTrackData(const TrackData::List& currentTrackDataList
         trackData.getQuaternion(quaternion);
         Catheter* catheter = trackData.catheter();
         QList<CatheterTrack>& catheterTrackList = catheterTracks->getTracks(catheter);
-        quint16 seatIdx = trackData.port() - catheter->bseat();
+        quint16 port = trackData.port();
+        quint16 seatIdx = port - catheter->bseat();
         Halve::CatheterElectrodeType type = catheter->catheterMould()->getType(seatIdx);
-        QList<ElectrodeNode*> electrodeNodes = catheter->getElectrodeNodes();
-        auto maxElectrodIdx = std::min(electrodeNodes.size() - 1, (qsizetype)seatIdx);
+        ElectrodeNode* electrodeNode = catheter->getElectrodeNode(port);
         vtkMath::Subtract(position, m_centerPoint.GetData(), position);
-        catheterTrackList.append(createCatheterTrack(trackData.port(), type, status, position, quaternion, electrodeNodes[maxElectrodIdx]->id()));
+        catheterTrackList.append(createCatheterTrack(port, type, status, position, quaternion, electrodeNode->id()));
     }
 
     if (m_centerPoint[0] != -1) {

@@ -550,6 +550,19 @@ ElectrodeNode *Catheter::findElectrodeNode(const QList<ElectrodeNode *> &nodes, 
     return iter != nodes.end()?*iter:nullptr;
 }
 
+
+ElectrodeNode* Catheter::getElectrodeNode(Halve::ElectrodeType electrode, quint16 d) {
+    QList<ElectrodeNode*> nodeList = getElectrodeNodes(electrode);
+    auto iter = std::find_if(nodeList.begin(), nodeList.end(), [d](ElectrodeNode* node) {
+        return node->d1() == d || node->d2() == d;
+    });
+    return iter != nodeList.end() ? *iter : nullptr;
+}
+
+ElectrodeNode* Catheter::getElectrodeNode(quint16 d) {
+    return getElectrodeNode(m_electrode, d);
+}
+
 QString Catheter::meshName() const
 {
     return m_meshName;

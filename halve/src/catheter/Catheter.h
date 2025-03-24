@@ -139,6 +139,11 @@ public:
 
     ElectrodeNode* getElectrodeNode(Halve::ElectrodeType electrode, const QString &id);
     ElectrodeNode* getElectrodeNode(const QString &id);
+
+
+    ElectrodeNode* getElectrodeNode(Halve::ElectrodeType electrode, quint16 d);
+    ElectrodeNode* getElectrodeNode(quint16 d);
+
     bool isBelongTo(const ElectrodeNode *node) const;
     bool isOccupied(quint16 bseat);
 
