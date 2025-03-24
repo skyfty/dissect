@@ -303,7 +303,7 @@ Study {
                                 height: 30
                                 width:30
                             }
-                            enabled: root.profile.catheterAlined && root.combined.state === ChannelReplica.State_Tracking
+                            enabled: root.profile.state == Profile.Reproduce && root.profile.catheterAlined && root.combined.state === ChannelReplica.State_Tracking
                             visible: root.profile.channelMode === Halve.CHANNELMODE_BLEND &&  root.profile.type !== Profile.SNAPSHOT
 
                             onClicked: trainConfirmDialog.open()
@@ -313,7 +313,7 @@ Study {
                                 prompt: qsTr("This will clear the model and mapping data")
                                 onAccepted: {
                                     root.combined.training = !root.combined.training;
-                                    statePane.state = root.profile.state = root.combined.training ? Profile.Reproduce : Profile.Melt;
+                                    //statePane.state = root.profile.state = root.combined.training ? Profile.Reproduce : Profile.Melt;
                                 }
                             }
                             background: Rectangle {
