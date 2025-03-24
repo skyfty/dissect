@@ -38,7 +38,7 @@ public:
         for (auto it = begin; i<size; ++i, ++it)
         {
             pe.col(i) = Eigen::Vector4d(it->eRef.x(), it->eRef.y(), it->eRef.z(), 1);
-            pw.row(i) = it->GetWorldRef();
+            pw.col(i) = it->GetWorldRef();
         }
 
         // 对 Pe 进行 SVD 分解

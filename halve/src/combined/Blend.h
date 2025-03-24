@@ -39,6 +39,9 @@ public:
     QList<TrackData> convert(const ChannelTrackData &dataBuffer,
                              ys::KNNCell* cell);
 
+    QList<TrackData> convert(const ChannelTrackData &dataBuffer,
+                             ys::ElecIdentify* elecIdentify);
+
 protected:
     ys::InputParameter makeInputParameter(const ChannelTrackData &dataBuffer,quint16 portIdx, quint16 consultSeat, quint16 targetSeat)  const ;
     QList<TrackData> convertPantTrackData(const ChannelTrackData &dataBuffer,quint16 portIdx, quint16 consultSeat, quint16 targetSeat)  const ;

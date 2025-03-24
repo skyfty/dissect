@@ -41,6 +41,11 @@ private:
         quint16 targetSeat,
         const ChannelTrackData& dataBuffer,
         ys::DynamicNearestNeighbor *dnn);
+    QList<TrackData> convert_20250319(
+        quint16 port,
+        quint16 consultSeat,
+        quint16 targetSeat,
+        const ChannelTrackData& dataBuffer);
 
     bool fillCell(
         quint16 port,
