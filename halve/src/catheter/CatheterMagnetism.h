@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <Eigen/Eigen>
+#include "Matrix3x4d.h"
 
 class QJsonObject;
 
@@ -23,8 +24,8 @@ public:
     void toJson(QJsonObject &json) const;
     bool magnetism() const;
     void setMagnetism(bool newMagnetism);
-    Eigen::Matrix3d matrix() const;
-    void setMatrix(const Eigen::Matrix3d&newMatrix);
+    Matrix3x4d matrix() const;
+    void setMatrix(const Matrix3x4d& newMatrix);
 
 
     int consult() const;
@@ -57,7 +58,7 @@ private:
     double m_consultDistance = 0.0;
     int m_target = -1;
     double m_targetDistance = 0.0;
-    Eigen::Matrix3d m_matrix = Eigen::Matrix3d::Identity();;
+    Matrix3x4d m_matrix = Matrix3x4d::Zero();
 };
 
 #endif // CATHETERMAGNETISM_H

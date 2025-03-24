@@ -43,12 +43,12 @@ void CatheterMagnetism::fromJson(const QJsonObject &json) {
     }
 }
 
-Eigen::Matrix3d CatheterMagnetism::matrix() const
+Matrix3x4d CatheterMagnetism::matrix() const
 {
     return m_matrix;
 }
 
-void CatheterMagnetism::setMatrix(const Eigen::Matrix3d &newMatrix)
+void CatheterMagnetism::setMatrix(const Matrix3x4d &newMatrix)
 {
     m_matrix = newMatrix;
 }

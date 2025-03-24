@@ -14,6 +14,7 @@ set(SRCS
     "ElecIdentify/Elec2WorldUpdater.cpp"
     "ElecIdentify/DynamicNearestNeighbor.cpp"
     "ElecIdentify/ScaleFactorGetter.cpp"
+    "ElecIdentify/Matrix3x4d.cpp"
 )
 add_library(ys ${SRCS})
 target_link_libraries(ys
