@@ -16,7 +16,7 @@ static BodySurfaceFunctionList BodySurfaceFunction = {
          return da[1] - da[0];
      }},
     {"bodysurface.bodysurface.ecgavr", [](const ChannelData::DataType da[]){
-         return 0.5 * -(da[0] + da[1]);
+         return -0.5 * (da[0] + da[1]);
      }},
     {"bodysurface.bodysurface.ecgavl", [](const ChannelData::DataType da[]){
          return 0.5 * (2 * da[0] - da[1]);
@@ -25,22 +25,22 @@ static BodySurfaceFunctionList BodySurfaceFunction = {
          return 0.5 * (2 * da[1] - da[0]);
      }},
     {"bodysurface.bodysurface.ecgv1", [](const ChannelData::DataType da[]){
-         return 0.333 * (3 * da[2] - da[0] - da[1]);
+         return da[2];
      }},
     {"bodysurface.bodysurface.ecgv2", [](const ChannelData::DataType da[]){
-         return 0.333 * (3 * da[3] - da[0] - da[1]);
+         return da[3];
      }},
     {"bodysurface.bodysurface.ecgv3", [](const ChannelData::DataType da[]){
-         return 0.333 * (3 * da[4] - da[0] - da[1]);
+         return da[4];
      }},
     {"bodysurface.bodysurface.ecgv4", [](const ChannelData::DataType da[]){
-         return 0.333 * (3 * da[5] - da[0] - da[1]);
+         return da[5];
      }},
     {"bodysurface.bodysurface.ecgv5", [](const ChannelData::DataType da[]){
-         return 0.333 * (3 * da[6] - da[0] - da[1]);
+         return da[6];
      }},
     {"bodysurface.bodysurface.ecgv6", [](const ChannelData::DataType da[]){
-         return 0.333 * (3 * da[7] - da[0] - da[1]);
+         return da[7];
      }},
 };
 
