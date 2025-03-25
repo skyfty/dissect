@@ -27,8 +27,8 @@ void MappingPointSortFilterProxyModel::setProfile(Profile* profile) {
     connect(m_mapping, &Mapping::showMappingInvalidChanged, this, &MappingPointSortFilterProxyModel::onMappingChanged);
 
     m_mappingPointsDb = m_profile->mappingPointsDb();
-    connect(m_mappingPointsDb, &MappingPointsDb::overcomeChanged, this, &MappingPointSortFilterProxyModel::onMappingPointsOvercomeChanged);
-    connect(m_mappingPointsDb, &MappingPointsDb::validChanged, this, &MappingPointSortFilterProxyModel::onMappingPointsOvercomeChanged);
+    connect(m_mappingPointsDb, &MappingPointsDb::overcomeChanged, this, &MappingPointSortFilterProxyModel::onMappingPointsChanged);
+    connect(m_mappingPointsDb, &MappingPointsDb::validChanged, this, &MappingPointSortFilterProxyModel::onMappingPointsChanged);
     emit profileChanged();
 }
 
@@ -47,22 +47,21 @@ bool MappingPointSortFilterProxyModel::filterAcceptsRow(int sourceRow, const QMo
     QModelIndex index0 = tableModel->index(sourceRow, 0, sourceParent);
     auto mappingPoint = tableModel->getData(index0.row());
     if (mappingPoint) {
-        if (m_mapping->onlyValid() && !mappingPoint->valid) {
+        if (!m_mapping->showMappingInvalid() && !mappingPoint->valid) {
             return false;
         }
         if (!m_mapping->showRepeatInvalid() && mappingPoint->overcome != MappingPoint::EFFECTIVE) {
             return false;
         }
     }
-
     return true;
 }
 
-void MappingPointSortFilterProxyModel::onMappingPointsOvercomeChanged(QList<qint64> ids) {
-    if (ids.size() > 0) {
-        Q_ASSERT(m_timer != nullptr);
-        m_timer->start(std::chrono::milliseconds(400));
+void MappingPointSortFilterProxyModel::onMappingPointsChanged(const QList<qint64>& ids) {
+    if (ids.isEmpty()) {
+        return;
     }
+    m_timer->start(std::chrono::milliseconds(400));
 }
 
 void MappingPointSortFilterProxyModel::onTimerEvent() {
@@ -70,7 +69,6 @@ void MappingPointSortFilterProxyModel::onTimerEvent() {
     m_timer->stop();
     invalidate();
 }
-
 
 qint32 MappingPointSortFilterProxyModel::rowOfId(qint64 id) const
 {

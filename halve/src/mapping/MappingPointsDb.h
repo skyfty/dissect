@@ -55,8 +55,8 @@ signals:
     void added(qint64 rowId);
     void deleted(qint64 rowId);
     void changed(qint64 rowId);
-    void overcomeChanged(QList<qint64> ids);
-    void validChanged(QList<qint64> ids);
+    void overcomeChanged(const QList<qint64>& ids);
+    void validChanged(const QList<qint64>& ids);
     void cleaned();
     void copied(MappingPointGroup *toGroup,QList<qint64> ids);
     void sizeChanged();

@@ -134,8 +134,8 @@ void Combined::appendElectrodeTrackData(const TrackData &trackData, Halve::Track
 
     for (vtkIdType idx = 0; idx < points->GetNumberOfPoints(); ++idx) {
         Halve::CatheterElectrodeType type = (Halve::CatheterElectrodeType)types->GetTuple1(idx);
-        ElectrodeNode* electrodeNode = catheter->getElectrodeNode(idx);
         quint16 seat = catheter->bseat() + idx;
+        ElectrodeNode* electrodeNode = catheter->getElectrodeNode(seat);
         vtkVector3d position;
         points->GetPoint(idx, position.GetData());
         vtkQuaterniond quaternion;

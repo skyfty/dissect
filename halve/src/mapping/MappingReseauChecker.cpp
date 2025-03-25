@@ -53,9 +53,8 @@ void MappingReseauChecker::setProfile(Profile* profile) {
     }
     m_profile = profile;
     m_mappingPointsDb = m_profile->mappingPointsDb();
-    connect(m_mappingPointsDb, &MappingPointsDb::sizeChanged, this, [this] {
-        m_checkOvercomTimer->start(std::chrono::milliseconds(500));
-    });
+    connect(m_mappingPointsDb, &MappingPointsDb::added, this, &MappingReseauChecker::onMappingAdded);
+
     m_reseauDb = m_profile->reseauDb();
     QObject::connect(m_reseauDb, &ReseauDb::changed, this, &MappingReseauChecker::onReseauChanged);
     QObject::connect(m_reseauDb, &ReseauDb::deleted, this, &MappingReseauChecker::onReseauChanged);
@@ -74,21 +73,30 @@ void MappingReseauChecker::setMappingSetting(MappingSetting *newMeltSetting)
 {
     if (m_mappingSetting == newMeltSetting)
         return;
-    QObject::disconnect(m_mappingSetting, nullptr, nullptr, nullptr);
     m_mappingSetting = newMeltSetting;
+    QObject::connect(m_mappingSetting, &MappingSetting::duplicateRadiusChanged, this, &MappingReseauChecker::onRecheckOvercome);
+    QObject::connect(m_mappingSetting, &MappingSetting::useDuplicatePointsChanged, this, &MappingReseauChecker::onRecheckOvercome);
+
     QObject::connect(m_mappingSetting, &MappingSetting::outsideThrowChanged, this, &MappingReseauChecker::onMappingOptionsThrowChanged);
     QObject::connect(m_mappingSetting, &MappingSetting::insideThrowChanged, this, &MappingReseauChecker::onMappingOptionsThrowChanged);
-    QObject::connect(m_mappingSetting, &MappingSetting::useDuplicatePointsChanged, this, &MappingReseauChecker::onMappingOptionsChanged);
-    QObject::connect(m_mappingSetting, &MappingSetting::duplicateRadiusChanged, this, &MappingReseauChecker::onMappingOptionsChanged);
     emit mappingSettingChanged();
+}
+
+void MappingReseauChecker::onMappingAdded(qint64 rowId) {
+    auto mappingPoint = m_mappingPointsDb->getData(rowId);
+    if (mappingPoint && mappingPoint->valid) {
+        if (mappingPoint->type == MappingPoint::SAMPLE) {
+            checkMappingPointOvercome(*mappingPoint, false);
+        }
+    }
+}
+
+void  MappingReseauChecker::onRecheckOvercome() {
+    m_checkOvercomTimer->start(std::chrono::milliseconds(500));
 }
 
 void MappingReseauChecker::onMappingOptionsThrowChanged() {
     m_reseauTimer->start(std::chrono::milliseconds(300));
-}
-
-void MappingReseauChecker::onMappingOptionsChanged() {
-    m_checkOvercomTimer->start(std::chrono::milliseconds(500));
 }
 
 void MappingReseauChecker::onReseauChanged(Reseau* reseau) {
@@ -115,7 +123,7 @@ QList<MappingPoint>::iterator MappingReseauChecker::getMappingPointCompIterator(
     return mappingPointList.end();
 }
 
-void MappingReseauChecker::checkMappingPointOvercome(const MappingPoint &mappingPoint) {
+void MappingReseauChecker::checkMappingPointOvercome(const MappingPoint &mappingPoint, bool reset) {
     QList<MappingPoint> mappingPointList;
     m_mappingPointsDb->getDataPoints(m_mappingSetting->duplicateRadius(), mappingPoint.position, mappingPointList);
     if (mappingPointList.isEmpty()) {
@@ -126,10 +134,14 @@ void MappingReseauChecker::checkMappingPointOvercome(const MappingPoint &mapping
         return;
     }
     QList<MappingPoint> changedMappingPointList;
+
     for (int i = 0; i < mappingPointList.size(); ++i) {
-        if (mappingPointList[i].id != maxIter->id && mappingPointList[i].overcome == MappingPoint::UNDEFINED) {
-            mappingPointList[i].overcome = MappingPoint::INVALID;
-            changedMappingPointList.append(mappingPointList[i]);
+        MappingPoint& mp = mappingPointList[i];
+        if (mp.id != maxIter->id && (reset || mp.overcome == MappingPoint::UNDEFINED)) {
+            if (mp.overcome != MappingPoint::INVALID) {
+                mp.overcome = MappingPoint::INVALID;
+                changedMappingPointList.append(mp);
+            }
         }
     }
     if (maxIter->overcome != MappingPoint::EFFECTIVE) {
@@ -144,9 +156,10 @@ void MappingReseauChecker::checkMappingPointOvercome(const MappingPoint &mapping
 void MappingReseauChecker::onCheckOvercomTimerEvent() {
     PointValidCheckerState stateChecker(m_profile);
     m_checkOvercomTimer->stop();
+
     for (const MappingPoint& mappingPoint : m_mappingPointsDb->getDatas()) {
         if (mappingPoint.valid && mappingPoint.type == MappingPoint::SAMPLE) {
-            checkMappingPointOvercome(mappingPoint);
+            checkMappingPointOvercome(mappingPoint, true);
         }
     }
 }
@@ -202,6 +215,12 @@ void MappingReseauChecker::onReseauChangedTimerEvent() {
     }
     if (changedMappingPointList.size() > 0) {
         m_mappingPointsDb->update(changedMappingPointList);
+
+        QList<qint64> mappingPointIds;
+        for (const auto& mappingPoint : changedMappingPointList) {
+            mappingPointIds.append(mappingPoint.id);
+        }
+        emit m_mappingPointsDb->validChanged(mappingPointIds);
     }
     if (currentMappingChanged) {
         emit m_profile->currentMappingPointIdChanged();

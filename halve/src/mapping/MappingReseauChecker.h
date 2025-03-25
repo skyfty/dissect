@@ -33,14 +33,15 @@ signals:
 public slots:
     void onReseauChanged(Reseau *reseau);
     void onMappingOptionsThrowChanged();
-    void onMappingOptionsChanged();
     void onReseauChangedTimerEvent();
     void onCheckOvercomTimerEvent();
+    void onRecheckOvercome();
+    void onMappingAdded(qint64 rowId);
 
 private:
     bool checkMappingPoint(MappingPoint &mp);
     bool checkMappingPoint(Reseau *reseau,double dist, MappingPoint &mp);
-    void checkMappingPointOvercome(const MappingPoint &mappingPoint);
+    void checkMappingPointOvercome(const MappingPoint &mappingPoint, bool reset);
     QList<MappingPoint>::iterator getMappingPointCompIterator(QList<MappingPoint> &mappingPointList);
 
 private:

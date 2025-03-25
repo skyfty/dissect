@@ -36,13 +36,12 @@ public:
     Q_INVOKABLE void removeRows(const QList<qint64> &ids);
 
 private slots:
-    void onMappingPointsOvercomeChanged(QList<qint64> ids);
+    void onMappingPointsChanged(const QList<qint64> &ids);
     void onMappingChanged();
     void onTimerEvent();
 protected:
     bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
     bool lessThan(const QModelIndex &left, const QModelIndex &right) const override;
-    void onMappingPointsChanged(qint64 id);
 signals:
     void profileChanged();
     void mappingChanged();

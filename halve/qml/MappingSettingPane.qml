@@ -143,11 +143,6 @@ RowLayout {
             ColumnLayout {
                 anchors.fill: parent
                 CheckBox {
-                    checked: root.mapping.onlyValid
-                    text: qsTr("Show only valid points")
-                    onClicked:  root.mapping.onlyValid = checked
-                }
-                CheckBox {
                     checked: root.mapping.showMappingInvalid
                     text: qsTr("Display invalid test points")
                     onClicked:  root.mapping.showMappingInvalid = checked
