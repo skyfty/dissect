@@ -266,13 +266,16 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
 
     if (m_centerPoint[0] != -1) {
         QList<CatheterTrack>& pantCatheterTrackList = catheterTracks->getTracks(m_pantCatheter);
-
-
+        TrackData cs4,cs8;
+        getCS4AndCS8TrackData(currentTrackDataList, cs4, cs8);
         vtkVector3d position;
-        vtkMath::Subtract(m_centerPoint, m_centerPoint.GetData(), position);
+        cs4.getPosition(position);
         vtkQuaterniond quaternion;
+        cs4.getQuaternion(quaternion);
         pantCatheterTrackList.append(createCatheterTrack(MagnetismPant0Port, Halve::CET_PANT, Halve::TrackStatus_Valid, position, quaternion, Pant0ID));
-        vtkMath::Subtract(m_centerPolemicsPosition, m_centerPoint.GetData(), position);
+
+        cs8.getPosition(position);
+        cs8.getQuaternion(quaternion);
         pantCatheterTrackList.append(createCatheterTrack(MagnetismPant1Port, Halve::CET_PANT, Halve::TrackStatus_Valid, position, quaternion, Pant1ID));
     }
 
@@ -283,11 +286,14 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
 
     emit catheterTrackChanged(catheterTracks);
 }
-bool Combined::getCS4AndCS8TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8) {
+void Combined::getCS4AndCS8TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8) {
     for(const TrackData &trackData : catheterTrackData) {
-        if (trackData.port() == CS4Port) {
+        Catheter* catheter = trackData.catheter();
+        quint16 port = trackData.port();
+        quint16 seatIdx = port - catheter->bseat();
+        if (seatIdx == 3) {
             cs4 = trackData;
-        } else if (trackData.port() == CS8Port) {
+        } else if (seatIdx == 7) {
             cs8 = trackData;
         }
     }

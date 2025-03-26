@@ -59,26 +59,32 @@ int PantCatheterFilter::RequestData(vtkInformation * vtkNotUsed(request), vtkInf
     }
     vtkNew<vtkAppendFilter> appendFilter;
 
-    vtkNew<vtkLineSource> lineSource;
-    lineSource->SetPoint1(input0->GetPoint(0));
-    lineSource->SetPoint2(input0->GetPoint(1));
-    lineSource->Update();
-    vtkSmartPointer<vtkPolyData> polyData = lineSource->GetOutput();
-    vtkIdType numberOfPoints = polyData->GetNumberOfPoints();
-    vtkSmartPointer<vtkUnsignedCharArray> colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
-    colors->SetName(ColorsPointDataName);
-    colors->SetNumberOfComponents(3);
-    for (int j = 0; j < numberOfPoints; ++j) {
-        colors->InsertNextTypedTuple(LineColor.GetData());
+    for(int i = 0; i < input0->GetNumberOfCells(); ++i) {
+        vtkPolyLine *line = dynamic_cast<vtkPolyLine*>(input0->GetCell(i));
+        vtkNew<vtkPoints> points;
+        for(int j = 0; j < line->GetNumberOfPoints(); ++j) {
+            points->InsertNextPoint(input0->GetPoint(line->GetPointIds()->GetId(j)));
+        }
+        vtkNew<vtkLineSource> lineSource;
+        lineSource->SetPoints(input0->GetPoints());
+        lineSource->Update();
+        vtkSmartPointer<vtkPolyData> polyData = lineSource->GetOutput();
+
+        vtkSmartPointer<vtkUnsignedCharArray> colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
+        colors->SetName(ColorsPointDataName);
+        colors->SetNumberOfComponents(3);
+        for (int j = 0; j < polyData->GetNumberOfPoints(); ++j) {
+            colors->InsertNextTypedTuple(LineColor.GetData());
+        }
+        polyData->GetPointData()->SetScalars(colors);
+        appendFilter->AddInputData(polyData);
     }
-    polyData->GetPointData()->SetScalars(colors);
-    appendFilter->AddInputData(polyData);
 
+    if (input0->GetNumberOfPoints() > 0) {
 
-    {
         vtkNew<vtkGlyph3D> glyph3D;
         glyph3D->SetSourceData(ModelCache::instance()->mesh(MeshName::PANT0_ELECTRODE_NODE));
-        glyph3D->SetInputData(polyData);
+        glyph3D->SetInputData(input0);
         glyph3D->SetScaleModeToDataScalingOff();
         glyph3D->SetGeneratePointIds(true);
         glyph3D->Update();

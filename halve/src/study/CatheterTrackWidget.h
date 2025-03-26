@@ -68,6 +68,7 @@ signals:
 private:
     bool getTrackPosition(const CatheterTrack &track, vtkVector3d &position);
     void checkCatheterTrack(Catheter* catheter, const QList<CatheterTrack> &trackDatas);
+    void checkPantCatheterTrack(Catheter* catheter, const QList<CatheterTrack> &trackDatas);
     void refreshCatheterTube(Catheter* catheter, vtkSmartPointer<vtkUnstructuredGrid> grid);
     void checkPant0Position(const QSharedPointer<CatheterTrackPackage> &trackDat);
     vtkUnstructuredGrid* prepareCatheterGrid(Catheter* catheter);

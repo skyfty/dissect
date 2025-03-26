@@ -134,7 +134,7 @@ private:
     void inspectBlendReproduceCatheter(const QSharedPointer<CatheterTrackPackage> &catheterTracks);
 
     quint64 checkEnvironmentFlags(quint64 flags, bool s);
-    bool getCS4AndCS8TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8);
+    void getCS4AndCS8TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8);
 
 signals:
     void profileChanged();

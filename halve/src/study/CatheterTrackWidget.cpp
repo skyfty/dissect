@@ -22,6 +22,8 @@
 #include <utility/ModelCache.h>
 #include <utility/Thread.h>
 
+#include <vtkPointData.h>
+
 using namespace std::placeholders;
 
 CatheterTrackWidget::CatheterTrackWidget(QQuickItem *parent)
@@ -155,6 +157,25 @@ void CatheterTrackWidget::checkCatheterTrack(Catheter* catheter, const QList<Cat
     refreshCatheterTube(catheter, grid);
 }
 
+void CatheterTrackWidget::checkPantCatheterTrack(Catheter* catheter, const QList<CatheterTrack> &trackDatas) {
+    Q_ASSERT(catheter != nullptr);
+    Q_ASSERT(Thread::currentlyOn(Thread::UI));
+
+    vtkVector3d pant0TrackPosition,pant1TrackPosition;
+    getTrackPosition(trackDatas[0], pant0TrackPosition);
+    getTrackPosition(trackDatas[1], pant1TrackPosition);
+
+    vtkUnstructuredGrid* grid = prepareCatheterGrid(catheter);
+    if (m_combined->mode() == Halve::CHANNELMODE_ELECTRICAL) {
+        grid->GetPoints()->SetPoint(0, pant0TrackPosition.GetData());
+        grid->GetPoints()->SetPoint(2, pant1TrackPosition.GetData());
+    } else {
+        grid->GetPoints()->SetPoint(0, pant0TrackPosition.GetData());
+        grid->GetPoints()->SetPoint(1, pant1TrackPosition.GetData());
+    }
+    refreshCatheterTube(catheter, grid);
+}
+
 void CatheterTrackWidget::onCatheterTrackChanged(const QSharedPointer<CatheterTrackPackage> &trackDataPackage) {
     Q_ASSERT(m_profile != nullptr);
     if (m_frameRate->charge() || m_profile->renovating()) {
@@ -166,7 +187,11 @@ void CatheterTrackWidget::onCatheterTrackChanged(const QSharedPointer<CatheterTr
         if (trackDatas.isEmpty()) {
             continue;
         }
-        checkCatheterTrack(catheter, trackDatas);
+        if (catheter->isPant()) {
+            checkPantCatheterTrack(catheter, trackDatas);
+        } else {
+            checkCatheterTrack(catheter, trackDatas);
+        }
     }
     for(Catheter* catheter: m_catheterDb->getEmployDatas()) {
         catheter->setValid(catheters.indexOf(catheter) != -1);
