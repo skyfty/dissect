@@ -14,6 +14,9 @@ class TrackData
 {
 public:
     typedef QList<TrackData> List;
+    enum {
+        ELECTRICAL_IMPEDANCE = 0x01
+    };
 
 public:
     TrackData() = default;

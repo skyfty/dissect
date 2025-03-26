@@ -8,16 +8,36 @@
 #include <vtkMath.h>
 #include "combined/BlendMagnetism.h"
 #include "combined/BlendDint.h"
+#include "Electric_field_define.h"
+#include "Electric_field_mapping_algorithm.h"
+#include "profile/Profile.h"
 
-QList<TrackData> Combined::convertTrackData(const ChannelTrackData &dataBuffer) {
+QList<TrackData> Combined::convertTrackData(const ChannelTrackData &dataInput) {
     QList<TrackData> trackDataList;
+    const int delay = 1;  // 电落后磁1个周期
+    m_inputBuffer.push_back(dataInput);
+    if (m_inputBuffer.size() > delay + 1)
+        m_inputBuffer.pop_front();
+    if (m_inputBuffer.size() < delay + 1)
+        return trackDataList;
+    const auto& d1 = m_inputBuffer.front();
+    const auto& d2 = m_inputBuffer.back();
+
+    // 重新拼接数据
+    ChannelTrackData dataBuffer;
+    dataBuffer.m_id = d2.m_id;
+    dataBuffer.m_time = d2.m_time;
+    std::memcpy(dataBuffer.m, d2.m, sizeof(d2.m));
+    std::memcpy(dataBuffer.n, d1.n, sizeof(d1.n));
+
+
     switch(m_channel->mode()) {
-    case Halve::CHANNELMODE_MAGNETIC: {
-        trackDataList = convertMagneticTrackData(dataBuffer);
-        break;
-    }
     case Halve::CHANNELMODE_ELECTRICAL: {
         trackDataList = convertElectricalTrackData(dataBuffer);
+        break;
+    }
+    case Halve::CHANNELMODE_MAGNETIC: {
+        trackDataList = convertMagneticTrackData(dataBuffer);
         break;
     }
     case Halve::CHANNELMODE_BLEND: {
@@ -54,14 +74,33 @@ QList<TrackData> Combined::convertMagneticTrackData(const ChannelTrackData &data
 }
 
 QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &dataBuffer) {
+    std::vector<ChannelTrackM> mdata(dataBuffer.m, dataBuffer.m + ElectricalPortAmount);
+    float position_zero_out[2]{};
+    int breath_gate_sync;
+    float blood_pool_impedance;
+    QScopedPointer<Electric_field_mapping_algorithm> algorithm(new Electric_field_mapping_algorithm());
+    algorithm->Electric_field_mapping_algorithm_all(
+        m_profile->state() == Profile::Reproduce?OPERATION_STATE::MODELING:OPERATION_STATE::MAPPING,
+        28,
+        4,
+        0,
+        10,
+        DEBUG_STATE2_MAPPING::GATING,
+        const_cast<float*>(dataBuffer.m[0].pos.GetData()),
+        &breath_gate_sync,
+        reinterpret_cast<float*>(mdata[0].pos.GetData()),
+        &blood_pool_impedance,
+        position_zero_out);
+
     QList<TrackData> trackDataList;
     for (quint16 seat = 0; seat < ElectricalPortAmount; seat++) {
         Catheter *catheter = m_catheterDb->getDataAtSeat(seat);
         if (catheter == nullptr) {
             continue;
         }
-        const ChannelTrackM &m = dataBuffer.m[seat];
+        const ChannelTrackM &m = mdata[seat];
         TrackData trackData(catheter, seat);
+        trackData.setFlags(breath_gate_sync == 0 ? TrackData::ELECTRICAL_IMPEDANCE : 0);
         trackData.setStatus(m.valid()?Halve::TrackStatus_Valid:Halve::TrackStatus_Invalid);
         vtkVector3<float> mpos = m.reversal();
         mpos[0] /= m_coefficient[0];

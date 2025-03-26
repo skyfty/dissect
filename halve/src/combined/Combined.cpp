@@ -247,7 +247,7 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
         vtkVector3d position;
         trackData.getPosition(position);
         quint16 seatIdx = port - catheter->bseat();
-        if (trackData.catheter()->getType() == CSCatheterType && seatIdx == 0) {
+        if (trackData.catheter()->getType() == CSCatheterType && seatIdx == 5) {
             m_centerPolemicsPosition = position;
             if (m_centerPoint[0] == -1) {
                 m_centerPoint = m_centerPolemicsPosition;                
@@ -266,6 +266,8 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
 
     if (m_centerPoint[0] != -1) {
         QList<CatheterTrack>& pantCatheterTrackList = catheterTracks->getTracks(m_pantCatheter);
+
+
         vtkVector3d position;
         vtkMath::Subtract(m_centerPoint, m_centerPoint.GetData(), position);
         vtkQuaterniond quaternion;
@@ -280,6 +282,15 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
     inspectReproduceCatheter(catheterTracks);
 
     emit catheterTrackChanged(catheterTracks);
+}
+bool Combined::getCS4AndCS8TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8) {
+    for(const TrackData &trackData : catheterTrackData) {
+        if (trackData.port() == CS4Port) {
+            cs4 = trackData;
+        } else if (trackData.port() == CS8Port) {
+            cs8 = trackData;
+        }
+    }
 }
 
 bool Combined::getPant0TrackData(const TrackData::List &catheterTrackData, vtkVector3d &pant10Position, vtkQuaterniond &pant10Quaternion) {
@@ -554,23 +565,7 @@ void Combined::setMagnetismTrainRate(qint32 newMagnetismTrainRate)
 }
 
 void Combined::onChannelTrackData(const ChannelTrackData &dataInput) {
-    const int delay = 1;  // 电落后磁1个周期
-    m_inputBuffer.push_back(dataInput);
-    if (m_inputBuffer.size() > delay + 1)
-        m_inputBuffer.pop_front();
-    if (m_inputBuffer.size() < delay + 1)
-        return;
-    const auto& d1 = m_inputBuffer.front();
-    const auto& d2 = m_inputBuffer.back();
-
-    // 重新拼接数据
-    ChannelTrackData dataBuffer;
-    dataBuffer.m_id = d2.m_id;
-    dataBuffer.m_time = d2.m_time;
-    std::memcpy(dataBuffer.m, d2.m, sizeof(d2.m));
-    std::memcpy(dataBuffer.n, d1.n, sizeof(d1.n));
-
-    m_currentTrackDataList = convertTrackData(dataBuffer);
+    m_currentTrackDataList = convertTrackData(dataInput);
     switch(m_channel->mode()) {
     case Halve::CHANNELMODE_MAGNETIC: {
         abruptionTrackData(m_currentTrackDataList);
