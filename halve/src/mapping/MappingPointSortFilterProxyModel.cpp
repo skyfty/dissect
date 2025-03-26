@@ -47,11 +47,14 @@ bool MappingPointSortFilterProxyModel::filterAcceptsRow(int sourceRow, const QMo
     QModelIndex index0 = tableModel->index(sourceRow, 0, sourceParent);
     auto mappingPoint = tableModel->getData(index0.row());
     if (mappingPoint) {
-        if (!m_mapping->showMappingInvalid() && !mappingPoint->valid) {
-            return false;
-        }
-        if (!m_mapping->showRepeatInvalid() && mappingPoint->overcome != MappingPoint::EFFECTIVE) {
-            return false;
+        if (!mappingPoint->valid) {
+            if (!m_mapping->showMappingInvalid()) {
+                return false;
+            }
+        } else if (mappingPoint->overcome != MappingPoint::EFFECTIVE) {
+            if (!m_mapping->showRepeatInvalid()) {
+                return false;
+            }
         }
     }
     return true;

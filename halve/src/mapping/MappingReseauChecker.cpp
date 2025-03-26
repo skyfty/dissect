@@ -107,7 +107,7 @@ void MappingReseauChecker::onReseauChanged(Reseau* reseau) {
 QList<MappingPoint>::iterator MappingReseauChecker::getMappingPointCompIterator(QList<MappingPoint> &mappingPointList) {
     MappingPointComp comp(mappingPointList);
     if (m_mappingSetting->useDuplicatePoints() == Halve::Last) {
-        return comp([](const auto& l, const auto& r) { return l.time < r.time; });
+        return comp([](const auto& l, const auto& r) { return l.time > r.time; });
     } else {
         switch (m_profile->mappingType()) {
         case Halve::Voltage: {
