@@ -23,6 +23,8 @@ class BlendDint;
 class CatheterTrackPackage;
 class vtkUnstructuredGrid;
 class ReproduceOptions;
+class Electric_field_mapping_algorithm;
+//class Electric_field_mapping_algorithm;
 
 class Combined : public QObject
 {
@@ -155,6 +157,7 @@ signals:
     void coefficientChanged();
 
     void trainingChanged();
+    void modeChanged();
 
 public slots:
     void onChannelTrackData(const ChannelTrackData &datas);
@@ -188,6 +191,7 @@ private:
 
     QList<QPair<Catheter*, QSharedPointer<BlendMagnetism>>> m_blendsMagnetism;
     QList<QPair<Catheter*, QSharedPointer<BlendDint>>> m_blendsDint;
+    Electric_field_mapping_algorithm *m_electric_field_mapping_algorithm = nullptr;
 
     QList<ChannelTrackData> m_inputBuffer;
     ys::DynamicNearestNeighbor m_dnn;

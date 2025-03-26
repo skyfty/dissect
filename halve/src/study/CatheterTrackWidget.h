@@ -55,6 +55,7 @@ public slots:
     void onCatheterEmployChanged(Catheter *catheter);
     void onCatheterAlined(Catheter *catheter);
     void onCarpenterResult(Catheter *catheter, UnstructuredGridWarp::Ptr polyData);
+    void onCenterPointChanged();
 
 
 signals:
@@ -82,6 +83,7 @@ private:
     QPointer<FrameRate> m_frameRate;
     QPointer<CatheterTrackWorker> m_worker;
     quint64 m_rate = 8;
+    bool m_pantElectricalNeedInit = true;
 
     vtkBoundingBox m_pant0BoundingBox{0,-1,0,-1,0,-1};
     double m_consultPrecision = 5.0;

@@ -352,6 +352,9 @@ void Stage::resetRender() {
 void Stage::setCombined(Combined *combined) {
     Q_ASSERT(combined != nullptr);
     m_combined = combined;
+    QObject::connect(m_combined, &Combined::modeChanged, this, [this] {
+        resetOptions();
+    });
 }
 
 Halve::WoundMode Stage::woundMode() const

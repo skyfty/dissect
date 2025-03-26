@@ -18,6 +18,10 @@
 #include <utility/ModelCache.h>
 #include <vtkCubeSource.h>
 #include <vtkGlyph3D.h>
+#include <vtkTubeFilter.h>
+#include <vtkUnstructuredGrid.h>
+#include <vtkPointData.h>
+#include <vtkPolyData.h>
 #include <vtkLineSource.h>
 
 vtkStandardNewMacro(PantCatheterFilter);
@@ -43,6 +47,19 @@ int PantCatheterFilter::FillInputPortInformation(int port, vtkInformation * info
     return 1;
 }
 
+vtkSmartPointer<vtkPolyData> PantCatheterFilter::makeTube(vtkPoints* points) {
+    vtkNew<vtkParametricSpline> spline;
+    spline->SetPoints(points);
+    vtkNew<vtkParametricFunctionSource> functionSource;
+    functionSource->SetParametricFunction(spline);
+    vtkNew<vtkTubeFilter> tubeFilter;
+    tubeFilter->SetInputConnection(functionSource->GetOutputPort());
+    tubeFilter->SetRadius(PantCatheterTubeRadius);
+    tubeFilter->SetNumberOfSides(3);
+    tubeFilter->CappingOn();
+    tubeFilter->Update();
+    return tubeFilter->GetOutput();
+}
 
 //------------------------------------------------------------------------------
 int PantCatheterFilter::RequestData(vtkInformation * vtkNotUsed(request), vtkInformationVector * *inputVector, vtkInformationVector * outputVector)
@@ -59,29 +76,28 @@ int PantCatheterFilter::RequestData(vtkInformation * vtkNotUsed(request), vtkInf
     }
     vtkNew<vtkAppendFilter> appendFilter;
 
+    vtkNew<vtkAppendFilter> lineAppendFilter;
     for(int i = 0; i < input0->GetNumberOfCells(); ++i) {
         vtkPolyLine *line = dynamic_cast<vtkPolyLine*>(input0->GetCell(i));
-        vtkNew<vtkPoints> points;
-        for(int j = 0; j < line->GetNumberOfPoints(); ++j) {
+        for(int j = 0; j < line->GetNumberOfPoints() - 1; ++j) {
+            vtkNew<vtkPoints> points;
             points->InsertNextPoint(input0->GetPoint(line->GetPointIds()->GetId(j)));
+            points->InsertNextPoint(input0->GetPoint(line->GetPointIds()->GetId(j + 1)));
+            lineAppendFilter->AddInputData(makeTube(points));
         }
-        vtkNew<vtkLineSource> lineSource;
-        lineSource->SetPoints(input0->GetPoints());
-        lineSource->Update();
-        vtkSmartPointer<vtkPolyData> polyData = lineSource->GetOutput();
-
-        vtkSmartPointer<vtkUnsignedCharArray> colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
-        colors->SetName(ColorsPointDataName);
-        colors->SetNumberOfComponents(3);
-        for (int j = 0; j < polyData->GetNumberOfPoints(); ++j) {
-            colors->InsertNextTypedTuple(LineColor.GetData());
-        }
-        polyData->GetPointData()->SetScalars(colors);
-        appendFilter->AddInputData(polyData);
     }
+    lineAppendFilter->Update();
+    vtkSmartPointer<vtkUnstructuredGrid> linePolyData = lineAppendFilter->GetOutput();
+    vtkSmartPointer<vtkUnsignedCharArray> colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
+    colors->SetName(ColorsPointDataName);
+    colors->SetNumberOfComponents(3);
+    for (int j = 0; j < linePolyData->GetNumberOfPoints(); ++j) {
+        colors->InsertNextTypedTuple(LineColor.GetData());
+    }
+    linePolyData->GetPointData()->SetScalars(colors);
+    appendFilter->AddInputData(linePolyData);
 
     if (input0->GetNumberOfPoints() > 0) {
-
         vtkNew<vtkGlyph3D> glyph3D;
         glyph3D->SetSourceData(ModelCache::instance()->mesh(MeshName::PANT0_ELECTRODE_NODE));
         glyph3D->SetInputData(input0);

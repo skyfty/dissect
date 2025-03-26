@@ -51,6 +51,7 @@ void CatheterTrackWidget::setProfile(Profile* profile) {
         return;
     }
     m_profile = profile;
+    QObject::connect(m_profile, &Profile::centerPointChanged, this, &CatheterTrackWidget::onCenterPointChanged);
     QObject::connect(m_worker, &CatheterTrackWorker::carpenterResult, m_profile, std::bind(&CatheterTrackWidget::onCarpenterResult, this, _1, _2));
     m_worker->init();
 
@@ -157,6 +158,10 @@ void CatheterTrackWidget::checkCatheterTrack(Catheter* catheter, const QList<Cat
     refreshCatheterTube(catheter, grid);
 }
 
+void CatheterTrackWidget::onCenterPointChanged() {
+    m_pantElectricalNeedInit = true;
+}
+
 void CatheterTrackWidget::checkPantCatheterTrack(Catheter* catheter, const QList<CatheterTrack> &trackDatas) {
     Q_ASSERT(catheter != nullptr);
     Q_ASSERT(Thread::currentlyOn(Thread::UI));
@@ -167,8 +172,16 @@ void CatheterTrackWidget::checkPantCatheterTrack(Catheter* catheter, const QList
 
     vtkUnstructuredGrid* grid = prepareCatheterGrid(catheter);
     if (m_combined->mode() == Halve::CHANNELMODE_ELECTRICAL) {
-        grid->GetPoints()->SetPoint(0, pant0TrackPosition.GetData());
-        grid->GetPoints()->SetPoint(2, pant1TrackPosition.GetData());
+        static const double pantOriginPosition[] = { 0, 0, 0 };
+        if (m_pantElectricalNeedInit) {
+            grid->GetPoints()->SetPoint(0, pant0TrackPosition.GetData());
+            grid->GetPoints()->SetPoint(1, pantOriginPosition);
+            grid->GetPoints()->SetPoint(2, pant1TrackPosition.GetData());
+            m_pantElectricalNeedInit = false;
+        }
+        grid->GetPoints()->SetPoint(3, pant0TrackPosition.GetData());
+        grid->GetPoints()->SetPoint(4, pantOriginPosition);
+        grid->GetPoints()->SetPoint(5, pant1TrackPosition.GetData());
     } else {
         grid->GetPoints()->SetPoint(0, pant0TrackPosition.GetData());
         grid->GetPoints()->SetPoint(1, pant1TrackPosition.GetData());

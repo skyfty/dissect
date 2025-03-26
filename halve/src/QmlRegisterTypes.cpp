@@ -159,6 +159,7 @@ double DefaultViewAngle = 14.0;
 
 double ElectrodeNodeRadius = 0.5;
 double CatheterTubeRadius = 0.2;
+double PantCatheterTubeRadius = 0.5;
 quint32 DefaultCoefficient = 100;
 
 

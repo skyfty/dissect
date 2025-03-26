@@ -2,16 +2,16 @@
 #include "catheter/Catheter.h"
 #include "combined/TrackData.h"
 
+#include "profile/Profile.h"
 #include <channel/Channel.h>
 #include "catheter/CatheterDb.h"
-#include "Combined.h"
 #include <vtkMath.h>
 #include "combined/BlendMagnetism.h"
 #include "combined/BlendDint.h"
 #include "Electric_field_define.h"
 #include "Electric_field_mapping_algorithm.h"
-#include "profile/Profile.h"
 
+#include "Combined.h"
 QList<TrackData> Combined::convertTrackData(const ChannelTrackData &dataInput) {
     QList<TrackData> trackDataList;
     const int delay = 1;  // 电落后磁1个周期
@@ -76,11 +76,13 @@ QList<TrackData> Combined::convertMagneticTrackData(const ChannelTrackData &data
 QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &dataBuffer) {
     std::vector<ChannelTrackM> mdata(dataBuffer.m, dataBuffer.m + ElectricalPortAmount);
     float position_zero_out[2]{};
-    int breath_gate_sync;
+    int breath_gate_sync = 1;
     float blood_pool_impedance;
-    QScopedPointer<Electric_field_mapping_algorithm> algorithm(new Electric_field_mapping_algorithm());
-    algorithm->Electric_field_mapping_algorithm_all(
-        m_profile->state() == Profile::Reproduce?OPERATION_STATE::MODELING:OPERATION_STATE::MAPPING,
+    if (m_electric_field_mapping_algorithm == nullptr) {
+        m_electric_field_mapping_algorithm = new Electric_field_mapping_algorithm();
+    }
+    m_electric_field_mapping_algorithm->Electric_field_mapping_algorithm_all(
+        m_profile->state() == Profile::Reproduce ? OPERATION_STATE::MODELING : OPERATION_STATE::MAPPING,
         28,
         4,
         0,

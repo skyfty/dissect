@@ -29,6 +29,7 @@ Combined::Combined(QObject *parent)
 }
 
 Combined::~Combined() {
+    delete m_electric_field_mapping_algorithm;
 }
 
 void Combined::setProfile(Profile* profile) {
@@ -86,6 +87,8 @@ void Combined::setChannel(Channel *newChannel)
     m_channel = newChannel;
     QObject::connect(m_channel, &Channel::trackData, this, &Combined::onChannelTrackData);
     QObject::connect(m_channel, &Channel::stateChanged, this, &Combined::stateChanged);
+    QObject::connect(m_channel, &Channel::modeChanged, this, &Combined::modeChanged);
+
     emit channelChanged();
 }
 
@@ -236,10 +239,13 @@ double  Combined::squaredDistance() {
 void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
     QSharedPointer<CatheterTrackPackage> catheterTracks(new CatheterTrackPackage());
     for(const TrackData &trackData:currentTrackDataList) {
-        Halve::TrackStatus status = trackData.getStatus();
         Catheter* catheter = trackData.catheter();
-        if (status != Halve::TrackStatus_Valid || !catheter->employ()) {
+        if (!catheter->employ()) {
             continue;
+        }
+        Halve::TrackStatus status = trackData.getStatus();
+        if (trackData.getFlags() & TrackData::ELECTRICAL_IMPEDANCE) {
+            status = Halve::TrackStatus_Missing;
         }
         QList<CatheterTrack> &catheterTrackList = catheterTracks->getTracks(catheter);
 
@@ -250,12 +256,12 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
         if (trackData.catheter()->getType() == CSCatheterType && seatIdx == 5) {
             m_centerPolemicsPosition = position;
             if (m_centerPoint[0] == -1) {
-                m_centerPoint = m_centerPolemicsPosition;                
+                m_centerPoint = m_centerPolemicsPosition;
                 emit centerPointChanged();
                 return;
             }
         }
-        vtkMath::Add(position, m_electricCenterShifting, position);
+        //vtkMath::Add(position, m_electricCenterShifting, position);
         vtkQuaterniond quaternion;
         trackData.getQuaternion(quaternion);
         Halve::CatheterElectrodeType type = catheter->catheterMould()->getType(seatIdx);
@@ -270,11 +276,12 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
         getCS4AndCS8TrackData(currentTrackDataList, cs4, cs8);
         vtkVector3d position;
         cs4.getPosition(position);
+        //vtkMath::Add(position, m_electricCenterShifting, position);
         vtkQuaterniond quaternion;
         cs4.getQuaternion(quaternion);
         pantCatheterTrackList.append(createCatheterTrack(MagnetismPant0Port, Halve::CET_PANT, Halve::TrackStatus_Valid, position, quaternion, Pant0ID));
-
         cs8.getPosition(position);
+        //vtkMath::Add(position, m_electricCenterShifting, position);
         cs8.getQuaternion(quaternion);
         pantCatheterTrackList.append(createCatheterTrack(MagnetismPant1Port, Halve::CET_PANT, Halve::TrackStatus_Valid, position, quaternion, Pant1ID));
     }
@@ -289,6 +296,9 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
 void Combined::getCS4AndCS8TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8) {
     for(const TrackData &trackData : catheterTrackData) {
         Catheter* catheter = trackData.catheter();
+        if (!catheter->employ() || catheter->getType() != CSCatheterType) {
+            continue;
+        }
         quint16 port = trackData.port();
         quint16 seatIdx = port - catheter->bseat();
         if (seatIdx == 3) {

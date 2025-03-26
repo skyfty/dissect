@@ -191,6 +191,7 @@ extern double DefaultViewAngle;
 extern quint32 DefaultCoefficient;
 extern double ElectrodeNodeRadius;
 extern double CatheterTubeRadius;
+extern double PantCatheterTubeRadius;
 
 extern std::string MainBodyMeshColorName;
 
