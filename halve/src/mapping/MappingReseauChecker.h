@@ -36,12 +36,11 @@ public slots:
     void onReseauChangedTimerEvent();
     void onCheckOvercomTimerEvent();
     void onRecheckOvercome();
-    void onMappingAdded(qint64 rowId);
 
 private:
     bool checkMappingPoint(MappingPoint &mp);
     bool checkMappingPoint(Reseau *reseau,double dist, MappingPoint &mp);
-    void checkMappingPointOvercome(const MappingPoint &mappingPoint, bool reset);
+    void checkMappingPointOvercome(const MappingPoint &mappingPoint);
     QList<MappingPoint>::iterator getMappingPointCompIterator(QList<MappingPoint> &mappingPointList);
 
 private:
