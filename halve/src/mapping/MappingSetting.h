@@ -41,9 +41,9 @@ signals:
 private:
     double m_insideThrow = 7.0;
     double m_outsideThrow = 7.0;
-    double m_gap =7.0;
+    double m_gap =1.0;
     Halve::UseDuplicatePoints m_useDuplicatePoints = Halve::Last;
-    double m_duplicateRadius = 7.0;
+    double m_duplicateRadius = 1.0;
 
 
 };
