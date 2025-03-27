@@ -25,13 +25,20 @@ private:
 	double num_with_breathe[5];
 	double den_with_breathe[5];
 	IIR_Filter* IIR_Filter_list_with_breathe[49][3];
+	double num_with_breathe2[5];
+	double den_with_breathe2[5];
+	IIR_Filter* IIR_Filter_list_with_breathe2[49][3];
 	double num_without_breathe[5];
 	double den_without_breathe[5];
 	IIR_Filter* IIR_Filter_list_without_breathe[49][3];
 	double electric_field_positon_48_in_tmp[49][3] = { 0 };
 	double electric_field_positon_48_out_tmp_with_breathe[49][3] = { 0 };
+	double electric_field_positon_48_out_tmp_with_breathe2[49][3] = { 0 };
 	double electric_field_positon_48_out_tmp_without_breathe[49][3] = { 0 };
 	float electric_field_positon_48_out_tmp[49][3] = { 0 };
+	int freq_div = 0;
+	float blood_pool_impedance_tmp = 0;
+
 };
 
 #endif	///_Electric_field_mapping_algorithm_H_

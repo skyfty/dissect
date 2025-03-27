@@ -5,16 +5,29 @@
 
 Electric_field_mapping_algorithm::Electric_field_mapping_algorithm()
 {
-	num_with_breathe[0] = 4.37268879782e-06;
-	num_with_breathe[1] = 1.749075519128e-05;
-	num_with_breathe[2] = 2.623613278692e-05;
-	num_with_breathe[3] = 1.749075519128e-05;
-	num_with_breathe[4] = 4.37268879782e-06;
+	//0.6
+	num_with_breathe2[0] = 4.37268879782e-06;
+	num_with_breathe2[1] = 1.749075519128e-05;
+	num_with_breathe2[2] = 2.623613278692e-05;
+	num_with_breathe2[3] = 1.749075519128e-05;
+	num_with_breathe2[4] = 4.37268879782e-06;
+	den_with_breathe2[0] = 1;
+	den_with_breathe2[1] = -3.753762756671;
+	den_with_breathe2[2] = 5.291152584163;
+	den_with_breathe2[3] = -3.318938604751;
+	den_with_breathe2[4] = 0.781618740279;
+		
+	//0.5
+	num_with_breathe[0] = 2.150568737288e-06;
+	num_with_breathe[1] = 8.602274949152e-06;
+	num_with_breathe[2] = 1.290341242373e-05;
+	num_with_breathe[3] = 8.602274949152e-06;
+	num_with_breathe[4] = 2.150568737288e-06;
 	den_with_breathe[0] = 1;
-	den_with_breathe[1] = -3.753762756671;
-	den_with_breathe[2] = 5.291152584163;
-	den_with_breathe[3] = -3.318938604751;
-	den_with_breathe[4] = 0.781618740279;
+	den_with_breathe[1] = -3.794791103079;
+	den_with_breathe[2] = 5.405166861726;
+	den_with_breathe[3] = -3.424747347274;
+	den_with_breathe[4] = 0.8144059977273;
 
 	num_without_breathe[0] = 1.533245520602e-09; 
 	num_without_breathe[1] = 6.132982082408e-09; 
@@ -33,6 +46,7 @@ Electric_field_mapping_algorithm::Electric_field_mapping_algorithm()
 		for (int j = 0; j < 3; j++)
 		{
 			IIR_Filter_list_with_breathe[i][j] = new IIR_Filter(num_with_breathe, den_with_breathe);
+			IIR_Filter_list_with_breathe2[i][j] = new IIR_Filter(num_with_breathe2, den_with_breathe2);
 			IIR_Filter_list_without_breathe[i][j] = new IIR_Filter(num_without_breathe, den_without_breathe);
 		}
 	}
@@ -55,6 +69,11 @@ void Electric_field_mapping_algorithm::Electric_field_mapping_algorithm_all
 	float*  test									//测试使用
 )
 {
+	freq_div++;
+	if ((20 <= freq_div)|| (0 > freq_div))
+	{
+		freq_div = 0;
+	}
 	int zeropoint = reference_start + 5;
 
 	//导管位置处理
@@ -64,8 +83,17 @@ void Electric_field_mapping_algorithm::Electric_field_mapping_algorithm_all
 		{
 			electric_field_positon_48_in_tmp[i][j] = electric_field_positon_48_in[i * 3 + j] - electric_field_positon_48_in[zeropoint * 3 + j];
 			electric_field_positon_48_out_tmp_with_breathe[i][j] = IIR_Filter_list_with_breathe[i][j]->filter(electric_field_positon_48_in_tmp[i][j]);
+			electric_field_positon_48_out_tmp_with_breathe2[i][j] = IIR_Filter_list_with_breathe2[i][j]->filter(electric_field_positon_48_in_tmp[i][j]);
 			//electric_field_positon_48_out_tmp_without_breathe[i][j] = IIR_Filter_list_without_breathe[i][j]->filter(electric_field_positon_48_in_tmp[i][j]);
-			electric_field_positon_48_out_tmp[i][j] = (float)(electric_field_positon_48_out_tmp_with_breathe)[i][j];
+			if (RESPIRATORY_MODE::ADAPTIVE == respiratory_mode)
+			{
+				electric_field_positon_48_out_tmp[i][j] = (float)(electric_field_positon_48_out_tmp_with_breathe2)[i][j];
+
+			}
+			else
+			{
+				electric_field_positon_48_out_tmp[i][j] = (float)(electric_field_positon_48_out_tmp_with_breathe)[i][j];
+			}
 		}
 	}
 	//十级位置处理
@@ -99,11 +127,20 @@ void Electric_field_mapping_algorithm::Electric_field_mapping_algorithm_all
 		*breath_gate_sync = 1;
 	}
 	//血池阻抗
-	double blood_pool_impedance_square = pow(electric_field_positon_48_out_tmp_with_breathe[catheter_start][0] - electric_field_positon_48_out_tmp_with_breathe[catheter_start + 1][0], 2)
-		+ pow(electric_field_positon_48_out_tmp_with_breathe[catheter_start][1] - electric_field_positon_48_out_tmp_with_breathe[catheter_start + 1][1], 2)
-		+ pow(electric_field_positon_48_out_tmp_with_breathe[catheter_start][2] - electric_field_positon_48_out_tmp_with_breathe[catheter_start + 1][2], 2)
+	double blood_pool_impedance_square = pow(electric_field_positon_48_out_tmp[catheter_start][0] - electric_field_positon_48_out_tmp[catheter_start + 1][0], 2)
+		+ pow(electric_field_positon_48_out_tmp[catheter_start][1] - electric_field_positon_48_out_tmp[catheter_start + 1][1], 2)
+		+ pow(electric_field_positon_48_out_tmp[catheter_start][2] - electric_field_positon_48_out_tmp[catheter_start + 1][2], 2)
 		;
-	*blood_pool_impedance = (float)(sqrt(blood_pool_impedance_square));
+	if (1==freq_div)
+	{
+		blood_pool_impedance_tmp = (float)(sqrt(blood_pool_impedance_square));
+		*blood_pool_impedance = blood_pool_impedance_tmp;
+	}
+	else
+	{
+		*blood_pool_impedance = blood_pool_impedance_tmp;
+	}
+	
 	test[0] = (float)zeropoint_with_breathe;
 	test[1] = (float)zeropoint_without_breathe;
 
