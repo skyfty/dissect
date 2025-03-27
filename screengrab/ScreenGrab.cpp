@@ -9,7 +9,8 @@ bool ScreenGrab::waitForFinish(const char *filepath, const char* eventName) {
     }
     HANDLE waitEvent = OpenEventA(EVENT_ALL_ACCESS, false, eventName);
 
-    auto pDllRegisterServer = (HRESULT(WINAPI *)())GetProcAddress(LoadLibrary("scr.dll"), "DllRegisterServer");
+    auto scrModeal = LoadLibrary("screen-capture-recorder.dll");
+    auto pDllRegisterServer = (HRESULT(WINAPI *)())GetProcAddress(scrModeal, "DllRegisterServer");
     if (pDllRegisterServer == NULL) {
         return false;
     }
