@@ -12,5 +12,4 @@ private:
     double Yin_Reg[4] = { 0 };
 };
 
-
 #endif	///_IIR_Filter_H_

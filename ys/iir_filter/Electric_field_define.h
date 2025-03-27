@@ -10,9 +10,9 @@ enum OPERATION_STATE {
 };
 
 //标测使用的数据处理类型
-enum DEBUG_STATE2_MAPPING {
+enum RESPIRATORY_MODE {
     GATING,      // 门控      0
-    FILTERING    // 滤波      1
+    ADAPTIVE     // 滤波      1
 };
 
 

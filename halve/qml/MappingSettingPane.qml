@@ -38,7 +38,7 @@ RowLayout {
                              Layout.preferredHeight: 25
                              value: root.mappingSetting.duplicateRadius
                              from: 1.00
-                             to: 40.00
+                             to: 10.00
                              stepSize: 1.0
                              onValueModified: {
                                  root.mappingSetting.duplicateRadius = value
@@ -73,7 +73,7 @@ RowLayout {
                      from: 0.00
                      stepSize: 1.00
                      value: root.mappingSetting.gap
-                     to: 40.00
+                     to: 10.00
                      onValueModified: {
                          root.mappingSetting.gap = value
                      }

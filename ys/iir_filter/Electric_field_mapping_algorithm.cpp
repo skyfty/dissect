@@ -45,14 +45,14 @@ void Electric_field_mapping_algorithm::Electric_field_mapping_algorithm_all
 	int		catheter_count,							//建模导管使用个数
 	int		reference_start,						//参考导管开始序号
 	int		reference_count,						//参考导管使用个数
-	//int		debug_state1_model,						//debug使用，建模的两种状态	0:无任何处理;	1:呼吸门控;				(默认置1)
-	int		debug_state2_mapping,					//debug使用，标测的两种状态	0:呼吸门控;	1:滤波;							(默认置0)
+	//int		debug_state1_model,						//debug使用，建模的两种状态	0:无任何处理;	1:呼吸门控;		(默认置1)
+	int		respiratory_mode,						//呼吸处理模式	0:呼吸门控;	1:呼吸补偿;							(默认置0)
 	float*	electric_field_positon_48_in,			//48路电场位置信号输入
 	int*	breath_gate_sync,						//呼吸门控状态控制	0：表示无效	1：表示数据有效
 	float*	electric_field_positon_48_out,			//48路电场位置信号处理完之后输出
 	float*  blood_pool_impedance,					//血池阻抗
 	float*  test									//测试使用
-	)
+)
 {
 	int zeropoint = reference_start + 5;
 
@@ -63,7 +63,7 @@ void Electric_field_mapping_algorithm::Electric_field_mapping_algorithm_all
 		{
 			electric_field_positon_48_in_tmp[i][j] = electric_field_positon_48_in[i * 3 + j] - electric_field_positon_48_in[zeropoint * 3 + j];
 			electric_field_positon_48_out_tmp_with_breathe[i][j] = IIR_Filter_list_with_breathe[i][j]->filter(electric_field_positon_48_in_tmp[i][j]);
-			electric_field_positon_48_out_tmp_without_breathe[i][j] = IIR_Filter_list_without_breathe[i][j]->filter(electric_field_positon_48_in_tmp[i][j]);
+			//electric_field_positon_48_out_tmp_without_breathe[i][j] = IIR_Filter_list_without_breathe[i][j]->filter(electric_field_positon_48_in_tmp[i][j]);
 			electric_field_positon_48_out_tmp[i][j] = (float)(electric_field_positon_48_out_tmp_with_breathe)[i][j];
 		}
 	}
@@ -90,24 +90,30 @@ void Electric_field_mapping_algorithm::Electric_field_mapping_algorithm_all
 	double zeropoint_without_breathe = sqrt(zeropoint_without_breathe_square);
 	//门控信号
 	*breath_gate_sync = zeropoint_without_breathe > zeropoint_with_breathe;
-	*blood_pool_impedance = 1;
-	test[0] = zeropoint_with_breathe;
-	test[1] = zeropoint_without_breathe;
-	//建模导管操作
-	if (2 == operation_state)	//2:标测
-	{
-		if (1 == debug_state2_mapping)	//1:滤波
-		{
-			//复制没有有呼吸的导管位置
-			for (int i = catheter_start; i < catheter_start + catheter_count; i++)
-			{
-				for (int j = 0; j < 3; j++)
-				{
-					electric_field_positon_48_out_tmp[i][j] = (float)(electric_field_positon_48_out_tmp_without_breathe)[i][j];
-				}
-			}
-		}
-	}
+	//血池阻抗
+	double blood_pool_impedance_square = pow(electric_field_positon_48_out_tmp_with_breathe[catheter_start][0] - electric_field_positon_48_out_tmp_with_breathe[catheter_start + 1][0], 2)
+		+ pow(electric_field_positon_48_out_tmp_with_breathe[catheter_start][1] - electric_field_positon_48_out_tmp_with_breathe[catheter_start + 1][1], 2)
+		+ pow(electric_field_positon_48_out_tmp_with_breathe[catheter_start][2] - electric_field_positon_48_out_tmp_with_breathe[catheter_start + 1][2], 2)
+		;
+	*blood_pool_impedance = (float)(sqrt(blood_pool_impedance_square));
+	test[0] = (float)zeropoint_with_breathe;
+	test[1] = (float)zeropoint_without_breathe;
+
+	////建模导管操作
+	//if (2 == operation_state)	//2:标测
+	//{
+	//	if (1 == debug_state2_mapping)	//1:滤波
+	//	{
+	//		//复制没有有呼吸的导管位置
+	//		for (int i = catheter_start; i < catheter_start + catheter_count; i++)
+	//		{
+	//			for (int j = 0; j < 3; j++)
+	//			{
+	//				electric_field_positon_48_out_tmp[i][j] = (float)(electric_field_positon_48_out_tmp_without_breathe)[i][j];
+	//			}
+	//		}
+	//	}
+	//}
 
 	//复制处理后的位置信息到用户空间
 	memcpy(electric_field_positon_48_out, electric_field_positon_48_out_tmp, sizeof(float)*48 * 3);
