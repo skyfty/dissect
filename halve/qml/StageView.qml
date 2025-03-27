@@ -654,7 +654,7 @@ Item {
                 }
 
                 Item {
-                    visible: root.combined.mode === Halve.CHANNELMODE_ELECTRICAL
+                    visible: root.channel.mode === Halve.CHANNELMODE_ELECTRICAL
                     anchors.top: parent.top
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.topMargin: 5
