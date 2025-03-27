@@ -163,7 +163,6 @@ void Combined::appendElectrodeTrackData(const TrackData &trackData, Halve::Track
 
 }
 void Combined::adjuestTrackAngle(vtkVector3d &position, const vtkQuaterniond &pant10Quaternion) {
-    return;
     // Manipulate the transform to reflect the rotation
     m_transform->Identity();
     double direction[4]{};
@@ -331,7 +330,7 @@ bool Combined::getPant0TrackData(const TrackData::List &catheterTrackData, vtkVe
     });
     if (iter != catheterTrackData.end()) {
         iter->getPosition(pant10Position);
-        iter->getQuaternion(pant10Quaternion);
+        //iter->getQuaternion(pant10Quaternion);
         return true;
     }
     return false;
