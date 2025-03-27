@@ -114,7 +114,7 @@ QList<MappingPoint>::iterator MappingReseauChecker::getMappingPointCompIterator(
     return mappingPointList.end();
 }
 
-void MappingReseauChecker::checkMappingPointOvercome(const MappingPoint &mappingPoint) {
+void MappingReseauChecker::checkMappingPointOvercome(const MappingPoint &mappingPoint,QSet<qint64> &overcoeMpappingIds) {
     QList<MappingPoint> mappingPointList;
     m_mappingPointsDb->getDataPoints(m_mappingSetting->duplicateRadius(), mappingPoint.position, mappingPointList);
     if (mappingPointList.isEmpty()) {
@@ -128,7 +128,9 @@ void MappingReseauChecker::checkMappingPointOvercome(const MappingPoint &mapping
 
     for (int i = 0; i < mappingPointList.size(); ++i) {
         MappingPoint& mp = mappingPointList[i];
-        if (mp.id != maxIter->id && mp.overcome != MappingPoint::EFFECTIVE) {
+        if (mp.id != maxIter->id) {
+            if (overcoeMpappingIds.contains(mp.id)) {
+                continue;
             if (mp.overcome != MappingPoint::INVALID) {
                 mp.overcome = MappingPoint::INVALID;
                 changedMappingPointList.append(mp);
@@ -138,6 +140,7 @@ void MappingReseauChecker::checkMappingPointOvercome(const MappingPoint &mapping
     if (maxIter->overcome != MappingPoint::EFFECTIVE) {
         maxIter->overcome = MappingPoint::EFFECTIVE;
         changedMappingPointList.append(*maxIter);
+        overcoeMpappingIds.insert(maxIter->id);
     }
     if (changedMappingPointList.size() > 0) {
         m_mappingPointsDb->updateOvercome(changedMappingPointList);
@@ -146,10 +149,10 @@ void MappingReseauChecker::checkMappingPointOvercome(const MappingPoint &mapping
 
 void MappingReseauChecker::onCheckOvercomTimerEvent() {
     PointValidCheckerState stateChecker(m_profile);
-
+    QSet<qint64> overcoeMpappingIds;
     for (const MappingPoint& mappingPoint : m_mappingPointsDb->getDatas()) {
         if (mappingPoint.valid && mappingPoint.type == MappingPoint::SAMPLE) {
-            checkMappingPointOvercome(mappingPoint);
+            checkMappingPointOvercome(mappingPoint,overcoeMpappingIds);
         }
     }
     m_checkOvercomTimer->stop();

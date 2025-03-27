@@ -40,7 +40,7 @@ public slots:
 private:
     bool checkMappingPoint(MappingPoint &mp);
     bool checkMappingPoint(Reseau *reseau,double dist, MappingPoint &mp);
-    void checkMappingPointOvercome(const MappingPoint &mappingPoint);
+    void checkMappingPointOvercome(const MappingPoint &mappingPoint,QSet<qint64> &overcoeMpappingIds);
     QList<MappingPoint>::iterator getMappingPointCompIterator(QList<MappingPoint> &mappingPointList);
 
 private:

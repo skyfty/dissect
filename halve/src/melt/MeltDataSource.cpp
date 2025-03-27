@@ -514,8 +514,8 @@ void MeltDataSource::strikSampleElectrode(const ElectrodeNode *electrodeNode, Me
                 if (mappingPoint.valid) {
                     reseaus.front().first->getPoint(pointId, mappingPoint.position);
                 }
-                addSampleMappintPoint(mappingPoint, meltSampleLine, electrodeNode->id());
             }
+            addSampleMappintPoint(mappingPoint, meltSampleLine, electrodeNode->id());
         }
     }
 }
