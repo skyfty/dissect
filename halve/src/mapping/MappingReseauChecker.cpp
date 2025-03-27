@@ -131,6 +131,7 @@ void MappingReseauChecker::checkMappingPointOvercome(const MappingPoint &mapping
         if (mp.id != maxIter->id) {
             if (overcoeMpappingIds.contains(mp.id)) {
                 continue;
+            }
             if (mp.overcome != MappingPoint::INVALID) {
                 mp.overcome = MappingPoint::INVALID;
                 changedMappingPointList.append(mp);
