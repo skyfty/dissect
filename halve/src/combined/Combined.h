@@ -201,7 +201,7 @@ private:
 
     QList<QPair<Catheter*, QSharedPointer<BlendMagnetism>>> m_blendsMagnetism;
     QList<QPair<Catheter*, QSharedPointer<BlendDint>>> m_blendsDint;
-    Electric_field_mapping_algorithm *m_electric_field_mapping_algorithm = nullptr;
+    Electric_field_mapping_algorithm * m_electricMappingAlgorithm = nullptr;
 
     QList<ChannelTrackData> m_inputBuffer;
     ys::DynamicNearestNeighbor m_dnn;

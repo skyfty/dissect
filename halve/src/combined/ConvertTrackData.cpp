@@ -31,7 +31,6 @@ QList<TrackData> Combined::convertTrackData(const ChannelTrackData &dataInput) {
     std::memcpy(dataBuffer.m, d2.m, sizeof(d2.m));
     std::memcpy(dataBuffer.n, d1.n, sizeof(d1.n));
 
-
     switch(m_channel->mode()) {
     case Halve::CHANNELMODE_ELECTRICAL: {
         trackDataList = convertElectricalTrackData(dataBuffer);
@@ -76,25 +75,31 @@ QList<TrackData> Combined::convertMagneticTrackData(const ChannelTrackData &data
 
 QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &dataBuffer) {
     std::vector<ChannelTrackM> mdata(dataBuffer.m, dataBuffer.m + ElectricalPortAmount);
-    float position_zero_out[2]{};
-    int breath_gate_sync = 1;
-    float blood_pool_impedance;
-    if (m_electric_field_mapping_algorithm == nullptr) {
-        m_electric_field_mapping_algorithm = new Electric_field_mapping_algorithm();
+    int breathGateSync = 1;
+    QList<Catheter*> csCatheters  = m_catheterDb->getCSDatas();
+    if (csCatheters.size() > 0 && m_reproductCatheterStatus == Halve::TrackStatus_Valid) {
+        float bloodPoolImpedance;
+        if (m_electricMappingAlgorithm == nullptr) {
+            m_electricMappingAlgorithm = new Electric_field_mapping_algorithm();
+        }
+        Catheter* csCatheter = csCatheters[0];
+        Catheter* reproduceCatheter = m_catheterDb->getData(m_reproduceOptions->catheterId());
+
+        float position_zero_out[2]{};
+        m_electricMappingAlgorithm->Electric_field_mapping_algorithm_all(
+            m_profile->state() == Profile::Reproduce ? OPERATION_STATE::MODELING : OPERATION_STATE::MAPPING,
+            reproduceCatheter->bseat(),
+            reproduceCatheter->getAmount(),
+            csCatheter->bseat(),
+            csCatheter->getAmount(),
+            static_cast<RESPIRATORY_MODE>(m_breathOptions->respiratoryMode()),
+            const_cast<float*>(dataBuffer.m[0].pos.GetData()),
+            &breathGateSync,
+            reinterpret_cast<float*>(mdata[0].pos.GetData()),
+            &bloodPoolImpedance,
+            position_zero_out);
+        setBloodPoolImpedance(bloodPoolImpedance);
     }
-    m_electric_field_mapping_algorithm->Electric_field_mapping_algorithm_all(
-        m_profile->state() == Profile::Reproduce ? OPERATION_STATE::MODELING : OPERATION_STATE::MAPPING,
-        28,
-        4,
-        0,
-        10,
-        static_cast<RESPIRATORY_MODE>(m_breathOptions->respiratoryMode()),
-        const_cast<float*>(dataBuffer.m[0].pos.GetData()),
-        &breath_gate_sync,
-        reinterpret_cast<float*>(mdata[0].pos.GetData()),
-        &blood_pool_impedance,
-        position_zero_out);
-    setBloodPoolImpedance(blood_pool_impedance);
 
     QList<TrackData> trackDataList;
     for (quint16 seat = 0; seat < ElectricalPortAmount; seat++) {
@@ -104,7 +109,7 @@ QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &da
         }
         const ChannelTrackM &m = mdata[seat];
         TrackData trackData(catheter, seat);
-        trackData.setFlags(breath_gate_sync == 0 ? TrackData::ELECTRICAL_IMPEDANCE : 0);
+        trackData.setFlags(breathGateSync == 0 ? TrackData::ELECTRICAL_IMPEDANCE : 0);
         trackData.setStatus(m.valid()?Halve::TrackStatus_Valid:Halve::TrackStatus_Invalid);
         vtkVector3<float> mpos = m.reversal();
         mpos[0] /= m_coefficient[0];

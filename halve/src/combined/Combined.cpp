@@ -30,7 +30,7 @@ Combined::Combined(QObject *parent)
 }
 
 Combined::~Combined() {
-    delete m_electric_field_mapping_algorithm;
+    delete m_electricMappingAlgorithm;
 }
 
 void Combined::setProfile(Profile* profile) {
@@ -276,7 +276,7 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
                 return;
             }
         }
-        vtkMath::Add(position, m_electricCenterShifting, position);
+        //vtkMath::Add(position, m_electricCenterShifting, position);
         vtkQuaterniond quaternion;
         trackData.getQuaternion(quaternion);
         Halve::CatheterElectrodeType type = catheter->catheterMould()->getType(seatIdx);
@@ -291,12 +291,12 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
         getCS1AndCS9TrackData(currentTrackDataList, cs1, cs9);
         vtkVector3d position;
         cs1.getPosition(position);
-        vtkMath::Add(position, m_electricCenterShifting, position);
+        //vtkMath::Add(position, m_electricCenterShifting, position);
         vtkQuaterniond quaternion;
         cs1.getQuaternion(quaternion);
         pantCatheterTrackList.append(createCatheterTrack(MagnetismPant0Port, Halve::CET_PANT, Halve::TrackStatus_Valid, position, quaternion, Pant0ID));
         cs9.getPosition(position);
-        vtkMath::Add(position, m_electricCenterShifting, position);
+        //vtkMath::Add(position, m_electricCenterShifting, position);
         cs9.getQuaternion(quaternion);
         pantCatheterTrackList.append(createCatheterTrack(MagnetismPant1Port, Halve::CET_PANT, Halve::TrackStatus_Valid, position, quaternion, Pant1ID));
     }
