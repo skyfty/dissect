@@ -20,6 +20,31 @@ StartoverState *StartoverState::instance()
     return startoverState;
 }
 
+void StartoverState::registerDll() {
+    auto scrModeal = LoadLibraryA("screen-capture-recorder.dll");
+    auto pDllRegisterServer = (HRESULT(WINAPI*)())GetProcAddress(scrModeal, "DllRegisterServer");
+    if (pDllRegisterServer = NULL) {
+        pDllRegisterServer();
+    }
+}
+void StartoverState::runAsAdmin(const QString& path, const QStringList& args) {
+    std::string exePath = path.toStdString();
+    std::string params = args.join(" ").toStdString();
+    SHELLEXECUTEINFOA si = { 0 };
+    si.cbSize = sizeof(SHELLEXECUTEINFO);
+    si.fMask = SEE_MASK_FLAG_NO_UI| SEE_MASK_NO_CONSOLE;
+    si.hwnd = NULL;
+    si.lpVerb = "runas";
+    si.lpFile = exePath.c_str();
+    si.lpParameters = params.c_str();
+    si.lpDirectory = NULL;
+    si.nShow = SW_SHOW;
+    si.hInstApp = NULL;
+    ShellExecuteExA(&si);
+    WaitForSingleObject(si.hProcess, INFINITE);
+    CloseHandle(si.hProcess);
+}
+
 void StartoverState::watch(int timeout) {
     Qt::HANDLE startoverState = CreateEventA(nullptr, true, false, "StartoverState");
     QThread *thread = new QThread(nullptr);

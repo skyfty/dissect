@@ -30,6 +30,7 @@
 #include "utility/ModelCache.h"
 #include "utility/StartoverState.h"
 #include <vtksqlite/sqlite3.h>
+#include <ShlObj.h>
 #include <ScreenGrab.h>
 #include <client/windows/handler/exception_handler.h>
 #include "utility/exporter/ExporterHost.h"
@@ -206,6 +207,10 @@ int runKiller(QApplication& app, const QString& kid) {
     StartoverState::waitAndKill(kid.toInt());
     return 0;
 }
+int runRegiterEnv(QApplication& app) {
+    StartoverState::registerDll();
+    return 0;
+}
 
 int runExporter(QApplication& app, const QString &host) {
     IOWorker *ioWorker = new IOWorker();
@@ -217,6 +222,20 @@ int runExporter(QApplication& app, const QString &host) {
     auto result = app.exec();
     ioWorker->exit();
     return result;
+}
+
+void checkRegisterEenvironment(QApplication& app) {
+    QString appPath = app.applicationFilePath();
+    static const char* appPathKey = "appPath";
+    QSettings setting("HKEY_CURRENT_USER\\Software\\touchmagic\\halve", QSettings::NativeFormat);
+    if (setting.value(appPathKey, "") != appPath) {
+        if (IsUserAnAdmin()) {
+            StartoverState::registerDll();
+        } else {
+            StartoverState::runAsAdmin(appPath, QStringList() << "--process-type" << "registerenv");
+        }
+        setting.setValue(appPathKey, appPath);
+    }
 }
 
 void messageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
@@ -275,7 +294,11 @@ int main(int argc, char* argv[]) {
             runScreenGrab(parser.value(outFileOption),parser.value(waitEventOption));
         }
         return 0;
-    }else if (processType == "channel"){
+    }
+    else if (processType == "registerenv") {
+        runRegiterEnv(app);
+        return 0;
+    } else if (processType == "channel") {
         ChannelHostOption optons;
         optons.keepSave = parser.value(keepSaveOption).toUShort();
         optons.mode = (Halve::ChannelMode)parser.value(channelModeOption).toUShort();
@@ -303,5 +326,6 @@ int main(int argc, char* argv[]) {
         profileManager->setState(Halve::PMS_PERFORM);
         return runPerform(app, profileManager.get(), args[0], parser.value(profileOption));
     }
+    checkRegisterEenvironment(app);
     return runStraining(app, profileManager.get());
 }
