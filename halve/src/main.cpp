@@ -34,10 +34,6 @@
 #include <client/windows/handler/exception_handler.h>
 #include "utility/exporter/ExporterHost.h"
 
-#if NDEBUG
-#include <vtkTimerLog.h>
-#endif
-
 extern void qmlRegisterTypes();
 
 class CustomViewFactory : public KDDockWidgets::QtQuick::ViewFactory
@@ -241,7 +237,6 @@ int main(int argc, char* argv[]) {
 
 #ifdef NDEBUG
     initBreakpad();
-    vtkTimerLog::LoggingOff();
 #endif
 
     QCommandLineParser parser;
