@@ -409,5 +409,6 @@
         <file>assets/images/train.svg</file>
         <file>assets/configures/hotkey.json</file>
         <file>qml/HotkeyAction.qml</file>
+        <file>qml/models/RespiratorModeModel.qml</file>
     </qresource>
 </RCC>

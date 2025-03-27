@@ -19,6 +19,7 @@
 #include "combined/BlendMagnetism.h"
 #include "combined/BlendDint.h"
 #include "HalveType.h"
+#include "halitus/BreathOptions.h"
 #include "CheckEnvironmentHelper.h"
 
 
@@ -39,6 +40,8 @@ void Combined::setProfile(Profile* profile) {
     m_profile = profile;
     m_reproduceOptions = profile->reproduceOptions();
     m_catheterDb = profile->catheterDb();
+    m_breathOptions = profile->breathOptions();
+
     prepareElectricalCatheter();
 
     emit profileChanged();
@@ -59,6 +62,19 @@ void Combined::prepareElectricalCatheter() {
 void Combined::onCatheterImported() {
     Q_ASSERT(m_catheterDb != nullptr);
     addBlendCatheter(m_catheterDb->getEmployDatas());
+}
+
+double Combined::bloodPoolImpedance() const
+{
+    return m_bloodPoolImpedance;
+}
+
+void Combined::setBloodPoolImpedance(double newBloodPoolImpedance)
+{
+    if (qFuzzyCompare(m_bloodPoolImpedance, newBloodPoolImpedance))
+        return;
+    m_bloodPoolImpedance = newBloodPoolImpedance;
+    emit bloodPoolImpedanceChanged();
 }
 
 
@@ -272,17 +288,17 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
 
     if (m_centerPoint[0] != -1) {
         QList<CatheterTrack>& pantCatheterTrackList = catheterTracks->getTracks(m_pantCatheter);
-        TrackData cs4,cs8;
-        getCS4AndCS8TrackData(currentTrackDataList, cs4, cs8);
+        TrackData cs1,cs9;
+        getCS1AndCS9TrackData(currentTrackDataList, cs1, cs9);
         vtkVector3d position;
-        cs4.getPosition(position);
+        cs1.getPosition(position);
         //vtkMath::Add(position, m_electricCenterShifting, position);
         vtkQuaterniond quaternion;
-        cs4.getQuaternion(quaternion);
+        cs1.getQuaternion(quaternion);
         pantCatheterTrackList.append(createCatheterTrack(MagnetismPant0Port, Halve::CET_PANT, Halve::TrackStatus_Valid, position, quaternion, Pant0ID));
-        cs8.getPosition(position);
+        cs9.getPosition(position);
         //vtkMath::Add(position, m_electricCenterShifting, position);
-        cs8.getQuaternion(quaternion);
+        cs9.getQuaternion(quaternion);
         pantCatheterTrackList.append(createCatheterTrack(MagnetismPant1Port, Halve::CET_PANT, Halve::TrackStatus_Valid, position, quaternion, Pant1ID));
     }
 
@@ -293,7 +309,7 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
 
     emit catheterTrackChanged(catheterTracks);
 }
-void Combined::getCS4AndCS8TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8) {
+void Combined::getCS1AndCS9TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8) {
     for(const TrackData &trackData : catheterTrackData) {
         Catheter* catheter = trackData.catheter();
         if (!catheter->employ() || catheter->getType() != CSCatheterType) {
@@ -301,9 +317,9 @@ void Combined::getCS4AndCS8TrackData(const TrackData::List &catheterTrackData, T
         }
         quint16 port = trackData.port();
         quint16 seatIdx = port - catheter->bseat();
-        if (seatIdx == 3) {
+        if (seatIdx == 1) {
             cs4 = trackData;
-        } else if (seatIdx == 7) {
+        } else if (seatIdx == 9) {
             cs8 = trackData;
         }
     }

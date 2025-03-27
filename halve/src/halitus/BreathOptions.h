@@ -4,6 +4,7 @@
 #include <QObject>
 #include <vtkSmartPointer.h>
 #include <vtkVector.h>
+#include "HalveType.h"
 
 class vtkVector3d;
 class vtkPoints;
@@ -25,6 +26,7 @@ class BreathOptions : public QObject
     Q_PROPERTY(double breathePeak READ breathePeak WRITE setBreathePeak NOTIFY breathePeakChanged FINAL)
     Q_PROPERTY(double breatheValley READ breatheValley WRITE setBreatheValley NOTIFY breatheValleyChanged FINAL)
     Q_PROPERTY(double breatheLimit READ breatheLimit WRITE setBreatheLimit NOTIFY breatheLimitChanged FINAL)
+    Q_PROPERTY(Halve::RespiratorMode respiratoryMode READ respiratoryMode WRITE setRespiratoryMode NOTIFY respiratoryModeChanged FINAL)
 
 public:
     explicit BreathOptions(QObject *parent = nullptr);
@@ -81,6 +83,9 @@ public:
     void setGatingValid(const QPair<double, double>&points);
 
 
+    Halve::RespiratorMode respiratoryMode() const;
+    void setRespiratoryMode(const Halve::RespiratorMode &newRespiratoryMode);
+
 signals:
 
     void breatheRestrictRenovateChanged();
@@ -112,6 +117,8 @@ signals:
     void breatheLimitChanged();
 
 
+    void respiratoryModeChanged();
+
 private:
     bool m_enabledCompensate = false;
     bool m_breatheGate = true;
@@ -129,6 +136,7 @@ private:
     double m_breathBoundaryRatio = 5;
     vtkSmartPointer<vtkPoints> m_compensatePoints;
     vtkVector3d m_compensateBasePoint;
+    Halve::RespiratorMode m_respiratoryMode =Halve::RES_MODE_GATING;
 };
 
 #endif // BREATHOPTIONS_H

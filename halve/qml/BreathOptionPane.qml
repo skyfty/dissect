@@ -4,6 +4,7 @@ import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Layouts
 import Halve 1.0
+import "models"
 
 ColumnLayout {
     id:root
@@ -165,4 +166,33 @@ ColumnLayout {
 
     }
 
+    ColumnLayout {
+        visible: root.combined.mode === Halve.CHANNELMODE_ELECTRICAL
+        ToolSeparator{
+            Layout.fillWidth: true
+            orientation: Qt.Horizontal
+        }
+
+        ColumnLayout {
+            Label {
+                text: qsTr("Respiratory compensation")
+                Layout.fillWidth: true
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                ComboBox {
+                    Layout.preferredHeight: 25
+                    Component.onCompleted: currentIndex = indexOfValue(root.breathOptions.respiratoryMode)
+                    onActivated:{
+                        root.breathOptions.respiratoryMode = currentValue
+                    }
+                    textRole: "text"
+                    valueRole: "value"
+                    Layout.fillWidth: true
+                    model: RespiratorModeModel{}
+                }
+            }
+        }
+    }
 }

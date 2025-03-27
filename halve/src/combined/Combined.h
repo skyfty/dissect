@@ -24,6 +24,7 @@ class CatheterTrackPackage;
 class vtkUnstructuredGrid;
 class ReproduceOptions;
 class Electric_field_mapping_algorithm;
+class BreathOptions;
 //class Electric_field_mapping_algorithm;
 
 class Combined : public QObject
@@ -41,6 +42,8 @@ class Combined : public QObject
     Q_PROPERTY(bool isEnvironmentValid READ isEnvironmentValid NOTIFY environmentFlagsChanged FINAL)
     Q_PROPERTY(QVector3D coefficient READ coefficient WRITE setCoefficient NOTIFY coefficientChanged FINAL)
     Q_PROPERTY(bool training READ training WRITE setTraining NOTIFY trainingChanged FINAL)
+    Q_PROPERTY(double bloodPoolImpedance READ bloodPoolImpedance WRITE setBloodPoolImpedance NOTIFY bloodPoolImpedanceChanged FINAL)
+    Q_PROPERTY(Halve::ChannelMode mode READ mode NOTIFY modeChanged FINAL CONSTANT)
 
 public:
     explicit Combined(QObject *parent = nullptr);
@@ -100,6 +103,9 @@ public:
     bool training() const;
     void setTraining(bool newTraining);
 
+    double bloodPoolImpedance() const;
+    void setBloodPoolImpedance(double newBloodPoolImpedance);
+
 private:
     vtkSmartPointer<vtkPoints> produceElectricityPoints(vtkUnstructuredGrid* grid, vtkVector3d &position, const vtkQuaterniond& quaternion);
     CatheterTrack createCatheterTrack(quint16 seat, Halve::CatheterElectrodeType type, Halve::TrackStatus status, const vtkVector3d &position, const vtkQuaterniond& quaternion, const QString &id);
@@ -136,7 +142,7 @@ private:
     void inspectBlendReproduceCatheter(const QSharedPointer<CatheterTrackPackage> &catheterTracks);
 
     quint64 checkEnvironmentFlags(quint64 flags, bool s);
-    void getCS4AndCS8TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8);
+    void getCS1AndCS9TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8);
 
 signals:
     void profileChanged();
@@ -159,6 +165,8 @@ signals:
     void trainingChanged();
     void modeChanged();
 
+    void bloodPoolImpedanceChanged();
+
 public slots:
     void onChannelTrackData(const ChannelTrackData &datas);
     void onCatheterDeleted(Catheter *catheter);
@@ -169,6 +177,7 @@ private:
     QPointer<Profile> m_profile;
     QPointer<Channel> m_channel;
     QPointer<ReproduceOptions> m_reproduceOptions;
+    QPointer<BreathOptions> m_breathOptions;
 
     QPointer<CatheterDb> m_catheterDb;
 
@@ -188,6 +197,7 @@ private:
     qint32 m_magnetismTrainRate = 5;
     quint64 m_environmentFlags = 0;
     quint32 m_reproductCatheterMissedCount = 0;
+    double m_bloodPoolImpedance = 0.0;
 
     QList<QPair<Catheter*, QSharedPointer<BlendMagnetism>>> m_blendsMagnetism;
     QList<QPair<Catheter*, QSharedPointer<BlendDint>>> m_blendsDint;

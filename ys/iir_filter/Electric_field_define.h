@@ -11,8 +11,9 @@ enum OPERATION_STATE {
 
 //标测使用的数据处理类型
 enum RESPIRATORY_MODE {
-    GATING,      // 门控      0
-    ADAPTIVE     // 滤波      1
+    NOTHING,     // 无算法    0
+    GATING,      // 门控      1
+    ADAPTIVE     // 滤波      2
 };
 
 

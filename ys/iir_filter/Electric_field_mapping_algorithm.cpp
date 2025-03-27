@@ -1,4 +1,5 @@
 #include "Electric_field_mapping_algorithm.h"
+#include "Electric_field_define.h"
 #include <math.h>
 #include <string.h>
 
@@ -46,7 +47,7 @@ void Electric_field_mapping_algorithm::Electric_field_mapping_algorithm_all
 	int		reference_start,						//参考导管开始序号
 	int		reference_count,						//参考导管使用个数
 	//int		debug_state1_model,						//debug使用，建模的两种状态	0:无任何处理;	1:呼吸门控;		(默认置1)
-	int		respiratory_mode,						//呼吸处理模式	0:呼吸门控;	1:呼吸补偿;							(默认置0)
+	int		respiratory_mode,						//呼吸处理模式	0:无算法	1:呼吸门控;		2:呼吸补偿;			(默认置1)
 	float*	electric_field_positon_48_in,			//48路电场位置信号输入
 	int*	breath_gate_sync,						//呼吸门控状态控制	0：表示无效	1：表示数据有效
 	float*	electric_field_positon_48_out,			//48路电场位置信号处理完之后输出
@@ -89,7 +90,14 @@ void Electric_field_mapping_algorithm::Electric_field_mapping_algorithm_all
 	double zeropoint_without_breathe_square = pow(electric_field_positon_48_out_tmp_without_breathe[48][0], 2) + pow(electric_field_positon_48_out_tmp_without_breathe[48][1], 2) + pow(electric_field_positon_48_out_tmp_without_breathe[48][2], 2);
 	double zeropoint_without_breathe = sqrt(zeropoint_without_breathe_square);
 	//门控信号
-	*breath_gate_sync = zeropoint_without_breathe > zeropoint_with_breathe;
+	if (RESPIRATORY_MODE::GATING ==respiratory_mode)//呼吸处理方式为门控时启动门控信号，除此之外始终为1
+	{
+		*breath_gate_sync = zeropoint_without_breathe > zeropoint_with_breathe;
+	}
+	else
+	{
+		*breath_gate_sync = 1;
+	}
 	//血池阻抗
 	double blood_pool_impedance_square = pow(electric_field_positon_48_out_tmp_with_breathe[catheter_start][0] - electric_field_positon_48_out_tmp_with_breathe[catheter_start + 1][0], 2)
 		+ pow(electric_field_positon_48_out_tmp_with_breathe[catheter_start][1] - electric_field_positon_48_out_tmp_with_breathe[catheter_start + 1][1], 2)

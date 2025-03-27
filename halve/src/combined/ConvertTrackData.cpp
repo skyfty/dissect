@@ -2,6 +2,7 @@
 #include "catheter/Catheter.h"
 #include "combined/TrackData.h"
 
+#include "halitus/BreathOptions.h"
 #include "profile/Profile.h"
 #include <channel/Channel.h>
 #include "catheter/CatheterDb.h"
@@ -87,12 +88,13 @@ QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &da
         4,
         0,
         10,
-        DEBUG_STATE2_MAPPING::GATING,
+        static_cast<RESPIRATORY_MODE>(m_breathOptions->respiratoryMode()),
         const_cast<float*>(dataBuffer.m[0].pos.GetData()),
         &breath_gate_sync,
         reinterpret_cast<float*>(mdata[0].pos.GetData()),
         &blood_pool_impedance,
         position_zero_out);
+    setBloodPoolImpedance(blood_pool_impedance);
 
     QList<TrackData> trackDataList;
     for (quint16 seat = 0; seat < ElectricalPortAmount; seat++) {
