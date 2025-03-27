@@ -67,6 +67,7 @@ class Profile : public QObject {
   Q_OBJECT;
   Q_PROPERTY(State state READ state WRITE setState NOTIFY stateChanged FINAL)
   Q_PROPERTY(QString id READ getId CONSTANT);
+  Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
   Q_PROPERTY(QString path READ path CONSTANT);
   Q_PROPERTY(int modelRef READ modelRef NOTIFY modelRefChanged CONSTANT FINAL)
   Q_PROPERTY(FilterOptions *filterOptions READ filterOptions CONSTANT FINAL);
@@ -193,6 +194,8 @@ signals:
 
     void storageStateChanged();
     void action(const QString &name);
+
+    void nameChanged();
 
 public:
     explicit Profile(QObject *parent);
@@ -352,6 +355,9 @@ public:
 
     Halve::StorageState storageState() const;
     void setStorageState(const Halve::StorageState &newStorageState);
+    QString name() const;
+    void setName(const QString &newName);
+
 public slots:
     void setCurrentMappingPointId(qint64 newCurrentMappingPointId);
     void setCurrentDissolvePointId(qint64 newCurrentDissolvePointId);
@@ -360,6 +366,7 @@ protected:
     qint32 m_modelRef =0;
     QString m_path;
     QString m_id;
+    QString m_name;
     State m_state = State::Init;
     Halve::StorageState m_storageState;
     QPointer<User> m_user;

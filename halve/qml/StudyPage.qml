@@ -833,6 +833,11 @@ Study {
                             }
                         }
 
+                        Label {
+                            font.pixelSize: 17
+                            font.bold: true
+                            text: root.profile.name
+                        }
 
                         Label {
                             font.pixelSize: 17

@@ -90,6 +90,19 @@ void Profile::setCurrentDissolvePointId(qint64 newCurrentDissolvePointId)
     emit currentDissolvePointIdChanged();
 }
 
+QString Profile::name() const
+{
+    return m_name;
+}
+
+void Profile::setName(const QString &newName)
+{
+    if (m_name == newName)
+        return;
+    m_name = newName;
+    emit nameChanged();
+}
+
 CatheterTempletDb *Profile::catheterTempletDb()
 {
     if (m_catheterTempletDb == nullptr) {

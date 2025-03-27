@@ -87,6 +87,7 @@ void ProfileData::save(const  QString &userPath) {
 Profile *ProfileData::loadProfile(QObject *parent) const {
     Profile *profile = new ProfileFile(getId(), m_path, parent);
     profile->setChannelMode(m_channelMode);
+    profile->setName(m_doctor);
     return profile;
 }
 
