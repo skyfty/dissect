@@ -3,6 +3,9 @@
 #include <vtkUnstructuredGridAlgorithm.h>
 #include <vtkColor.h>
 
+class vtkPolyData;
+class vtkPoints;
+
 class PantCatheterFilter : public vtkUnstructuredGridAlgorithm
 {
 
@@ -19,6 +22,7 @@ protected:
 
     int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*) override;
     int FillInputPortInformation(int port, vtkInformation* info) override;
+    vtkSmartPointer<vtkPolyData> makeTube(vtkPoints* points);
 private:
     vtkColor3ub LineColor;
 

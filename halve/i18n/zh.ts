@@ -2173,6 +2173,10 @@
         <source>Apply breathing gate</source>
         <translation>应用呼吸门</translation>
     </message>
+    <message>
+        <source>Respiratory compensation</source>
+        <translation>呼吸处理模式</translation>
+    </message>
 </context>
 <context>
     <name>PulseView</name>
@@ -2279,6 +2283,21 @@
     <message>
         <source>The catheter port is reused</source>
         <translation>导管端口被重复使用</translation>
+    </message>
+</context>
+<context>
+    <name>RespiratorModeModel</name>
+    <message>
+        <source>None</source>
+        <translation>无算法</translation>
+    </message>
+    <message>
+        <source>Breathing gate control</source>
+        <translation>呼吸门控</translation>
+    </message>
+    <message>
+        <source>Respiratory compensation</source>
+        <translation>呼吸补偿</translation>
     </message>
 </context>
 </TS>

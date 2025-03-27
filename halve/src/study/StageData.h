@@ -56,6 +56,7 @@ class DissolvePointSource;
 class EliminateSource;
 class MappingPointSource;
 class ReseauShowFilter;
+class ElectricalPantFilter;
 
 struct DetectorPair : public vtkObject {
     static DetectorPair *New();

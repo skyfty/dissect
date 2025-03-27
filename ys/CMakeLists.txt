@@ -15,6 +15,11 @@ set(SRCS
     "ElecIdentify/DynamicNearestNeighbor.cpp"
     "ElecIdentify/ScaleFactorGetter.cpp"
     "ElecIdentify/Matrix3x4d.cpp"
+    "iir_filter/Electric_field_define.h"
+    "iir_filter/Electric_field_mapping_algorithm.cpp"
+    "iir_filter/Electric_field_mapping_algorithm.h"
+    "iir_filter/iir_filter.cpp"
+    "iir_filter/iir_filter.h"
 )
 add_library(ys ${SRCS})
 target_link_libraries(ys
@@ -37,3 +42,4 @@ target_include_directories(ys PUBLIC "EcgMethod/Neurokit")
 target_include_directories(ys PUBLIC "3rd-party/findpeaks")
 target_include_directories(ys PUBLIC "ElecIdentify")
 target_include_directories(ys PUBLIC "3rd-party/hnswlib")
+target_include_directories(ys PUBLIC "iir_filter")

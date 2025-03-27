@@ -160,6 +160,13 @@ public:
     };
     Q_ENUM(StorageState);
 
+    enum RespiratorMode {
+        RES_MODE_NOTHING,
+        RES_MODE_GATING,
+        RES_MODE_ADAPTIVE
+    };
+    Q_ENUM(RespiratorMode);
+
 };
 constexpr double DefaultSpacing[3] = { 1.0f,1.0f,1.0f };
 constexpr qint32 ScalarsWounded = -1;
@@ -191,6 +198,7 @@ extern double DefaultViewAngle;
 extern quint32 DefaultCoefficient;
 extern double ElectrodeNodeRadius;
 extern double CatheterTubeRadius;
+extern double PantCatheterTubeRadius;
 
 extern std::string MainBodyMeshColorName;
 

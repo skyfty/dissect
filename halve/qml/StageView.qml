@@ -651,7 +651,29 @@ Item {
                             }
                         }
                     }
+                }
 
+                Item {
+                    visible: root.channel.mode === Halve.CHANNELMODE_ELECTRICAL
+                    anchors.top: parent.top
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.topMargin: 5
+                    height: 40
+                    width: 80
+                    Rectangle {
+                        anchors.fill: parent
+                        color: "#CD3333"
+                        opacity: 0.9
+                        radius: 10
+                        border.color: "white"
+                        Label {
+                            text: root.combined.bloodPoolImpedance.toFixed(0)
+                            color: "white"
+                            font.weight: 1200
+                            font.pixelSize: 18
+                            anchors.centerIn: parent
+                        }
+                    }
 
                 }
 

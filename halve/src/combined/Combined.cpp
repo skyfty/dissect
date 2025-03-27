@@ -19,6 +19,7 @@
 #include "combined/BlendMagnetism.h"
 #include "combined/BlendDint.h"
 #include "HalveType.h"
+#include "halitus/BreathOptions.h"
 #include "CheckEnvironmentHelper.h"
 
 
@@ -29,6 +30,7 @@ Combined::Combined(QObject *parent)
 }
 
 Combined::~Combined() {
+    delete m_electric_field_mapping_algorithm;
 }
 
 void Combined::setProfile(Profile* profile) {
@@ -38,6 +40,8 @@ void Combined::setProfile(Profile* profile) {
     m_profile = profile;
     m_reproduceOptions = profile->reproduceOptions();
     m_catheterDb = profile->catheterDb();
+    m_breathOptions = profile->breathOptions();
+
     prepareElectricalCatheter();
 
     emit profileChanged();
@@ -58,6 +62,19 @@ void Combined::prepareElectricalCatheter() {
 void Combined::onCatheterImported() {
     Q_ASSERT(m_catheterDb != nullptr);
     addBlendCatheter(m_catheterDb->getEmployDatas());
+}
+
+double Combined::bloodPoolImpedance() const
+{
+    return m_bloodPoolImpedance;
+}
+
+void Combined::setBloodPoolImpedance(double newBloodPoolImpedance)
+{
+    if (qFuzzyCompare(m_bloodPoolImpedance, newBloodPoolImpedance))
+        return;
+    m_bloodPoolImpedance = newBloodPoolImpedance;
+    emit bloodPoolImpedanceChanged();
 }
 
 
@@ -86,6 +103,8 @@ void Combined::setChannel(Channel *newChannel)
     m_channel = newChannel;
     QObject::connect(m_channel, &Channel::trackData, this, &Combined::onChannelTrackData);
     QObject::connect(m_channel, &Channel::stateChanged, this, &Combined::stateChanged);
+    QObject::connect(m_channel, &Channel::modeChanged, this, &Combined::modeChanged);
+
     emit channelChanged();
 }
 
@@ -236,10 +255,13 @@ double  Combined::squaredDistance() {
 void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
     QSharedPointer<CatheterTrackPackage> catheterTracks(new CatheterTrackPackage());
     for(const TrackData &trackData:currentTrackDataList) {
-        Halve::TrackStatus status = trackData.getStatus();
         Catheter* catheter = trackData.catheter();
-        if (status != Halve::TrackStatus_Valid || !catheter->employ()) {
+        if (!catheter->employ()) {
             continue;
+        }
+        Halve::TrackStatus status = trackData.getStatus();
+        if (trackData.getFlags() & TrackData::ELECTRICAL_IMPEDANCE) {
+            status = Halve::TrackStatus_Missing;
         }
         QList<CatheterTrack> &catheterTrackList = catheterTracks->getTracks(catheter);
 
@@ -247,10 +269,10 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
         vtkVector3d position;
         trackData.getPosition(position);
         quint16 seatIdx = port - catheter->bseat();
-        if (trackData.catheter()->getType() == CSCatheterType && seatIdx == 0) {
+        if (trackData.catheter()->getType() == CSCatheterType && seatIdx == 5) {
             m_centerPolemicsPosition = position;
             if (m_centerPoint[0] == -1) {
-                m_centerPoint = m_centerPolemicsPosition;                
+                m_centerPoint = m_centerPolemicsPosition;
                 emit centerPointChanged();
                 return;
             }
@@ -266,11 +288,17 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
 
     if (m_centerPoint[0] != -1) {
         QList<CatheterTrack>& pantCatheterTrackList = catheterTracks->getTracks(m_pantCatheter);
+        TrackData cs1,cs9;
+        getCS1AndCS9TrackData(currentTrackDataList, cs1, cs9);
         vtkVector3d position;
-        vtkMath::Subtract(m_centerPoint, m_centerPoint.GetData(), position);
+        cs1.getPosition(position);
+        vtkMath::Add(position, m_electricCenterShifting, position);
         vtkQuaterniond quaternion;
+        cs1.getQuaternion(quaternion);
         pantCatheterTrackList.append(createCatheterTrack(MagnetismPant0Port, Halve::CET_PANT, Halve::TrackStatus_Valid, position, quaternion, Pant0ID));
-        vtkMath::Subtract(m_centerPolemicsPosition, m_centerPoint.GetData(), position);
+        cs9.getPosition(position);
+        vtkMath::Add(position, m_electricCenterShifting, position);
+        cs9.getQuaternion(quaternion);
         pantCatheterTrackList.append(createCatheterTrack(MagnetismPant1Port, Halve::CET_PANT, Halve::TrackStatus_Valid, position, quaternion, Pant1ID));
     }
 
@@ -280,6 +308,21 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
     inspectReproduceCatheter(catheterTracks);
 
     emit catheterTrackChanged(catheterTracks);
+}
+void Combined::getCS1AndCS9TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8) {
+    for(const TrackData &trackData : catheterTrackData) {
+        Catheter* catheter = trackData.catheter();
+        if (!catheter->employ() || catheter->getType() != CSCatheterType) {
+            continue;
+        }
+        quint16 port = trackData.port();
+        quint16 seatIdx = port - catheter->bseat();
+        if (seatIdx == 1) {
+            cs4 = trackData;
+        } else if (seatIdx == 9) {
+            cs8 = trackData;
+        }
+    }
 }
 
 bool Combined::getPant0TrackData(const TrackData::List &catheterTrackData, vtkVector3d &pant10Position, vtkQuaterniond &pant10Quaternion) {
@@ -554,23 +597,7 @@ void Combined::setMagnetismTrainRate(qint32 newMagnetismTrainRate)
 }
 
 void Combined::onChannelTrackData(const ChannelTrackData &dataInput) {
-    const int delay = 1;  // 电落后磁1个周期
-    m_inputBuffer.push_back(dataInput);
-    if (m_inputBuffer.size() > delay + 1)
-        m_inputBuffer.pop_front();
-    if (m_inputBuffer.size() < delay + 1)
-        return;
-    const auto& d1 = m_inputBuffer.front();
-    const auto& d2 = m_inputBuffer.back();
-
-    // 重新拼接数据
-    ChannelTrackData dataBuffer;
-    dataBuffer.m_id = d2.m_id;
-    dataBuffer.m_time = d2.m_time;
-    std::memcpy(dataBuffer.m, d2.m, sizeof(d2.m));
-    std::memcpy(dataBuffer.n, d1.n, sizeof(d1.n));
-
-    m_currentTrackDataList = convertTrackData(dataBuffer);
+    m_currentTrackDataList = convertTrackData(dataInput);
     switch(m_channel->mode()) {
     case Halve::CHANNELMODE_MAGNETIC: {
         abruptionTrackData(m_currentTrackDataList);
