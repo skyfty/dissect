@@ -142,6 +142,7 @@ void Study::onCatheterDeleted(Catheter *catheter) {
     Q_ASSERT(m_combined != nullptr);
     m_combined->checkCatheterPort(catheter);
     m_combined->checkReproduceCatheter();
+    emit m_profile->catheterAlinedChanged();
 }
 
 void Study::onCatheterPortChanged(Catheter *inCatheter) {
