@@ -328,7 +328,8 @@ void Stage::setMappingSetting(MappingSetting *newMeltSetting)
         return;
     QObject::disconnect(m_mappingSetting, nullptr, nullptr, nullptr);
     m_mappingSetting = newMeltSetting;
-    QObject::connect(m_mappingSetting, &MappingSetting::gapChanged, this, &Stage::onMappingGapChanged);
+    QObject::connect(m_mappingSetting, &MappingSetting::gapChanged, this, &Stage::onMappingSettingsChanged);
+    QObject::connect(m_mappingSetting, &MappingSetting::duplicateRadiusChanged, this, &Stage::onMappingSettingsChanged);
     emit mappingSettingChanged();
 }
 
@@ -421,12 +422,6 @@ void Stage::resetOptions() {
         }
         resetOptions(userData);
     });
-}
-
-
-void Stage::setStageScalar(StageScalar* stageScalar) {
-    Q_ASSERT(stageScalar != nullptr);
-    m_stageScalar = stageScalar;
 }
 
 void Stage::destroyingVTK(vtkRenderWindow*, vtkUserData vtkObject) {

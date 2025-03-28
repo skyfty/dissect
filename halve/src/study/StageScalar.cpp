@@ -43,6 +43,7 @@ vtkMTimeType StageScalar::GetMTime()
 void StageScalar::onScalarDbChanged()
 {
     m_mTime.Modified();
+    emit changed();
 }
 
 bool StageScalar::getColor(qint64 id, unsigned char color[]) const {

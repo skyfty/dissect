@@ -204,9 +204,10 @@ public slots:
     void onReseauAdded(Reseau* reseau);
     void onCurrentReseauChanged();
     void onReseauPropertyChanged(Reseau* reseau);
-    void onMappingGapChanged();
+    void onMappingSettingsChanged();
     void onMappingTypeChanged();
     void onDissolveOptionsRadiusChanged();
+    void onStageScalarChanged();
 
 
 private:

@@ -44,6 +44,8 @@
 #include "mapping/MappingPointVisbleFilter.h"
 #include <vtkCleanPolyData.h>
 #include "EliminateSource.h"
+#include "HightPointFilter.h"
+
 
 void Stage::setMeshShadow(vtkRenderWindow* renderWindow, StageData* userData) {
     vtkSmartPointer<vtkOutlineGlowPass> shadowPass = vtkNew<vtkOutlineGlowPass>();
@@ -178,13 +180,36 @@ vtkSmartPointer<MeshPair> Stage::createMeshPair(StageData* userData,Reseau* rese
     return meshPair;
 }
 
-void Stage::onMappingGapChanged() {
+void Stage::onMappingSettingsChanged() {
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         auto* userData = StageData::SafeDownCast(vtkObject);
         if (userData->renderer == nullptr || m_profile == nullptr) {
             return;
         }
+        userData->highlightPointFilter->SetMappingPointRadius(m_mappingSetting->duplicateRadius());
         userData->voronoiKernel->SetRadius(m_mappingSetting->gap());
+        static_cast<vtkOpenGLGlyph3DMapper*>(userData->mappingSurfacePointActor->GetMapper())->SetScaleFactor(m_mappingSetting->duplicateRadius());
+    });
+}
+
+void Stage::setStageScalar(StageScalar* stageScalar) {
+    Q_ASSERT(stageScalar != nullptr);
+    m_stageScalar = stageScalar;
+    connect(m_stageScalar, &StageScalar::changed, this, &Stage::onStageScalarChanged);
+}
+
+void Stage::onStageScalarChanged() {
+    Reseau* reseau = m_profile->getCurrentReseau();
+    if (reseau == nullptr) {
+        return;
+    }
+    dispatch_async([this, reseau](vtkRenderWindow*, vtkUserData vtkObject) {
+        auto* userData = StageData::SafeDownCast(vtkObject);
+        if (userData->renderer == nullptr || m_profile == nullptr) {
+            return;
+        }
+        vtkSmartPointer<MeshPair> meshPair = userData->meshs.value(reseau);
+        meshPair->colorTransfer->Modified();
     });
 }
 

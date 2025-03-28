@@ -41,6 +41,7 @@ private:
 signals:
     void profileChanged();
     void basisChanged();
+    void changed();
 
 private:
     QPointer<Profile> m_profile;

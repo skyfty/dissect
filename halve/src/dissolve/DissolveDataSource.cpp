@@ -92,16 +92,11 @@ void DissolveDataSource::strik() {
 
 std::optional<CatheterTrack> DissolveDataSource::getElectrodeTrack(Catheter *catheter) const {
     Q_ASSERT(catheter != nullptr);
-    QList<ElectrodeNode *> nodes = catheter->getElectrodeNodes();
-    if (m_catheterTrack != nullptr && nodes.size() > 0 && m_dissolveOptions->electrodeIndex() < nodes.size()) {
-        ElectrodeNode *node = nodes.at(m_dissolveOptions->electrodeIndex());
-        if (node == nullptr) {
-            node = nodes.back();
-        }
-        for(auto &track:m_catheterTrack->getTracks(catheter)) {
-            if (track.electrodeId() == node->id()) {
-                return track;
-            }
+
+    const QList<CatheterTrack>& tracks = m_catheterTrack->getTracks(catheter);
+    for (auto& track : tracks) {
+        if (track.seat() == m_dissolveOptions->electrodeIndex()) {
+            return track;
         }
     }
     return std::nullopt;

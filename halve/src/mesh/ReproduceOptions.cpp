@@ -72,19 +72,6 @@ void ReproduceOptions::setKernelSize(int newKernelSize)
     emit changed();
 }
 
-double ReproduceOptions::holeSize() const
-{
-    return m_holeSize;
-}
-
-void ReproduceOptions::setHoleSize(double newHoleSize)
-{
-    if (qFuzzyCompare(m_holeSize, newHoleSize))
-        return;
-    m_holeSize = newHoleSize;
-    emit holeSizeChanged();
-    emit changed();
-}
 
 QString ReproduceOptions::catheterId() const
 {

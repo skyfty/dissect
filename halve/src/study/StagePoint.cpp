@@ -76,6 +76,7 @@ void Stage::resetMappintSurfacePointActor(StageData* userData) {
     mapper->SetSourceData(ModelCache::instance()->mesh(MeshName::MN_MAPPING_SURFACE_POINT));
     mapper->SetInputConnection(userData->mappingPointVisbleFilter->GetOutputPort());
     mapper->UseSelectionIdsOn();
+    mapper->SetScaleFactor(m_mappingSetting->duplicateRadius());
     userData->mappingSurfacePointActor = vtkSmartPointer<vtkActor>::New();
     userData->mappingSurfacePointActor->SetMapper(mapper);
     vtkProperty* property = userData->mappingSurfacePointActor->GetProperty();
@@ -107,6 +108,7 @@ void Stage::onDissolveOptionsRadiusChanged()
         if (userData == nullptr || userData->renderer == nullptr || m_profile == nullptr) {
             return;
         }
+        userData->highlightPointFilter->SetDissolvePointRadius(m_dissolveOptions->radius());
         dynamic_cast<vtkOpenGLGlyph3DMapper*>(userData->dissolvePointActor->GetMapper())->SetScaleFactor(m_dissolveOptions->radius());
     });
 }
@@ -215,12 +217,16 @@ void Stage::applyDissolve(StageData* userData, int x, int y) {
 }
 void Stage::resetHightlightActor(StageData* userData) {
     vtkSmartPointer<vtkSphereSource> sphereSource = vtkSmartPointer<vtkSphereSource>::New();
-    sphereSource->SetRadius(1.6);
-    vtkNew<vtkOpenGLGlyph3DMapper> mapper;
-    mapper->SetSourceConnection(sphereSource->GetOutputPort());
     userData->highlightPointFilter = vtkSmartPointer<HightPointFilter>::New();
     userData->highlightPointFilter->SetMappingPointsDb(m_mappingPointsDb);
     userData->highlightPointFilter->SetDissolveDb(m_dissolveDb);
+    userData->highlightPointFilter->SetMappingPointRadius(m_mappingSetting->duplicateRadius());
+    userData->highlightPointFilter->SetDissolvePointRadius(m_dissolveOptions->radius());
+
+    vtkNew<vtkOpenGLGlyph3DMapper> mapper;
+    mapper->SetScaleArray("Radius");
+    mapper->SetScaleModeToScaleByVectorComponents();
+    mapper->SetSourceConnection(sphereSource->GetOutputPort());
     mapper->SetInputConnection(userData->highlightPointFilter->GetOutputPort());
     userData->highlightPointActor = vtkSmartPointer<vtkActor>::New();
     userData->highlightPointActor->SetMapper(mapper);

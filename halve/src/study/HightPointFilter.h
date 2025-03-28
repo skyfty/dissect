@@ -32,6 +32,16 @@ public:
     vtkSetMacro(CurrentMappingPointId, qint64);
     vtkGetMacro(CurrentMappingPointId, qint64);
 
+
+    vtkSetMacro(DissolvePointRadius, double);
+    vtkGetMacro(DissolvePointRadius, double);
+
+    vtkSetMacro(MappingPointRadius, double);
+    vtkGetMacro(MappingPointRadius, double);
+
+    vtkSetMacro(Margen, double);
+    vtkGetMacro(Margen, double);
+
 protected:
     HightPointFilter();
     ~HightPointFilter();
@@ -47,6 +57,9 @@ private:
 private:
     bool ShowDissolve = false;
     bool ShowSurface = false;
+    double Margen = 0.6;
+    double DissolvePointRadius = 1.0;
+    double MappingPointRadius = 1.0;
     qint64  CurrentDissolvePointId = -1;
     qint64  CurrentMappingPointId = -1;
     DissolveDb *m_dissolveDb = nullptr;
