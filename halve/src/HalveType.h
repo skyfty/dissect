@@ -160,12 +160,6 @@ public:
     };
     Q_ENUM(StorageState);
 
-    enum RespiratorMode {
-        RES_MODE_NOTHING,
-        RES_MODE_GATING,
-        RES_MODE_ADAPTIVE
-    };
-    Q_ENUM(RespiratorMode);
 
 };
 constexpr double DefaultSpacing[3] = { 1.0f,1.0f,1.0f };

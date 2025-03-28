@@ -565,6 +565,7 @@ Item {
 
 
                 Item {
+                    id:pointButtons
                     anchors.left: parent.left
                     anchors.top: parent.top
                     anchors.topMargin: 20
@@ -656,7 +657,7 @@ Item {
                 Item {
                     visible: root.channel.mode === Halve.CHANNELMODE_ELECTRICAL
                     anchors.top: parent.top
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.left: pointButtons.right
                     anchors.topMargin: 5
                     height: 40
                     width: 80

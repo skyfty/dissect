@@ -85,6 +85,14 @@ QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &da
         Catheter* csCatheter = csCatheters[0];
         Catheter* reproduceCatheter = m_catheterDb->getData(m_reproduceOptions->catheterId());
 
+        RESPIRATORY_MODE respiratoryMode = RESPIRATORY_MODE::NOTHING;
+        if (m_breathOptions->enabledCompensate()) {
+            if (m_breathOptions->breatheCompensation()) {
+                respiratoryMode = RESPIRATORY_MODE::ADAPTIVE;
+            } else if (m_breathOptions->breatheGate()) {
+                respiratoryMode = RESPIRATORY_MODE::GATING;
+            }
+        }
         float position_zero_out[2]{};
         m_electricMappingAlgorithm->Electric_field_mapping_algorithm_all(
             m_profile->state() == Profile::Reproduce ? OPERATION_STATE::MODELING : OPERATION_STATE::MAPPING,
@@ -92,7 +100,7 @@ QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &da
             reproduceCatheter->getAmount(),
             csCatheter->bseat(),
             csCatheter->getAmount(),
-            static_cast<RESPIRATORY_MODE>(m_breathOptions->respiratoryMode()),
+            respiratoryMode,
             const_cast<float*>(dataBuffer.m[0].pos.GetData()),
             &breathGateSync,
             reinterpret_cast<float*>(mdata[0].pos.GetData()),

@@ -17,108 +17,115 @@ ColumnLayout {
     readonly property int duration:12
 
     ColumnLayout {
-        Layout.topMargin:10
-        Layout.bottomMargin: 10
-        Layout.leftMargin: 5
-        Layout.rightMargin: 5
+        visible: root.combined.mode === Halve.CHANNELMODE_ELECTRICAL
         Layout.fillWidth: true
-        Label {
-            text:qsTr("The catheter must be in a stable position\r\n for 12 seconds while collecting respiratory data")
-        }
-        Button {
-            id:collectButton
+        Layout.fillHeight: true
+        ColumnLayout {
+            Layout.topMargin:10
+            Layout.bottomMargin: 10
+            Layout.leftMargin: 5
+            Layout.rightMargin: 5
             Layout.fillWidth: true
-            enabled:root.combined.state === ChannelReplica.State_Tracking && !timer.running
-            onClicked:  {
-                root.profile.renovating = true;
-                root.notebookDataSource.autoRecord("CRD " + new Date().toLocaleString(locale, "hh:mm:ss"));
+            Label {
+                text:qsTr("The catheter must be in a stable position\r\n for 12 seconds while collecting respiratory data")
             }
-            contentItem: Item {
-
-            }
-
-            ProgressBar {
-                id:progressBar
-                visible: timer.running
-                value: timerInterval / root.duration
-                width: parent.width
-                height: parent.height
-                anchors.horizontalCenter: parent.horizontalCenter
-            }
-            RowLayout {
-                anchors.centerIn: parent
-                Label {
-                    text:qsTr("Collect respiratory data")
-                    color: "white"
-                }
-                Label {
-                    text:(root.duration - timerInterval) + qsTr(" second")
-                    visible: timer.running
-                    color: "white"
-                }
-            }
-
-        }
-        Label {
-            visible: root.profile.pantSampling &&  !timer.running && breathOptions.breatheLimit < AppSettings.breathSamplingValidLimit
-            text:qsTr("The breath sampling value is too small") + " " + breathOptions.breatheLimit.toFixed(2)
-            color: "red"
-            font.bold: true
-        }
-    }
-
-    Timer {
-        id:timer;
-        repeat:true
-        running: root.profile.renovating
-
-        onRunningChanged: {
-            timerInterval = 0;
-        }
-
-        triggeredOnStart:true
-        onTriggered: {
-            if (timerInterval++ >= root.duration) {
-                root.profile.renovating = false;
-            }
-        }
-    }
-
-    ColumnLayout {
-        Label {
-            text: qsTr("Breathing boundary value coefficient (%)")
-            Layout.fillWidth: true
-        }
-
-        Connections {
-            target: root.breathOptions
-            function onBreathBoundaryRatioChanged() {
-                breathBoundaryRatioSpinBox.value = root.breathOptions.breathBoundaryRatio;
-            }
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-
-            DoubleSpinBox {
-                id:breathBoundaryRatioSpinBox
+            Button {
+                id:collectButton
                 Layout.fillWidth: true
-                Layout.preferredHeight: 25
-                from: 0.0
-                to: 100
-                stepSize: 0.1
-                enabled:  !timer.running
-                value: root.breathOptions.breathBoundaryRatio
-                onValueModified: {
-                    root.breathOptions.breathBoundaryRatio = value
+                enabled:root.combined.state === ChannelReplica.State_Tracking && !timer.running
+                onClicked:  {
+                    root.profile.renovating = true;
+                    root.notebookDataSource.autoRecord("CRD " + new Date().toLocaleString(locale, "hh:mm:ss"));
+                }
+                contentItem: Item {
+
+                }
+
+                ProgressBar {
+                    id:progressBar
+                    visible: timer.running
+                    value: timerInterval / root.duration
+                    width: parent.width
+                    height: parent.height
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
+                RowLayout {
+                    anchors.centerIn: parent
+                    Label {
+                        text:qsTr("Collect respiratory data")
+                        color: "white"
+                    }
+                    Label {
+                        text:(root.duration - timerInterval) + qsTr(" second")
+                        visible: timer.running
+                        color: "white"
+                    }
+                }
+
+            }
+            Label {
+                visible: root.profile.pantSampling &&  !timer.running && breathOptions.breatheLimit < AppSettings.breathSamplingValidLimit
+                text:qsTr("The breath sampling value is too small") + " " + breathOptions.breatheLimit.toFixed(2)
+                color: "red"
+                font.bold: true
+            }
+        }
+
+        Timer {
+            id:timer;
+            repeat:true
+            running: root.profile.renovating
+
+            onRunningChanged: {
+                timerInterval = 0;
+            }
+
+            triggeredOnStart:true
+            onTriggered: {
+                if (timerInterval++ >= root.duration) {
+                    root.profile.renovating = false;
                 }
             }
         }
+
+        ColumnLayout {
+            Label {
+                text: qsTr("Breathing boundary value coefficient (%)")
+                Layout.fillWidth: true
+            }
+
+            Connections {
+                target: root.breathOptions
+                function onBreathBoundaryRatioChanged() {
+                    breathBoundaryRatioSpinBox.value = root.breathOptions.breathBoundaryRatio;
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                DoubleSpinBox {
+                    id:breathBoundaryRatioSpinBox
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 25
+                    from: 0.0
+                    to: 100
+                    stepSize: 0.1
+                    enabled:  !timer.running
+                    value: root.breathOptions.breathBoundaryRatio
+                    onValueModified: {
+                        root.breathOptions.breathBoundaryRatio = value
+                    }
+                }
+            }
+        }
+        ToolSeparator{
+            Layout.fillWidth: true
+            orientation: Qt.Horizontal
+        }
     }
-    ToolSeparator{
-        Layout.fillWidth: true
-        orientation: Qt.Horizontal
-    }
+
+
 
     ColumnLayout {
         spacing: 10
@@ -164,35 +171,5 @@ ColumnLayout {
 
         }
 
-    }
-
-    ColumnLayout {
-        visible: root.combined.mode === Halve.CHANNELMODE_ELECTRICAL
-        ToolSeparator{
-            Layout.fillWidth: true
-            orientation: Qt.Horizontal
-        }
-
-        ColumnLayout {
-            Label {
-                text: qsTr("Respiratory compensation")
-                Layout.fillWidth: true
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-                ComboBox {
-                    Layout.preferredHeight: 25
-                    Component.onCompleted: currentIndex = indexOfValue(root.breathOptions.respiratoryMode)
-                    onActivated:{
-                        root.breathOptions.respiratoryMode = currentValue
-                    }
-                    textRole: "text"
-                    valueRole: "value"
-                    Layout.fillWidth: true
-                    model: RespiratorModeModel{}
-                }
-            }
-        }
     }
 }

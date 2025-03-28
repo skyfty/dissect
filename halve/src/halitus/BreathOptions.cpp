@@ -52,9 +52,6 @@ void BreathOptions::fromJson(const QJsonObject &json)
     if (json.contains("breatheValley")) {
         m_breatheValley = json["breatheValley"].toDouble();
     }
-    if (json.contains("respiratoryMode")) {
-        m_respiratoryMode = (Halve::RespiratorMode)json["respiratoryMode"].toInt();
-    }
     if (json.contains("compensatePoints")) {
         QJsonArray compensatePointsJson = json["compensatePoints"].toArray();
         for(qsizetype i = 0; i < compensatePointsJson.size(); ++i) {
@@ -87,7 +84,6 @@ QJsonValue BreathOptions::toJson()
     json["breathBoundaryRatio"] = m_breathBoundaryRatio;
     json["breathePeak"] = m_breathePeak;
     json["breatheValley"] = m_breatheValley;
-    json["respiratoryMode"] = m_respiratoryMode;
 
     QJsonArray compensatePointsJson;
     for(int i = 0; i < m_compensatePoints->GetNumberOfPoints(); ++i) {
@@ -289,19 +285,6 @@ const QPair<double, double>& BreathOptions::gatingValid() const {
 
 void BreathOptions::setGatingValid(const QPair<double, double>& points) {
     m_gateValid = points;
-}
-
-Halve::RespiratorMode BreathOptions::respiratoryMode() const
-{
-    return m_respiratoryMode;
-}
-
-void BreathOptions::setRespiratoryMode(const Halve::RespiratorMode &newRespiratoryMode)
-{
-    if (m_respiratoryMode == newRespiratoryMode)
-        return;
-    m_respiratoryMode = newRespiratoryMode;
-    emit respiratoryModeChanged();
 }
 
 
