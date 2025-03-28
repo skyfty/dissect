@@ -120,13 +120,14 @@ private:
     void blendTrackData(const TrackData::List &catheterTrackData, const vtkVector3d &pant10Position, const vtkQuaterniond &pant10Quaternion);
     void blendTrackData(const TrackData &trackData,const vtkVector3d &pant10Position, const vtkQuaterniond &pant10Quaternion,QList<CatheterTrack> &catheterTrackList);
     void blendTraningTrackData(const TrackData::List& currentTrackDataList);
+    int electricCSMapping(ChannelTrackData& dataBuffer);
 
     bool getPant0TrackData(const TrackData::List &catheterTrackData, vtkVector3d &pant10Position, vtkQuaterniond &pant10Quaternion);
     void setTrackCenterPoint(const TrackData &trackData, const vtkVector3d &pant10Position, const vtkQuaterniond &pant10Quaternion);
     QList<TrackData> convertTrackData(const ChannelTrackData &dataBuffer);
     QList<TrackData> convertBlendTrackData(const ChannelTrackData &dataBuffer);
     QList<TrackData> convertBlendTraningTrackData(const ChannelTrackData& dataBuffer);
-    QList<TrackData> convertElectricalTrackData(const ChannelTrackData &dataBuffer);
+    QList<TrackData> convertElectricalTrackData(const ChannelTrackData &dataBuffer, int breathGateSync = 1);
     QList<TrackData> convertMagneticTrackData(const ChannelTrackData &dataBuffer);
 
     void addBlendCatheter(const QList<Catheter *> &catheters);

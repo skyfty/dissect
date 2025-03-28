@@ -14,7 +14,8 @@ public:
     void PrintSelf(ostream& os, vtkIndent indent) override;
     static PantCatheterFilter* New();
 
-    vtkSetMacro(LineColor, vtkColor3ub);
+    vtkSetMacro(LineColor1, vtkColor3ub);
+    vtkSetMacro(LineColor2, vtkColor3ub);
 
 protected:
     PantCatheterFilter();
@@ -24,7 +25,8 @@ protected:
     int FillInputPortInformation(int port, vtkInformation* info) override;
     vtkSmartPointer<vtkPolyData> makeTube(vtkPoints* points);
 private:
-    vtkColor3ub LineColor;
+    vtkColor3ub LineColor1;
+    vtkColor3ub LineColor2;
 
 private:
     PantCatheterFilter(const PantCatheterFilter&) = delete;

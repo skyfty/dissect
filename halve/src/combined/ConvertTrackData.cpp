@@ -33,7 +33,8 @@ QList<TrackData> Combined::convertTrackData(const ChannelTrackData &dataInput) {
 
     switch(m_channel->mode()) {
     case Halve::CHANNELMODE_ELECTRICAL: {
-        trackDataList = convertElectricalTrackData(dataBuffer);
+        int breathGateSync = electricCSMapping(dataBuffer);
+        trackDataList = convertElectricalTrackData(dataBuffer, breathGateSync);
         break;
     }
     case Halve::CHANNELMODE_MAGNETIC: {
@@ -72,11 +73,10 @@ QList<TrackData> Combined::convertMagneticTrackData(const ChannelTrackData &data
     }
     return trackDataList;
 }
-
-QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &dataBuffer) {
+int Combined::electricCSMapping(ChannelTrackData& dataBuffer) {
     std::vector<ChannelTrackM> mdata(dataBuffer.m, dataBuffer.m + ElectricalPortAmount);
     int breathGateSync = 1;
-    QList<Catheter*> csCatheters  = m_catheterDb->getCSDatas();
+    QList<Catheter*> csCatheters = m_catheterDb->getCSDatas();
     if (csCatheters.size() > 0 && m_reproductCatheterStatus == Halve::TrackStatus_Valid) {
         float bloodPoolImpedance;
         if (m_electricMappingAlgorithm == nullptr) {
@@ -89,7 +89,8 @@ QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &da
         if (m_breathOptions->enabledCompensate()) {
             if (m_breathOptions->breatheCompensation()) {
                 respiratoryMode = RESPIRATORY_MODE::ADAPTIVE;
-            } else if (m_breathOptions->breatheGate()) {
+            }
+            else if (m_breathOptions->breatheGate()) {
                 respiratoryMode = RESPIRATORY_MODE::GATING;
             }
         }
@@ -101,21 +102,24 @@ QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &da
             csCatheter->bseat(),
             csCatheter->getAmount(),
             respiratoryMode,
-            const_cast<float*>(dataBuffer.m[0].pos.GetData()),
+            const_cast<float*>(mdata[0].pos.GetData()),
             &breathGateSync,
-            reinterpret_cast<float*>(mdata[0].pos.GetData()),
+            reinterpret_cast<float*>(dataBuffer.m[0].pos.GetData()),
             &bloodPoolImpedance,
             position_zero_out);
         setBloodPoolImpedance(bloodPoolImpedance);
     }
+    return breathGateSync;
+}
 
+QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &dataBuffer, int breathGateSync) {
     QList<TrackData> trackDataList;
     for (quint16 seat = 0; seat < ElectricalPortAmount; seat++) {
         Catheter *catheter = m_catheterDb->getDataAtSeat(seat);
         if (catheter == nullptr) {
             continue;
         }
-        const ChannelTrackM &m = mdata[seat];
+        const ChannelTrackM &m = dataBuffer.m[seat];
         TrackData trackData(catheter, seat);
         trackData.setFlags(breathGateSync == 0 ? TrackData::ELECTRICAL_IMPEDANCE : 0);
         trackData.setStatus(m.valid()?Halve::TrackStatus_Valid:Halve::TrackStatus_Invalid);
@@ -128,6 +132,7 @@ QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &da
     }
     return trackDataList;
 }
+
 QList<TrackData> Combined::convertBlendTraningTrackData(const ChannelTrackData& dataBuffer) {
     QList<TrackData> trackDataList;
     for (auto& channelBlend : m_blendsMagnetism) {

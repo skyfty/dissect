@@ -17,7 +17,7 @@ ColumnLayout {
     readonly property int duration:12
 
     ColumnLayout {
-        visible: root.combined.mode === Halve.CHANNELMODE_ELECTRICAL
+        visible: root.combined.mode !== Halve.CHANNELMODE_ELECTRICAL
         Layout.fillWidth: true
         Layout.fillHeight: true
         ColumnLayout {
@@ -155,7 +155,7 @@ ColumnLayout {
             ButtonGroup.group: breathingRadioGroup
             text:qsTr("Apply breathing compensation")
             checked: root.breathOptions.breatheCompensation
-            enabled: root.profile.pantSampling && !timer.running && root.breathOptions.enabledCompensate
+            enabled: !timer.running && root.breathOptions.enabledCompensate
             onCheckedChanged:root.breathOptions.breatheCompensation = checked
         }
 
@@ -163,7 +163,7 @@ ColumnLayout {
             text:qsTr("Apply breathing gate")
             ButtonGroup.group: breathingRadioGroup
             checked: root.breathOptions.breatheGate
-            enabled: root.profile.pantSampling && !timer.running
+            enabled: !timer.running
 
             onCheckedChanged: {
                 root.breathOptions.breatheGate = checked

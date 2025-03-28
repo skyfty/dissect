@@ -530,6 +530,7 @@ Item {
 
 
                 Item {
+                    id:orientationWarp
                     visible: root.options.showOrientation
                     anchors.bottom: parent.bottom
                     anchors.left: parent.left
@@ -562,7 +563,32 @@ Item {
                         text:stage.azimuthName
                     }
                 }
+                
+                Item {
+                    visible: root.channel.mode === Halve.CHANNELMODE_ELECTRICAL
+                    anchors.left: parent.left
+                    anchors.bottomMargin: 10
+                    anchors.leftMargin: 10
+                    anchors.bottom: orientationWarp.top
+                    
+                    height: 30
+                    width: 80
+                    Rectangle {
+                        anchors.fill: parent
+                        color: "#CD3333"
+                        opacity: 0.9
+                        radius: 4
+                        border.color: "white"
+                        Label {
+                            text: root.combined.bloodPoolImpedance.toFixed(0)
+                            color: "white"
+                            font.weight: 1200
+                            font.pixelSize: 18
+                            anchors.centerIn: parent
+                        }
+                    }
 
+                }
 
                 Item {
                     id:pointButtons
@@ -654,29 +680,6 @@ Item {
                     }
                 }
 
-                Item {
-                    visible: root.channel.mode === Halve.CHANNELMODE_ELECTRICAL
-                    anchors.top: parent.top
-                    anchors.left: pointButtons.right
-                    anchors.topMargin: 5
-                    height: 40
-                    width: 80
-                    Rectangle {
-                        anchors.fill: parent
-                        color: "#CD3333"
-                        opacity: 0.9
-                        radius: 10
-                        border.color: "white"
-                        Label {
-                            text: root.combined.bloodPoolImpedance.toFixed(0)
-                            color: "white"
-                            font.weight: 1200
-                            font.pixelSize: 18
-                            anchors.centerIn: parent
-                        }
-                    }
-
-                }
 
             }
 

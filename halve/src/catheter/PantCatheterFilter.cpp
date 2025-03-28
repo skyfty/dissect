@@ -28,7 +28,9 @@ vtkStandardNewMacro(PantCatheterFilter);
 
 PantCatheterFilter::PantCatheterFilter()
 {
-    LineColor = ModelCache::instance()->color3ub("Green");
+    LineColor1 = ModelCache::instance()->color3ub("Green");
+    LineColor2 = ModelCache::instance()->color3ub("SkyBlue");
+
 }
 
 void PantCatheterFilter::PrintSelf(ostream& os, vtkIndent indent)
@@ -76,6 +78,7 @@ int PantCatheterFilter::RequestData(vtkInformation * vtkNotUsed(request), vtkInf
     }
     vtkNew<vtkAppendFilter> appendFilter;
 
+    int colorIdx = 0;
     vtkNew<vtkAppendFilter> lineAppendFilter;
     for(int i = 0; i < input0->GetNumberOfCells(); ++i) {
         vtkPolyLine *line = dynamic_cast<vtkPolyLine*>(input0->GetCell(i));
@@ -83,19 +86,19 @@ int PantCatheterFilter::RequestData(vtkInformation * vtkNotUsed(request), vtkInf
             vtkNew<vtkPoints> points;
             points->InsertNextPoint(input0->GetPoint(line->GetPointIds()->GetId(j)));
             points->InsertNextPoint(input0->GetPoint(line->GetPointIds()->GetId(j + 1)));
-            lineAppendFilter->AddInputData(makeTube(points));
+            vtkSmartPointer<vtkPolyData> lineGrid = makeTube(points);
+            vtkSmartPointer<vtkUnsignedCharArray> colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
+            colors->SetName(ColorsPointDataName);
+            colors->SetNumberOfComponents(3);
+            for (int k = 0; k < lineGrid->GetNumberOfPoints(); ++k) {
+                colors->InsertNextTypedTuple(colorIdx++ % 2?LineColor1.GetData(): LineColor2.GetData());
+            }
+            lineGrid->GetPointData()->SetScalars(colors);
+            lineAppendFilter->AddInputData(lineGrid);
         }
     }
     lineAppendFilter->Update();
-    vtkSmartPointer<vtkUnstructuredGrid> linePolyData = lineAppendFilter->GetOutput();
-    vtkSmartPointer<vtkUnsignedCharArray> colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
-    colors->SetName(ColorsPointDataName);
-    colors->SetNumberOfComponents(3);
-    for (int j = 0; j < linePolyData->GetNumberOfPoints(); ++j) {
-        colors->InsertNextTypedTuple(LineColor.GetData());
-    }
-    linePolyData->GetPointData()->SetScalars(colors);
-    appendFilter->AddInputData(linePolyData);
+    appendFilter->AddInputData(lineAppendFilter->GetOutput());
 
     if (input0->GetNumberOfPoints() > 0) {
         vtkNew<vtkGlyph3D> glyph3D;
