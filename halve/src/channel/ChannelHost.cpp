@@ -2,6 +2,7 @@
 #include "channel/ChannelDataDb.h"
 #include "channel/ChannelTrackDb.h"
 #include <utility/IOWorker.h>
+#include <utility/FrameRate.h>
 #include "channel/ChannelTrack.h"
 #include "channel/ChannelTrackData.h"
 
@@ -14,6 +15,7 @@ ChannelHost::ChannelHost(QObject *parent)
     QObject::connect(m_lookbackTimer, &QTimer::timeout, this, &ChannelHost::onLookbackTimeout);
     m_keepliveTimer = new QTimer(this);
     QObject::connect(m_keepliveTimer, &QTimer::timeout, this, &ChannelHost::onKeepliveTimerEvent);
+    m_frameRate = new FrameRate(this);
 }
 
 ChannelHost::~ChannelHost() {
@@ -104,8 +106,9 @@ void ChannelHost::publishChannelData(const ChannelDataPackage *dataBuffer, const
 }
 void ChannelHost::publishTrackData(const ChannelDataPackage *dataBuffer, const QDateTime &nowTime) {
     auto channelTrackData = std::make_unique<ChannelTrackData>(m_channelIdCounter++, nowTime.toMSecsSinceEpoch(), dataBuffer);
-    emit trackData(*channelTrackData);
-
+    if (!m_frameRate->charge()) {
+        emit trackData(*channelTrackData);
+    }
     IOWorker::run([this, channelTrackData = std::move(channelTrackData)] {
         m_channelTrackDb->add(*channelTrackData);
     });
@@ -125,6 +128,10 @@ void ChannelHost::setLookbackSpeed(qint32 newLookbackSpeed) {
     } else {
         m_lookbackTimer->start(std::chrono::milliseconds(newLookbackSpeed));
     }
+}
+void ChannelHost::setTrackRate(qint32 trackRate) {
+    ChannelSimpleSource::setTrackRate(trackRate);
+    m_frameRate->setRate(trackRate);
 }
 
 void ChannelHost::testChannelImportSpeed(const QList<ChannelData> &channelDatas) {

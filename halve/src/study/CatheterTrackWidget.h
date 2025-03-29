@@ -30,7 +30,6 @@ class CatheterTrackWidget : public QQuickItem
     Q_PROPERTY(Combined* combined WRITE setCombined READ combined NOTIFY combinedChanged FINAL);
     Q_PROPERTY(double consultPrecision READ consultPrecision WRITE setConsultPrecision NOTIFY consultPrecisionChanged FINAL)
     Q_PROPERTY(BreathSurvey *breathSurvey WRITE setBreathSurvey FINAL)
-    Q_PROPERTY(quint64 rate READ rate WRITE setRate NOTIFY rateChanged FINAL)
 
 public:
     explicit CatheterTrackWidget(QQuickItem *parent = nullptr);
@@ -46,8 +45,6 @@ public:
     double consultPrecision() const;
     void setConsultPrecision(double newConsultPrecision);
 
-    quint64 rate() const;
-    void setRate(quint64 newRate);
 
 public slots:
     void onCatheterTrackChanged(const QSharedPointer<CatheterTrackPackage> &trackData);
@@ -64,7 +61,6 @@ signals:
     void pant0Changed();
     void consultPrecisionChanged();
     void initRender();
-    void rateChanged();
 
 private:
     bool getTrackPosition(const CatheterTrack &track, vtkVector3d &position);
@@ -80,9 +76,7 @@ private:
     QPointer<Combined> m_combined;
     QPointer<BreathOptions> m_breathOptions;
     QPointer<BreathSurvey> m_breathSurvey;
-    QPointer<FrameRate> m_frameRate;
     QPointer<CatheterTrackWorker> m_worker;
-    quint64 m_rate = 8;
     bool m_pantElectricalNeedInit = true;
 
     vtkBoundingBox m_pant0BoundingBox{0,-1,0,-1,0,-1};

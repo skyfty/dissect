@@ -90,6 +90,7 @@ void ReseauDb::connectSignals(Reseau *reseau) {
 }
 
 void ReseauDb::remove(Reseau* reseau) {
+    QMutexLocker locker(&m_mutex);
     auto iter = std::find(std::begin(m_reseaus), std::end(m_reseaus), reseau);
     if (iter != std::end(m_reseaus)) {
         m_reseaus.erase(iter);
@@ -104,6 +105,7 @@ void ReseauDb::remove(int row) {
     }
 }
 void ReseauDb::clean() {
+    QMutexLocker locker(&m_mutex);
     for(Reseau* reseau: m_reseaus) {
         reseau->clean();
     }
@@ -117,7 +119,10 @@ Reseau *ReseauDb::add(qint64 id, const QString &name)
     reseau->setId(id);
     reseau->setName(name);
     connectSignals(reseau);
-    m_reseaus.push_front(reseau);
+    {
+        QMutexLocker locker(&m_mutex);
+        m_reseaus.push_front(reseau);
+    }
     emit added(reseau);
     return reseau;
 }
@@ -130,7 +135,10 @@ Reseau* ReseauDb::add(qint64 id, const QString& name, const QColor& color, vtkId
     reseau->setPointIds(ids);
     reseau->setPolyData(polyData);
     connectSignals(reseau);
-    m_reseaus.push_front(reseau);
+    {
+        QMutexLocker locker(&m_mutex);
+        m_reseaus.push_front(reseau);
+    }
     emit added(reseau);
     return reseau;
 }
@@ -140,15 +148,17 @@ int ReseauDb::size() const
     return m_reseaus.size();
 }
 
-Reseau* ReseauDb::getData(int row) const
+Reseau* ReseauDb::getData(int row)
 {
+    QMutexLocker locker(&m_mutex);
     if (row<0 || row > m_reseaus.size()) {
         return nullptr;
     }
     return m_reseaus[row];
 }
 
-Reseau* ReseauDb::getData(qint64 id)const {
+Reseau* ReseauDb::getData(qint64 id) {
+    QMutexLocker locker(&m_mutex);
     for(int i = 0; i < m_reseaus.size(); ++i) {
         Reseau *reseau = m_reseaus[i];
         if (reseau->id() == id) {
@@ -159,13 +169,14 @@ Reseau* ReseauDb::getData(qint64 id)const {
 }
 
 
-QList<Reseau *> ReseauDb::getDatas() const
+QList<Reseau *> ReseauDb::getDatas()
 {
     return m_reseaus;
 }
 
-QList<Reseau *> ReseauDb::getApparentDatas() const
+QList<Reseau *> ReseauDb::getApparentDatas()
 {
+    QMutexLocker locker(&m_mutex);
     QList<Reseau *> list;
     for(int i = 0; i < m_reseaus.size(); ++i) {
         Reseau *reseau = m_reseaus[i];
@@ -176,13 +187,15 @@ QList<Reseau *> ReseauDb::getApparentDatas() const
     return list;
 }
 
-int ReseauDb::index(const Reseau *reseau) const
+int ReseauDb::index(const Reseau *reseau)
 {
+    QMutexLocker locker(&m_mutex);
     return m_reseaus.indexOf(reseau);
 }
 
-int ReseauDb::index(qint64 id) const
+int ReseauDb::index(qint64 id)
 {
+    QMutexLocker locker(&m_mutex);
     for(int i = 0; i < m_reseaus.size(); ++i) {
         Reseau *reseau = m_reseaus[i];
         if (reseau->id() == id) {
@@ -191,7 +204,8 @@ int ReseauDb::index(qint64 id) const
     }
     return -1;
 }
-int ReseauDb::indexOfName(const QString &name) const {
+int ReseauDb::indexOfName(const QString &name) {
+    QMutexLocker locker(&m_mutex);
     for(int i = 0; i < m_reseaus.size(); ++i) {
         Reseau *reseau = m_reseaus[i];
         if (reseau->getName() == name) {
@@ -200,7 +214,8 @@ int ReseauDb::indexOfName(const QString &name) const {
     }
     return -1;
 }
-QList<QPair<Reseau*, double>> ReseauDb::getDatas(double x, double y, double z) const {
+QList<QPair<Reseau*, double>> ReseauDb::getDatas(double x, double y, double z) {
+    QMutexLocker locker(&m_mutex);
     QList<QPair<Reseau*, double>> result;
     for(int i = 0; i < m_reseaus.size(); ++i) {
         Reseau *reseau = m_reseaus[i];
@@ -214,10 +229,10 @@ QList<QPair<Reseau*, double>> ReseauDb::getDatas(double x, double y, double z) c
     return result;
 }
 
-QList<QPair<Reseau*, double>> ReseauDb::getDatas(double x[3]) const {
+QList<QPair<Reseau*, double>> ReseauDb::getDatas(double x[3]) {
     return getDatas(x[0],x[1],x[2]);
 }
 
-QList<QPair<Reseau*, double>> ReseauDb::getDatas(const vtkVector3d &pos) const {
+QList<QPair<Reseau*, double>> ReseauDb::getDatas(const vtkVector3d &pos) {
     return getDatas(pos.GetX(),pos.GetY(),pos.GetZ());
 }

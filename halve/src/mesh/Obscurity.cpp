@@ -23,6 +23,7 @@
 #include "mesh/Obscurity.h"
 #include "utility/ConnectCheck.h"
 #include "mesh/Carpenter.h"
+#include "mesh/ReactWorker.h"
 
 using namespace std::placeholders;
 
@@ -30,11 +31,15 @@ Obscurity::Obscurity(QObject* parent)
     : QObject(parent) {
     m_worker = new ObscurityWorker();
     QObject::connect(m_worker, &ObscurityWorker::carpenterResult, this, &Obscurity::onCarpenterResult);
+
+    m_reactWorker = new ReactWorker();
+    QObject::connect(m_reactWorker, &ReactWorker::depicted, this, &Obscurity::onDepicted);
 }
 
 Obscurity::~Obscurity() {
     QObject::disconnect(m_combined, nullptr, this, nullptr);
     m_worker->exit();
+    m_reactWorker->exit();
 }
 
 void Obscurity::setCombined(Combined* combined) {
@@ -50,27 +55,6 @@ void Obscurity::refresh() {
     emit m_worker->carpenter();
 }
 
-void Obscurity::onCatheterTrackChanged(const QSharedPointer<CatheterTrackPackage> &trackData) {
-    if (m_profile == nullptr || m_profile->renovating()) {
-        return;
-    }
-    quint64 falgs = m_combined->environmentFlags();
-    if ((m_combined->mode() == Halve::CHANNELMODE_ELECTRICAL && falgs != 0) || ((falgs & ~Halve::AN_PRETHORACIC_REFERENCE_CATHETER_CONFIGURATION_ERROR) != 0)) {
-        return;
-    }
-
-    vtkSmartPointer<vtkIdList> idTotalList = vtkSmartPointer<vtkIdList>::New();
-    for(Catheter* catheter:trackData->getCatheters()) {
-        if (catheter->id() != m_profile->reproduceOptions()->catheterId()) {
-            continue;
-        }
-        checkCatheterTrackData(catheter, trackData->getTracks(catheter), idTotalList);
-    }
-
-    if (idTotalList->GetNumberOfIds() > 0) {
-        depictBlackboardPoint(idTotalList);
-    }
-}
 void Obscurity::onSaveCurrentReseauTimerEvent() {
     m_saveTimer->stop();
     Reseau *currentReseau = m_profile->getCurrentReseau();
@@ -84,66 +68,11 @@ void Obscurity::onSaveCurrentReseauTimerEvent() {
     });
 }
 
-void Obscurity::depictBlackboardPoint(vtkIdList *idTotalList) {
-    Q_ASSERT(idTotalList != nullptr);
-    Reseau *defaultReseau = m_profile->getCurrentReseau();
-    if (defaultReseau == nullptr) {
-        return;
-    }
-    qint32 depictCount = m_blackboardDb->depictPoint(idTotalList,m_reproduceOptions->kernelSize() / 2);
-    if (!m_state && depictCount > 0) {
-        emit m_blackboardDb->changed();
-        refresh();
-    }
-    if (depictCount > 0) {
-        saveCurrentReseauPoints(std::chrono::milliseconds(500));
-    }
-}
-
-void Obscurity::checkElectrodeTrackPosition(Catheter *catheter,const QString &electrodeId,const vtkVector3d &trackPosition, vtkIdList *idTotalList) {
-    vtkVector3d endPos = catheter->getElectrodeLastPoint(electrodeId);
-    if (endPos.GetX() == -1) {
-        vtkIdType pointId  = m_blackboardDb->findClosestPoint(trackPosition);
-        if (pointId != -1) {
-            idTotalList->InsertNextId(pointId);
-        }
-    } else {
-        m_blackboardDb->getSeriePointIds(trackPosition, endPos, idTotalList);
-    }
-}
-
-void Obscurity::checkCatheterTrackData(Catheter *catheter, const QList<CatheterTrack> &trackDatas, vtkIdList *idTotalList) {
-    for(const CatheterTrack &track:trackDatas) {
-        if (track.status() != Halve::TrackStatus_Valid || track.type() != Halve::CET_MAG) {
-            continue;
-        }
-        vtkVector3d trackPosition;
-        track.getPosition(trackPosition);
-
-        bool valid = true;
-        if (m_breathOptions->enabledCompensate() && m_breathSurvey != nullptr && m_profile->pantSampling()) {
-            valid = m_breathSurvey->compensatePosition(trackPosition);
-        }
-        QString electrodeId = track.electrodeId();
-        if (valid) {
-            checkElectrodeTrackPosition(catheter, electrodeId, trackPosition, idTotalList);
-        }
-        catheter->setElectrodeLastPoint(electrodeId, trackPosition);
-    }
-}
 
 void Obscurity::onCarpenterResult(PolyDataWarp::Ptr polyData) {
     Q_ASSERT(polyData != nullptr);
     setState(false);
     emit polyDataChanged(polyData);
-}
-
-void Obscurity::onProfileStateChanged() {
-    if (m_profile->state() == Profile::Reproduce) {
-        QObject::connect(m_combined, &Combined::catheterTrackChanged, this, std::bind(&Obscurity::onCatheterTrackChanged, this, _1));
-    } else {
-        QObject::disconnect(m_combined, nullptr, this, nullptr);
-    }
 }
 
 void Obscurity::onCenterPointChanged() {
@@ -168,7 +97,6 @@ void Obscurity::setProfile(Profile *newProfile) {
         return;
     }
     m_profile = newProfile;
-    QObject::connect(m_profile, &Profile::stateChanged, this, &Obscurity::onProfileStateChanged);
     QObject::connect(m_profile, &Profile::centerPointChanged, this, &Obscurity::onCenterPointChanged);
     QObject::connect(m_profile, &Profile::currentReseauIdChanged, this, &Obscurity::onCurrentReseauChanged);
 
@@ -180,10 +108,7 @@ void Obscurity::setProfile(Profile *newProfile) {
     if (reseau != nullptr) {
         m_blackboardDb->resetPoint(reseau->pointIds());
     }
-    m_worker->setBlackboardDb(m_blackboardDb);
-
     m_reproduceOptions = m_profile->reproduceOptions();
-    m_worker->setReproduceOptions(m_reproduceOptions);
     QObject::connect(m_reproduceOptions, &ReproduceOptions::kernelSizeChanged, this, &Obscurity::refresh);
     QObject::connect(m_reproduceOptions, &ReproduceOptions::iterationsChanged, this, &Obscurity::refresh);
     emit profileChanged();
@@ -252,14 +177,14 @@ void Obscurity::setBreathSurvey(BreathSurvey *newBreathSurvey)
 void Obscurity::init() {
     Q_ASSERT(m_profile != nullptr);
 
-    m_worker->init();
+    m_worker->init(m_profile);
+    m_reactWorker->init(m_profile, m_combined);
 
-         //QtConcurrent::run([&] { test(); }).then(this, [this] {
-         //   m_blackboardDb->setPoint(m_profile->getCurrentReseau()->pointIds(), ScalarsSet);
-         //   refresh();
-         //});
+     //QtConcurrent::run([&] { test(); }).then(this, [this] {
+     //   m_blackboardDb->setPoint(m_profile->getCurrentReseau()->pointIds(), ScalarsSet);
+     //   refresh();
+     //});
 
-    onProfileStateChanged();
 }
 
 vtkSmartPointer<vtkPolyData> Obscurity::extract(vtkSmartPointer<vtkIdList> ids) {
@@ -311,6 +236,15 @@ void Obscurity::unwound() {
     refresh();
     emit abradeCountChanged();
 }
+void Obscurity::onDepicted(quint32 depictCount) {
+    if (!m_state && depictCount > 0) {
+        emit m_blackboardDb->changed();
+        refresh();
+    }
+    if (depictCount > 0) {
+        saveCurrentReseauPoints(std::chrono::milliseconds(500));
+    }
+}
 
 void Obscurity::onCurrentReseauChanged() {
     Reseau *reseau = m_profile->getCurrentReseau();
@@ -335,4 +269,18 @@ void Obscurity::saveCurrentReseauPoints(std::chrono::milliseconds value) {
     QMetaObject::invokeMethod(this, [this, value]() {
         m_saveTimer->start(value);
     }, Qt::QueuedConnection);
+}
+
+qint32 Obscurity::trackRate() const
+{
+    return m_trackRate;
+}
+
+void Obscurity::setTrackRate(qint32 newTrackRate)
+{
+    if (m_trackRate == newTrackRate)
+        return;
+    m_trackRate = newTrackRate;
+    m_reactWorker->setTrackRate(newTrackRate);
+    emit trackRateChanged();
 }

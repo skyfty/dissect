@@ -85,6 +85,7 @@ int runStorageChecker(QApplication &app, const QString &path, qint32 threshold) 
 struct ChannelHostOption {
     quint16 keepSave;
     Halve::ChannelMode mode;
+    qint32 trackRate;
 
 };
 
@@ -100,6 +101,7 @@ int runChannel(QApplication& app, const QString& profile,ChannelHostOption &opti
     srcNode.enableRemoting(&channelHost); // enable remoting
     channelHost.init(profile, options.mode);
     channelHost.setKeepSave(options.keepSave);
+    channelHost.setTrackRate(options.trackRate);
     channelHost.setState(ChannelHost::State_Ready);
     auto result = app.exec();
     ioWorker->exit();
@@ -279,6 +281,8 @@ int main(int argc, char* argv[]) {
     parser.addOption(kidOption);
     QCommandLineOption keepSaveOption("keep-save", "want to kill process id", "ks");
     parser.addOption(keepSaveOption);
+    QCommandLineOption trackRateOption("track-rate", "track-rate", "tr");
+    parser.addOption(trackRateOption);
     QCommandLineOption channelModeOption("channel-mode", "channel model", "cm");
     parser.addOption(channelModeOption);
     QCommandLineOption thresholdOption("threshold", "channel model", "cm");
@@ -302,6 +306,7 @@ int main(int argc, char* argv[]) {
         ChannelHostOption optons;
         optons.keepSave = parser.value(keepSaveOption).toUShort();
         optons.mode = (Halve::ChannelMode)parser.value(channelModeOption).toUShort();
+        optons.trackRate = parser.value(trackRateOption).toInt();
         return runChannel(app,parser.value(profileOption),optons);
     }else if (processType == "storagechecker"){
         return runStorageChecker(app,parser.value(profileOption), parser.value(thresholdOption).toInt());

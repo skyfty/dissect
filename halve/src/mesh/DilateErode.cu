@@ -11,121 +11,104 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include "DilateErode.h"
 
-class DilateWorklet : public vtkm::worklet::WorkletMapField {
+class DilateErodeWorklet : public vtkm::worklet::WorkletMapField {
 public:
     using ControlSignature = void(FieldIn input, FieldOut output, WholeArrayIn inputArray, WholeArrayOut outputArray);
     using ExecutionSignature = void(_1, _2, _3, _4);
 
-    DilateWorklet(int kernelSize, int *dim)
+    DilateErodeWorklet(int kernelSize, int dim, int dilateValue, int erodeValue):
+        m_dilateValue(dilateValue), m_erodeValue(erodeValue), m_kernelSize(kernelSize), m_dim(dim)
     {
-        m_dim = dim;
-        m_kernelSize = kernelSize;
-    }
-
-    template <typename InArrayPortalType, typename OutArrayPortalType>
-    VTKM_EXEC void operator()(const vtkm::Id3& index, int& result,  const InArrayPortalType& inputArray,  OutArrayPortalType& outputArray) const
-    {
-        int halfKernel = m_kernelSize / 2;
-        int maxValue = 0;
-        for (int dz = -halfKernel; dz <= halfKernel; ++dz) {
-            for (int dy = -halfKernel; dy <= halfKernel; ++dy) {
-                for (int dx = -halfKernel; dx <= halfKernel; ++dx) {
-                    int nx = index[0] + dx;
-                    int ny = index[1] + dy;
-                    int nz = index[2] + dz;
-                    if (nx >= 0 && nx < m_dim[0] && ny >= 0 && ny < m_dim[1] && nz >= 0 && nz < m_dim[2]) {
-                        auto value = inputArray.Get(getIndex(nx, ny, nz));
-                        maxValue = vtkm::Max(maxValue, value);
-                    }
-                }
-            }
-        }
-        result = maxValue;
-    }
-
-    int getIndex(int x, int y, int z) const {
-        return x + m_dim[0] * (y + m_dim[1] * z);
-    }
-
-private:
-    int m_kernelSize = 3;
-    int *m_dim;
-};
-
-
-class ErodeWorklet : public vtkm::worklet::WorkletMapField {
-public:
-    using ControlSignature = void(FieldIn input, FieldOut output, WholeArrayIn inputArray, WholeArrayOut outputArray);
-    using ExecutionSignature = void(_1, _2, _3, _4);
-
-    ErodeWorklet(int kernelSize, int* dim)
-    {
-        m_dim = dim;
-        m_kernelSize = kernelSize;
     }
 
     template <typename InArrayPortalType, typename OutArrayPortalType>
     VTKM_EXEC void operator()(const vtkm::Id3& index, int& result, const InArrayPortalType& inputArray, OutArrayPortalType& outputArray) const
     {
-        int halfKernel = m_kernelSize / 2;
-        int minValue = 255;
-        for (int dz = -halfKernel; dz <= halfKernel; ++dz) {
-            for (int dy = -halfKernel; dy <= halfKernel; ++dy) {
-                for (int dx = -halfKernel; dx <= halfKernel; ++dx) {
-                    int nx = index[0] + dx;
-                    int ny = index[1] + dy;
-                    int nz = index[2] + dz;
-
-                    if (nx >= 0 && nx < m_dim[0] && ny >= 0 && ny < m_dim[1] && nz >= 0 && nz < m_dim[2]) {
-                        auto value = inputArray.Get(getIndex(nx, ny, nz));
-                        minValue = vtkm::Min(minValue, value);
+        result = inputArray.Get(getIndex(index[0], index[1], index[2]));
+        if (result == m_erodeValue) {
+            int halfKernel = m_kernelSize / 2;
+            for (int dz = -halfKernel; dz <= halfKernel; ++dz) {
+                for (int dy = -halfKernel; dy <= halfKernel; ++dy) {
+                    for (int dx = -halfKernel; dx <= halfKernel; ++dx) {
+                        int nx = index[0] + dx;
+                        int ny = index[1] + dy;
+                        int nz = index[2] + dz;
+                        if (nx >= 0 && nx < m_dim && ny >= 0 && ny < m_dim && nz >= 0 && nz < m_dim) {
+                            auto value = inputArray.Get(getIndex(nx, ny, nz));
+                            if (value == m_dilateValue) {
+                                result = m_dilateValue;
+                                return;
+                            }
+                        }
                     }
                 }
             }
         }
-        result = minValue;
     }
 
-    int getIndex(int x, int y, int z) const
-    {
-        return x + m_dim[0] * (y + m_dim[1] * z);
-    }
+    VTKM_EXEC int getIndex(int x, int y, int z) const
+	{
+		return x + m_dim * (y + m_dim * z);
+	}
 
 private:
-    int m_kernelSize = 3;
-    int* m_dim;
+    const int m_dilateValue;
+    const int m_erodeValue;
+    const int m_kernelSize;
+    const int m_dim;
 };
 
-DilateErode::DilateErode(int kernelSize, int dim[3])
+
+DilateErode::DilateErode()
 {
-    m_kernelSize = kernelSize;
-    m_dim[0] = dim[0];
-    m_dim[1] = dim[1];
-    m_dim[2] = dim[2];
+    m_dilateValue = 1;
+    m_erodeValue = 0;
+    m_kernelSize = 5;
+    m_dim = 201;
 }
 
-void DilateErode::operator()(const int* buffer, int* outBuffer, int bufferSize)
+void DilateErode::setDilateValue(int v) {
+    m_dilateValue = v;
+
+}
+void DilateErode::setErodeValue(int v) {
+    m_erodeValue = v;
+}
+
+void DilateErode::setKernelSize(int v) {
+    m_kernelSize = v;
+
+}
+void DilateErode::setDimension(int v) {
+    m_dim = v;
+
+}
+
+void DilateErode::filter(const int* inBuffer, int* outBuffer, int bufferSize)
 {
-    vtkm::Id3 dimensions(m_dim[0], m_dim[1], m_dim[2]);
+    m_workBuffer.resize(bufferSize);
+
+    vtkm::Id3 dimensions(m_dim, m_dim, m_dim);
     vtkm::cont::ArrayHandleUniformPointCoordinates coords(dimensions);
     vtkm::cont::CoordinateSystem coordinates("coordinates", coords);
 
-    std::vector<int> buff;
-    buff.resize(bufferSize);
-
+    auto workBufferHandle = vtkm::cont::make_ArrayHandle(m_workBuffer, vtkm::CopyFlag::Off);
     {
-
-        auto inputArray = vtkm::cont::make_ArrayHandle(buffer, bufferSize, vtkm::CopyFlag::Off);
-        auto outputArray = vtkm::cont::make_ArrayHandle(&buff[0], bufferSize, vtkm::CopyFlag::Off);
-        DilateWorklet worklet(m_kernelSize, m_dim);
+        DilateErodeWorklet worklet(m_kernelSize, m_dim, m_dilateValue, m_erodeValue);
         vtkm::cont::Invoker invoker;
-        invoker(worklet, coordinates.GetData(), outputArray, inputArray, outputArray);
+        invoker(worklet, coordinates.GetData(), 
+            workBufferHandle,
+            vtkm::cont::make_ArrayHandle(inBuffer, bufferSize, vtkm::CopyFlag::Off),
+            workBufferHandle);
     }
     {
-        auto inputArray = vtkm::cont::make_ArrayHandle(&buff[0], bufferSize, vtkm::CopyFlag::Off);
-        auto outputArray = vtkm::cont::make_ArrayHandle(outBuffer, bufferSize, vtkm::CopyFlag::Off);
-        DilateWorklet worklet(m_kernelSize, m_dim);
+        auto outBuffHandle = vtkm::cont::make_ArrayHandle(outBuffer, bufferSize, vtkm::CopyFlag::Off);
+        DilateErodeWorklet worklet(m_kernelSize, m_dim, m_erodeValue, m_dilateValue);
         vtkm::cont::Invoker invoker;
-        invoker(worklet, coordinates.GetData(), outputArray, inputArray, outputArray);
+        invoker(worklet, coordinates.GetData(),
+            outBuffHandle,
+            workBufferHandle,
+            outBuffHandle);
+        outBuffHandle.ReadPortal();
     }
 }

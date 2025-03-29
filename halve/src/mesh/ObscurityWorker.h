@@ -15,6 +15,7 @@ class ReproduceOptions;
 class BlackboardDb;
 class Carpenter;
 class CarpenterSource;
+class Profile;
 
 class ObscurityWorker : public QObject
 {
@@ -23,10 +24,8 @@ public:
     explicit ObscurityWorker(QObject *parent = nullptr);
     ~ObscurityWorker();
     void exit();
-    void init();
-    void setReproduceOptions(ReproduceOptions *optios);
-    void setBlackboardDb(BlackboardDb *blackboardDb);
-    QFuture<IdListWarp::Ptr> obtainPoints(vtkIdType type, QPolygon polygon,const vtkSmartPointer<vtkMatrix4x4>& mat, const vtkVector2i &windowSize,const vtkVector4d &viewport);
+    void init(Profile *newProfile);
+     QFuture<IdListWarp::Ptr> obtainPoints(vtkIdType type, QPolygon polygon,const vtkSmartPointer<vtkMatrix4x4>& mat, const vtkVector2i &windowSize,const vtkVector4d &viewport);
     QFuture<PolyDataWarp::Ptr> extractPolyData(vtkSmartPointer<vtkIdList> ids);
 
 signals:
@@ -42,6 +41,7 @@ private:
     vtkSmartPointer<vtkPolyData> extractPolyData();
 
 private:
+    QPointer<Profile> m_profile;
     QPointer<ReproduceOptions> m_reproduceOptions;
     QPointer<QThread> m_thread;
     QPointer<BlackboardDb> m_blackboardDb;

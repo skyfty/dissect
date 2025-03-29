@@ -63,6 +63,7 @@ Study {
         id:currentObscurity
         profile: root.profile
         combined:root.combined
+        trackRate: AppSettings.catheterTrackRate
         breathSurvey:currentBreathSurvey
         Component.onCompleted: {
             currentObscurity.init()
@@ -860,7 +861,6 @@ Study {
                             combined:root.combined
                             breathSurvey:currentBreathSurvey
                             consultPrecision:AppSettings.consultPrecision
-                            rate: AppSettings.catheterTrackRate
 
                             ChannelModeModel {
                                 id:channelModeModel

@@ -24,6 +24,7 @@ class Channel : public QObject
     Q_PROPERTY(bool keepSave READ keepSave WRITE setKeepSave NOTIFY keepSaveChanged FINAL)
     Q_PROPERTY(Halve::ChannelMode mode READ mode WRITE setMode NOTIFY modeChanged FINAL)
     Q_PROPERTY(QString profilePath READ profilePath WRITE setProfilePath NOTIFY profilePathChanged FINAL)
+    Q_PROPERTY(quint64 rate READ rate WRITE setRate NOTIFY rateChanged FINAL)
 
 
 public:
@@ -38,6 +39,8 @@ public:
     void setLookbackSpeed(qint32 newSpeed);
     bool keepSave() const;
     void setKeepSave(bool newKeepSave);
+    quint64 rate() const;
+    void setRate(quint64 newRate);
 
     Halve::ChannelMode mode() const;
     void setMode(const Halve::ChannelMode &newMode);
@@ -69,6 +72,7 @@ signals:
 
     void keepSaveChanged();
     void modeChanged();
+    void rateChanged();
 
 
     void profilePathChanged();
@@ -84,6 +88,7 @@ private:
     QProcess *m_process = nullptr;
     Halve::ChannelMode m_mode = Halve::CHANNELMODE_MAGNETIC;
     QString m_profilePath;
+    quint64 m_rate = 8;
 };
 
 #endif // CHANNEL_H

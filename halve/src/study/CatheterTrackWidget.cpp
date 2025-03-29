@@ -29,7 +29,6 @@ using namespace std::placeholders;
 CatheterTrackWidget::CatheterTrackWidget(QQuickItem *parent)
     : QQuickItem{parent}
 {
-    m_frameRate = new FrameRate(this);
     m_worker = new CatheterTrackWorker();
 }
 
@@ -108,19 +107,6 @@ vtkUnstructuredGrid* CatheterTrackWidget::prepareCatheterGrid(Catheter* catheter
     return grid;
 }
 
-quint64 CatheterTrackWidget::rate() const
-{
-    return m_rate;
-}
-
-void CatheterTrackWidget::setRate(quint64 newRate)
-{
-    if (m_rate == newRate)
-        return;
-    m_rate = newRate;
-    m_frameRate->setRate(newRate);
-    emit rateChanged();
-}
 void CatheterTrackWidget::onCatheterAlined(Catheter *catheter) {
     Q_ASSERT(catheter != nullptr);
 }
@@ -191,7 +177,7 @@ void CatheterTrackWidget::checkPantCatheterTrack(Catheter* catheter, const QList
 
 void CatheterTrackWidget::onCatheterTrackChanged(const QSharedPointer<CatheterTrackPackage> &trackDataPackage) {
     Q_ASSERT(m_profile != nullptr);
-    if (m_frameRate->charge() || m_profile->renovating()) {
+    if ( m_profile->renovating()) {
         return;
     }
     QList<Catheter*> catheters = trackDataPackage->getCatheters();

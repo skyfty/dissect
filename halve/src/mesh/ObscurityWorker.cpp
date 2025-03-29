@@ -20,6 +20,7 @@
 #include "mesh/BlackboardDb.h"
 #include "ObscurityWorker.h"
 #include "mesh/Carpenter.h"
+#include "profile/Profile.h"
 #include "reseau/Reseau.h"
 #include <QThread>
 #include <vtkExtractGeometry.h>
@@ -48,11 +49,6 @@ void ObscurityWorker::exit() {
     m_thread->wait();
 }
 
-void ObscurityWorker::setBlackboardDb(BlackboardDb *blackboardDb) {
-    m_blackboardDb = blackboardDb;
-    m_carpenter->setInputData(m_blackboardDb->getImageData());
-    QObject::connect(m_blackboardDb, &BlackboardDb::changed, this, &ObscurityWorker::onBlackboardChanged);
-}
 
 vtkSmartPointer<vtkPolyData> ObscurityWorker::extractPolyData(){
     Q_ASSERT(Thread::currentlyOn(m_thread));
@@ -87,14 +83,11 @@ void ObscurityWorker::onBlackboardChanged()
     m_carpenter->modified();
 }
 
-void ObscurityWorker::init() {
-    m_thread->start();
-}
-
-void ObscurityWorker::setReproduceOptions(ReproduceOptions* options) {
-    m_reproduceOptions = options;  
-    m_carpenter->setKernelSize(options->kernelSize());
-    m_carpenter->setIterations(options->iterations());
+void ObscurityWorker::init(Profile *newProfile) {
+    m_profile = newProfile;
+    m_reproduceOptions = m_profile->reproduceOptions();
+    m_carpenter->setKernelSize(m_reproduceOptions->kernelSize());
+    m_carpenter->setIterations(m_reproduceOptions->iterations());
     QObject::connect(m_reproduceOptions, &ReproduceOptions::iterationsChanged, this, [this](){
         m_carpenter->setIterations(m_reproduceOptions->iterations());
     });
@@ -103,5 +96,8 @@ void ObscurityWorker::setReproduceOptions(ReproduceOptions* options) {
         m_carpenter->modified();
     });
 
-
+    m_blackboardDb = m_profile->blackboardDb();
+    m_carpenter->setInputData(m_blackboardDb->getImageData());
+    QObject::connect(m_blackboardDb, &BlackboardDb::changed, this, &ObscurityWorker::onBlackboardChanged);
+    m_thread->start();
 }

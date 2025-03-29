@@ -50,6 +50,7 @@ Item {
         mode: root.profile.channelMode
         keepSave: AppSettings.keepSave
         port:AppSettings.channelPort
+        rate: AppSettings.catheterTrackRate
         onPortChanged: {
             currentChannel.launch()
         }

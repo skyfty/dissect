@@ -6,6 +6,7 @@
 #include "vtkInformation.h"
 #include "vtkDataObject.h"
 #include <vtkFloatArray.h>
+#include <vtkPointData.h>
 
 vtkStandardNewMacro(CarpenterSource);
 

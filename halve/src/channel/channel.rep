@@ -23,6 +23,7 @@ class Channel
     PROP(qint32 lookbackSpeed = 30 READWRITE)
     PROP(bool keepSave = false READWRITE)
     PROP(qint32 trainInterval = 5 READWRITE)
+    PROP(qint32 trackRate = 5 READWRITE)
 
     SIGNAL(sampleChanged(QList<ChannelData> data))
     SIGNAL(shipChanged(QList<ChannelData> data))

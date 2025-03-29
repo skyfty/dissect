@@ -20,10 +20,14 @@ set(SRCS
     "MeshImporter.h"
     "MeshImporter.cpp"
     "DilateErode.h"
+    "DilateErode.cu"
     "Carpenter.cpp"
     "Carpenter.h"
     "CarpenterSource.cpp"
     "CarpenterSource.h"
-    # "DilateErode.cu"
+    "ImageOpenClose.cpp"
+    "ImageOpenClose.h"
+    "ReactWorker.cpp"
+    "ReactWorker.h"
 )
 target_sources(halve PRIVATE ${SRCS})

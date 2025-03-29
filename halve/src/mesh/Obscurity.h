@@ -26,6 +26,7 @@ class ReproduceOptions;
 class Reseau;
 class Catheter;
 class CatheterTrackPackage;
+class ReactWorker;
 
 class Obscurity : public QObject
 {
@@ -35,6 +36,7 @@ class Obscurity : public QObject
     Q_PROPERTY(bool state READ state WRITE setState NOTIFY stateChanged FINAL)
     Q_PROPERTY(BreathSurvey *breathSurvey WRITE setBreathSurvey FINAL)
     Q_PROPERTY(quint32 abradeCount READ abradeCount NOTIFY abradeCountChanged FINAL)
+    Q_PROPERTY(qint32 trackRate READ trackRate WRITE setTrackRate NOTIFY trackRateChanged FINAL)
 
 public:
 
@@ -62,6 +64,9 @@ public:
 
     quint32 abradeCount() const;
 
+    qint32 trackRate() const;
+    void setTrackRate(qint32 newTrackRate);
+
 signals:
     void profileChanged();
     void changed(ImageDataWarp::Ptr result);
@@ -70,18 +75,16 @@ signals:
     void abradeCountChanged();
 
 
+    void trackRateChanged();
+
 public slots:
-    void onCatheterTrackChanged(const QSharedPointer<CatheterTrackPackage> &trackData);
     void onCarpenterResult(PolyDataWarp::Ptr polyData);
-    void onProfileStateChanged();
     void onCenterPointChanged();
     void onSaveCurrentReseauTimerEvent();
     void onCurrentReseauChanged();
+    void onDepicted(quint32 cnt);
 
 private:
-    void checkCatheterTrackData(Catheter *catheter, const QList<CatheterTrack> &trackDatas, vtkIdList *idTotalList);
-    void checkElectrodeTrackPosition(Catheter *catheter,const QString &electrodeId,const vtkVector3d &trackPosition, vtkIdList *idTotalList);
-    void depictBlackboardPoint(vtkIdList *idTotalList);
     void pushWoundStack(vtkSmartPointer<vtkIdList> ids);
     void saveCurrentReseauPoints(std::chrono::milliseconds value);
 
@@ -95,7 +98,9 @@ private:
     QPointer<BreathSurvey> m_breathSurvey;
     bool m_state  = false;
     QPointer<ObscurityWorker> m_worker;
+    QPointer<ReactWorker> m_reactWorker;
     QStack<vtkSmartPointer<vtkIdList>> m_woundStack;
     vtkVector3d m_centerPoint{-1,-1,-1};
     QTimer *m_saveTimer = nullptr;
+    qint32 m_trackRate = 5;
 };

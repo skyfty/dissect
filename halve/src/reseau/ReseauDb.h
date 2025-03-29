@@ -3,6 +3,8 @@
 
 #include "utility/VtkDataWarp.h"
 
+#include <QMutex>
+
 class Reseau;
 class vtkPolyData;
 class vtkIdList;
@@ -24,19 +26,19 @@ public:
     Reseau* add(qint64 id, const QString& name, const QColor& color, vtkIdList *ids, vtkSmartPointer<vtkPolyData> polyData);
 
     int size() const;
-    Reseau* getData(int row) const;
-    Reseau* getData(qint64 id) const;
+    Reseau* getData(int row);
+    Reseau* getData(qint64 id);
 
-    QList<QPair<Reseau*, double>> getDatas(double x, double y, double z) const;
-    QList<QPair<Reseau*, double>> getDatas(double x[3]) const;
-    QList<QPair<Reseau*, double>> getDatas(const vtkVector3d &pos) const;
+    QList<QPair<Reseau*, double>> getDatas(double x, double y, double z);
+    QList<QPair<Reseau*, double>> getDatas(double x[3]);
+    QList<QPair<Reseau*, double>> getDatas(const vtkVector3d &pos);
 
-    QList<Reseau *> getDatas() const;
-    QList<Reseau *> getApparentDatas() const;
+    QList<Reseau *> getDatas();
+    QList<Reseau *> getApparentDatas();
 
-    int index(const Reseau *reseau) const;
-    int index(qint64 id) const;
-    int indexOfName(const QString &name) const;
+    int index(const Reseau *reseau);
+    int index(qint64 id);
+    int indexOfName(const QString &name);
 
 
 signals:
@@ -57,6 +59,7 @@ private:
 
 
 private:
+    QMutex m_mutex;
     QString m_path;
     QString m_reseauPath;
     QList<Reseau*> m_reseaus;

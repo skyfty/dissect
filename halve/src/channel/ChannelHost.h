@@ -10,6 +10,7 @@ struct ChannelTrack;
 class ChannelTrackDb;
 class CatheterMagnetism;
 class ChannelTrackData;
+class FrameRate;
 
 class ChannelHost : public ChannelSimpleSource {
   Q_OBJECT
@@ -23,6 +24,7 @@ public:
     void lookback(qint64 beginTime, qint64 endTime) override;
     void ship(qint64 idx, qint64 count) override;
     void setLookbackSpeed(qint32 lookbackSpeed) override;
+    void setTrackRate(qint32 trackRate) override;
 
 private:
     void publishData(const ChannelDataPackage *buffer);
@@ -50,6 +52,7 @@ private:
     quint32 m_lookbackTrackDataIndex = 0;
     Halve::ChannelMode m_mode;
     QDateTime m_lastKeepTime;
+    QPointer<FrameRate> m_frameRate;
 };
 
 

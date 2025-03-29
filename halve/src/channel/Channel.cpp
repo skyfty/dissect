@@ -40,6 +40,7 @@ void Channel::launch() {
               << "--process-type" << "channel"
               << "--keep-save" << (m_keepSave ? "1" : "0")
               << "--channel-mode" << QString("%1").arg(m_mode)
+              << "--track-rate" << QString("%1").arg(m_rate)
               << "--profile" << m_profilePath;
     m_process = new QProcess(this);;
     QObject::connect(m_process, &QProcess::finished, this, &Channel::onFinised);
@@ -65,6 +66,19 @@ void Channel::setProfilePath(const QString &newProfilePath)
     emit profilePathChanged();
 }
 
+quint64 Channel::rate() const
+{
+    return m_rate;
+}
+
+void Channel::setRate(quint64 newRate)
+{
+    if (m_rate == newRate)
+        return;
+    m_rate = newRate;
+    m_channelReplica->setTrackRate(newRate);
+    emit rateChanged();
+}
 
 Halve::ChannelMode Channel::mode() const
 {
