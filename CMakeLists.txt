@@ -14,10 +14,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/halve)
 
-enable_language(CUDA)
 
 option(HALVE_BUILD_TESTS "Build Tests" OFF)
 option(HALVE_USE_CUDA "Enable CUDA complite" OFF)
+
+if(HALVE_USE_CUDA)
+  enable_language(CUDA)
+endif()
+
+# Forward CUDA option to VTK
+set(VTK_USE_CUDA "${HALVE_USE_CUDA}")
 
 add_subdirectory ("third_party")
 add_subdirectory ("ys")
