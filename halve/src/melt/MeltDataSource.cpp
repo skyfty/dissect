@@ -510,7 +510,7 @@ void MeltDataSource::strikSampleElectrode(const ElectrodeNode *electrodeNode, Me
             if (reseaus.size() > 0) {
                 double radius = reseaus.front().second < 0 ? m_mappingSetting->insideThrow() : m_mappingSetting->outsideThrow();
                 auto [pointId, dist] = reseaus.front().first->getClosestPointWithinRadius(mappingPoint.location, radius);
-                mappingPoint.valid = (pointId != -1 && (quint32)dist == 0);
+                mappingPoint.valid = (pointId != -1 && (quint32)dist <= radius);
                 if (mappingPoint.valid) {
                     reseaus.front().first->getPoint(pointId, mappingPoint.position);
                 }

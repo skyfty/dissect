@@ -270,5 +270,6 @@ void Stage::onCurrentPointIdChanged() {
         userData->highlightPointFilter->SetCurrentDissolvePointId(m_profile->currentDissolvePointId());
         userData->highlightPointFilter->SetCurrentMappingPointId(m_profile->currentMappingPointId());
         userData->voronoiKernel->SetRadius(m_mappingSetting->gap());
+        static_cast<vtkOpenGLGlyph3DMapper*>(userData->mappingSurfacePointActor->GetMapper())->SetScaleFactor(m_mappingSetting->duplicateRadius());
     });
 }
