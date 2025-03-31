@@ -13,6 +13,7 @@ class FilterOptionItem : public QObject
     Q_PROPERTY(qint32 order READ order WRITE setOrder NOTIFY orderChanged FINAL)
     Q_PROPERTY(bool noise READ noise WRITE setNoise NOTIFY noiseChanged FINAL)
     Q_PROPERTY(bool magnetic READ magnetic WRITE setMagnetic NOTIFY magneticChanged FINAL)
+    Q_PROPERTY(bool notch10Hz READ notch10Hz WRITE setNotch10Hz NOTIFY notch10HzChanged FINAL)
 
 public:
     explicit FilterOptionItem(QObject *parent = nullptr);
@@ -35,6 +36,9 @@ public:
     bool magnetic() const;
     void setMagnetic(bool newMagnetic);
 
+    bool notch10Hz() const;
+    void setNotch10Hz(bool newM_notch10Hz);
+
 signals:
     void highPassChanged();
     void lowPassChanged();
@@ -42,8 +46,8 @@ signals:
     void changed();
 
     void noiseChanged();
-
     void magneticChanged();
+    void notch10HzChanged();
 
 private:
     double m_highPass = -1;
@@ -51,6 +55,7 @@ private:
     qint32 m_order = 4;
     bool m_noise = true;
     bool m_magnetic = true;
+    bool m_notch10Hz = true;
 
 };
 

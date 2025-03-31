@@ -84,11 +84,11 @@ void ChannelDataFilter::setFilterOptions(FilterPipe *filterPipe, FilterOptionIte
 
     auto lowPass = filterOption->lowPass();
     if (lowPass != -1) {
-        filterPipe->AddLowPass(4,m_samplingRate, lowPass);
+        filterPipe->AddLowPass(4, m_samplingRate, lowPass);
     }
     auto highPass = filterOption->highPass();
     if (highPass != -1) {
-        filterPipe->AddHighPass(filterOption->order(),m_samplingRate, highPass);
+        filterPipe->AddHighPass(filterOption->order(), m_samplingRate, highPass);
     }
 
     if (filterOption->noise()) {
@@ -101,6 +101,10 @@ void ChannelDataFilter::setFilterOptions(FilterPipe *filterPipe, FilterOptionIte
        for(int i =1; i <= 11; ++i) {
            filterPipe->AddBandStop(4, m_samplingRate, 48.5, 0.05, i);
        }
+    }
+
+    if (filterOption->notch10Hz()) {
+        filterPipe->AddBandStop(4, m_samplingRate, 10, 0.1, 1);
     }
 
     filterPipe->Unlock();
