@@ -74,41 +74,41 @@ QList<TrackData> Combined::convertMagneticTrackData(const ChannelTrackData &data
     return trackDataList;
 }
 int Combined::electricCSMapping(ChannelTrackData& dataBuffer) {
-    std::vector<ChannelTrackM> mdata(dataBuffer.m, dataBuffer.m + ElectricalPortAmount);
     int breathGateSync = 1;
     QList<Catheter*> csCatheters = m_catheterDb->getCSDatas();
-    if (csCatheters.size() > 0 && m_reproductCatheterStatus == Halve::TrackStatus_Valid) {
-        float bloodPoolImpedance;
-        if (m_electricMappingAlgorithm == nullptr) {
-            m_electricMappingAlgorithm = new Electric_field_mapping_algorithm();
-        }
-        Catheter* csCatheter = csCatheters[0];
-        Catheter* reproduceCatheter = m_catheterDb->getData(m_reproduceOptions->catheterId());
-
-        RESPIRATORY_MODE respiratoryMode = RESPIRATORY_MODE::NOTHING;
-        if (m_breathOptions->enabledCompensate()) {
-            if (m_breathOptions->breatheCompensation()) {
-                respiratoryMode = RESPIRATORY_MODE::ADAPTIVE;
-            }
-            else if (m_breathOptions->breatheGate()) {
-                respiratoryMode = RESPIRATORY_MODE::GATING;
-            }
-        }
-        float position_zero_out[2]{};
-        m_electricMappingAlgorithm->Electric_field_mapping_algorithm_all(
-            m_profile->state() == Profile::Reproduce ? OPERATION_STATE::MODELING : OPERATION_STATE::MAPPING,
-            reproduceCatheter->bseat(),
-            reproduceCatheter->getAmount(),
-            csCatheter->bseat(),
-            csCatheter->getAmount(),
-            respiratoryMode,
-            const_cast<float*>(mdata[0].pos.GetData()),
-            &breathGateSync,
-            reinterpret_cast<float*>(dataBuffer.m[0].pos.GetData()),
-            &bloodPoolImpedance,
-            position_zero_out);
-        setBloodPoolImpedance(bloodPoolImpedance);
+    Catheter* reproduceCatheter = m_catheterDb->getData(m_reproduceOptions->catheterId());
+    if (reproduceCatheter == nullptr || !reproduceCatheter->employ() || m_reproductCatheterStatus != Halve::TrackStatus_Valid || csCatheters.size() == 0) {
+        return breathGateSync;
     }
+    std::vector<ChannelTrackM> mdata(dataBuffer.m, dataBuffer.m + ElectricalPortAmount);
+    if (m_electricMappingAlgorithm == nullptr) {
+        m_electricMappingAlgorithm = new Electric_field_mapping_algorithm();
+    }
+    Catheter* csCatheter = csCatheters[0];
+    RESPIRATORY_MODE respiratoryMode = RESPIRATORY_MODE::NOTHING;
+    if (m_breathOptions->enabledCompensate()) {
+        if (m_breathOptions->breatheCompensation()) {
+            respiratoryMode = RESPIRATORY_MODE::ADAPTIVE;
+        }
+        else if (m_breathOptions->breatheGate()) {
+            respiratoryMode = RESPIRATORY_MODE::GATING;
+        }
+    }
+    float bloodPoolImpedance;
+    float position_zero_out[2]{};
+    m_electricMappingAlgorithm->Electric_field_mapping_algorithm_all(
+        m_profile->state() == Profile::Reproduce ? OPERATION_STATE::MODELING : OPERATION_STATE::MAPPING,
+        reproduceCatheter->bseat(),
+        reproduceCatheter->getAmount(),
+        csCatheter->bseat(),
+        csCatheter->getAmount(),
+        respiratoryMode,
+        const_cast<float*>(mdata[0].pos.GetData()),
+        &breathGateSync,
+        reinterpret_cast<float*>(dataBuffer.m[0].pos.GetData()),
+        &bloodPoolImpedance,
+        position_zero_out);
+    setBloodPoolImpedance(bloodPoolImpedance);
     return breathGateSync;
 }
 

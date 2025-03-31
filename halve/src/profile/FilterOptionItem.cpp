@@ -17,6 +17,8 @@ void FilterOptionItem::fromJson(const QJsonObject &json)
         m_noise = json["noise"].toBool();
     if (json.contains("magnetic"))
         m_magnetic = json["magnetic"].toBool();
+    if (json.contains("notch10Hz"))
+        m_notch10Hz = json["notch10Hz"].toBool();
     if (json.contains("order"))
         m_order = json["order"].toInt();
 }
@@ -28,6 +30,7 @@ QJsonValue FilterOptionItem::toJson()
     json["lowPass"] = m_lowPass;
     json["noise"] = m_noise;
     json["magnetic"] = m_magnetic;
+    json["notch10Hz"] = m_notch10Hz;
     json["order"] = m_order;
     return json;
 }
@@ -101,4 +104,17 @@ void FilterOptionItem::setMagnetic(bool newMagnetic)
     m_magnetic = newMagnetic;
     emit magneticChanged();
     emit changed();
+}
+
+bool FilterOptionItem::notch10Hz() const
+{
+    return m_notch10Hz;
+}
+
+void FilterOptionItem::setNotch10Hz(bool newM_notch10Hz)
+{
+    if (m_notch10Hz == newM_notch10Hz)
+        return;
+    m_notch10Hz = newM_notch10Hz;
+    emit notch10HzChanged();
 }
