@@ -95,7 +95,8 @@ std::optional<CatheterTrack> DissolveDataSource::getElectrodeTrack(Catheter *cat
 
     const QList<CatheterTrack>& tracks = m_catheterTrack->getTracks(catheter);
     for (auto& track : tracks) {
-        if (track.seat() == m_dissolveOptions->electrodeIndex()) {
+        auto elecidx = track.seat() - catheter->bseat();
+        if (elecidx == m_dissolveOptions->electrodeIndex()) {
             return track;
         }
     }
