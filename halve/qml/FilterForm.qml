@@ -56,5 +56,11 @@ ColumnLayout {
         onClicked: mode.magnetic = checked
 
     }
+    CheckBox {
+        text:"10Hz陷波器"
+        checked: mode.notch10Hz
+        onClicked: mode.notch10Hz = checked
+
+    }
 }
 
