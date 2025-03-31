@@ -1,11 +1,11 @@
 #include "winver.h"
 
-IDI_ICON1               ICON    "halve.ico"
+IDI_ICON1               ICON    "@HALVE_ICON@"
 
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,4,1,5200
- PRODUCTVERSION 1,4,1,5200
+ FILEVERSION @VERSION_COMMA@
+ PRODUCTVERSION @VERSION_COMMA@
  FILEFLAGS 0x0L
  FILEFLAGSMASK 0x3fL
  FILEOS 0x00040004L
@@ -18,12 +18,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "The Touchmagic Ltd"
             VALUE "FileDescription", "Medical Treatment"
-            VALUE "FileVersion", "1,4,1,5200"
+            VALUE "FileVersion", "@VERSION_COMMA@"
             VALUE "LegalCopyright", "Copyright (C) 2015 The Touchmagic Company Ltd."
             VALUE "InternalName", "Halve"
             VALUE "OriginalFilename", "halve.exe"
             VALUE "ProductName", "Medical Treatment"
-            VALUE "ProductVersion", "1,4,1,5200"
+            VALUE "ProductVersion", "@VERSION_COMMA@"
         END
     END
     BLOCK "VarFileInfo"

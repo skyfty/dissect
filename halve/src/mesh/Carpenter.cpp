@@ -1,14 +1,15 @@
+#include "config.h"
 #include "Carpenter.h"
 #include "HalveType.h"
 #include <QDateTime>
 #include <vtkFlyingEdges3D.h>
 #include <vtkImageData.h>
-#include <vtkImageOpenClose3D.h>
 #include <vtkPolyDataNormals.h>
+#include <vtkPointData.h>
 #include <vtkWindowedSincPolyDataFilter.h>
 #include "ImageDataRefineFilter.h"
 #include "mesh/CarpenterSource.h"
-#include <vtkPointData.h>
+#include "mesh/ImageOpenClose.h"
 
 Carpenter::Carpenter(QObject *parent)
     : QObject{parent}
@@ -19,9 +20,9 @@ Carpenter::Carpenter(QObject *parent)
 void Carpenter::initFilters() {
     m_carpenterSource = vtkSmartPointer<CarpenterSource>::New();
 
-    m_openCloseFilter = vtkSmartPointer<vtkImageOpenClose3D>::New();
-    m_openCloseFilter->SetOpenValue(ScalarsReset);
-    m_openCloseFilter->SetCloseValue(ScalarsSet);
+    m_openCloseFilter = vtkSmartPointer<ImageOpenClose>::New();
+    m_openCloseFilter->SetOpenValue(ScalarsSet);
+    m_openCloseFilter->SetCloseValue(ScalarsReset);
     m_openCloseFilter->ReleaseDataFlagOff();
     m_openCloseFilter->SetInputConnection(m_carpenterSource->GetOutputPort());
 

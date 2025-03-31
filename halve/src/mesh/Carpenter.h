@@ -12,6 +12,7 @@ class vtkImageData;
 class vtkPolyData;
 class ImageDataRefineFilter;
 class CarpenterSource;
+class ImageOpenClose;
 
 
 class Carpenter : public QObject
@@ -39,7 +40,7 @@ private:
     int m_kernelSize;
     int m_iterations;
     vtkSmartPointer<CarpenterSource> m_carpenterSource;
-    vtkSmartPointer<vtkImageOpenClose3D> m_openCloseFilter;
+    vtkSmartPointer<ImageOpenClose> m_openCloseFilter;
     vtkSmartPointer<ImageDataRefineFilter> m_refineFilter;
     vtkSmartPointer<vtkFlyingEdges3D> m_flyingEdgesFilter;
     vtkSmartPointer<vtkWindowedSincPolyDataFilter> m_smoother;
