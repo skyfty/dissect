@@ -21,7 +21,7 @@ StartoverState *StartoverState::instance()
 }
 
 void StartoverState::registerDll() {
-    auto scrModeal = LoadLibraryA("screen-capture-recorder.dll");
+    auto scrModeal = LoadLibraryA("ffmpeg\\bin\\screen-capture-recorder-x64.dll");
     auto pDllRegisterServer = (HRESULT(WINAPI*)())GetProcAddress(scrModeal, "DllRegisterServer");
     if (pDllRegisterServer = NULL) {
         pDllRegisterServer();
