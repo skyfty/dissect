@@ -15,7 +15,7 @@ bool ScreenGrab::waitForFinish(const char *filepath, const char* eventName) {
     ZeroMemory( &pi, sizeof(pi) );
 
     std::stringstream ss;
-    ss << "ffmpeg.exe -y -f dshow -i video=\"screen-capture-recorder\" " << filepath;
+    ss << "ffmpeg.exe\\bin\\ffmpeg.exe -y -f dshow -i video=\"screen-capture-recorder\" " << filepath;
     std::string str = ss.str();
     std::unique_ptr<char> p(new char[str.size() + 1]);
     std::strcpy(p.get(), str.c_str());
