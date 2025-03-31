@@ -163,6 +163,7 @@ void Combined::appendElectrodeTrackData(const TrackData &trackData, Halve::Track
 
 }
 void Combined::adjuestTrackAngle(vtkVector3d &position, const vtkQuaterniond &pant10Quaternion) {
+    return;
     // Manipulate the transform to reflect the rotation
     m_transform->Identity();
     double direction[4]{};
@@ -190,9 +191,6 @@ void Combined::abruptionTrackData(TrackData::List &currentTrackDataList) {
     vtkVector3d pant0Position{0.0,0.0,0.0};
     vtkQuaterniond pant0Quaternion{0.0,0.0,0.0,0.0};
     bool pantResult = m_profile->useBackReference() ? getPant0TrackData(currentTrackDataList, pant0Position, pant0Quaternion):true;
-    if (m_centerPoint[0] != -1) {
-        vtkMath::Subtract(m_centerPoint.GetData(), pant0Position, m_centerPolemicsPosition.GetData());
-    }
     QSharedPointer<CatheterTrackPackage> catheterTracks(new CatheterTrackPackage());
     for(TrackData &trackData : currentTrackDataList) {
         Catheter* catheter = trackData.catheter();
@@ -227,7 +225,6 @@ void Combined::abruptionTrackData(TrackData::List &currentTrackDataList) {
 
                 if (catheter->employ()) {
                     adjuestTrackAngle(position, pant0Quaternion);
-                    vtkMath::Subtract(position, pant0Position, position);
                     vtkMath::Subtract(position, m_centerPolemicsPosition.GetData(), position);
                     appendElectrodeTrackData(trackData, status, catheter, position, catheterTrackList);
                 }
@@ -337,6 +334,8 @@ bool Combined::getPant0TrackData(const TrackData::List &catheterTrackData, vtkVe
 }
 void Combined::setTrackCenterPoint(const TrackData &trackData, const vtkVector3d &pant0Position, const vtkQuaterniond &pant0Quaternion)  {
     trackData.getPosition(m_centerPoint);
+    m_centerPolemicsPosition = m_centerPoint;
+    m_lastCenterPolemicsPosition = m_centerPolemicsPosition;
     adjuestTrackAngle(m_centerPoint, pant0Quaternion);
     emit centerPointChanged();
 }
@@ -346,12 +345,6 @@ void Combined::blendTrackData(const TrackData::List &currentTrackDataList) {
     vtkQuaterniond pant0Quaternion{0.0,0.0,0.0,0.0};
     bool pantResult = m_profile->useBackReference() ? getPant0TrackData(currentTrackDataList, pant0Position, pant0Quaternion):true;
     if (pantResult) {
-        if (m_centerPoint[0] != -1) {
-            vtkMath::Subtract(m_centerPoint.GetData(), pant0Position, m_centerPolemicsPosition.GetData());
-            if (m_lastCenterPolemicsPosition[0] == -1) {
-                m_lastCenterPolemicsPosition = m_centerPolemicsPosition;
-            }
-        }
         blendTrackData(currentTrackDataList, pant0Position, pant0Quaternion);
     }
 }
@@ -360,7 +353,6 @@ void Combined::blendTrackData(const TrackData &trackData,const vtkVector3d &pant
     vtkVector3d position;
     trackData.getPosition(position);
     adjuestTrackAngle(position, pant10Quaternion);
-    vtkMath::Subtract(position, pant10Position, position);
     vtkMath::Subtract(position, m_centerPolemicsPosition.GetData(), position);
     vtkQuaterniond quaternion;
     trackData.getQuaternion(quaternion);
@@ -596,6 +588,24 @@ void Combined::setMagnetismTrainRate(qint32 newMagnetismTrainRate)
 }
 
 void Combined::onChannelTrackData(const ChannelTrackData &dataInput) {
+    if (m_profile->useBackReference())
+    {
+        if (m_channel->mode() == Halve::CHANNELMODE_MAGNETIC ||
+            m_channel->mode() == Halve::CHANNELMODE_BLEND)
+        {
+            auto& p0 = dataInput.n[MagnetismPant0Port];
+            for (int i=0; i<MagnetismPortAmount; ++i)
+            {
+                if (i == MagnetismPant0Port ||
+                    i == MagnetismPant1Port)
+                    continue;
+                auto& pi = dataInput.n[i];
+                vtkMath::Subtract(pi.pos.GetData(), p0.pos.GetData(), (float*)pi.pos.GetData());
+            }
+        }
+    }
+
+
     m_currentTrackDataList = convertTrackData(dataInput);
     switch(m_channel->mode()) {
     case Halve::CHANNELMODE_MAGNETIC: {
@@ -650,6 +660,7 @@ const static vtkVector3d OrgCenterPoint{-1,-1,-1};
 void Combined::resetCenterPoint() {
     m_centerPoint = OrgCenterPoint;
     m_lastCenterPolemicsPosition = OrgCenterPoint;
+    m_centerPolemicsPosition = OrgCenterPoint;
     emit centerPointChanged();
 }
 
