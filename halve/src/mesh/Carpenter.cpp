@@ -77,7 +77,6 @@ void Carpenter::setInputData(vtkSmartPointer<vtkImageData> imageData)
 }
 
 vtkSmartPointer<vtkPolyData> Carpenter::getPolyData() {
-
     m_smoother->Update();
     return m_smoother->GetOutput();
 }

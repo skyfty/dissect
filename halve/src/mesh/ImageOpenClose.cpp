@@ -61,6 +61,7 @@ int ImageOpenClose::RequestData(vtkInformation* vtkNotUsed(request), vtkInformat
         vtkErrorMacro(<< "Output data is nullptr.");
         return 0;
     }
+
     vtkNew<vtkImageData> imageData;
     imageData->DeepCopy(input0);
     vtkIntArray* scalars = dynamic_cast<vtkIntArray*>(imageData->GetPointData()->GetScalars());

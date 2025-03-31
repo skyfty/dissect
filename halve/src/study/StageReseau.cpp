@@ -45,6 +45,7 @@
 #include <vtkCleanPolyData.h>
 #include "EliminateSource.h"
 #include "HightPointFilter.h"
+#include <vtkmPolyDataNormals.h>
 
 
 void Stage::setMeshShadow(vtkRenderWindow* renderWindow, StageData* userData) {
@@ -77,6 +78,11 @@ void Stage::onReseauChanged(Reseau* reseau) {
         }
         vtkSmartPointer<MeshPair> meshPair = userData->meshs.value(reseau);
         meshPair->source->SetInputData(polyData);
+
+        auto i = QDateTime::currentMSecsSinceEpoch();
+        meshPair->normalGenerator->Update();
+        qDebug() << QDateTime::currentMSecsSinceEpoch() - i;
+
     });
 }
 
@@ -157,20 +163,20 @@ vtkSmartPointer<MeshPair> Stage::createMeshPair(StageData* userData,Reseau* rese
     meshPair->reseauShowFilter->SetInputConnection(0, meshPair->interpolator->GetOutputPort());
     meshPair->reseauShowFilter->SetInputConnection(1, meshPair->source->GetOutputPort());
 
-    vtkNew<vtkPolyDataNormals> normalGenerator;
-    normalGenerator->SetInputConnection(meshPair->reseauShowFilter->GetOutputPort());
-    normalGenerator->ConsistencyOn();
-    normalGenerator->SplittingOff();
-    normalGenerator->ComputePointNormalsOn();
-    normalGenerator->ComputeCellNormalsOn();
-    normalGenerator->AutoOrientNormalsOn();
+    meshPair->normalGenerator = vtkSmartPointer<vtkPolyDataNormals>::New();
+    meshPair->normalGenerator->SetInputConnection(meshPair->reseauShowFilter->GetOutputPort());
+    meshPair->normalGenerator->ConsistencyOn();
+    meshPair->normalGenerator->SplittingOff();
+    meshPair->normalGenerator->ComputePointNormalsOn();
+    meshPair->normalGenerator->ComputeCellNormalsOn();
+    meshPair->normalGenerator->AutoOrientNormalsOff();
 
     meshPair->colorTransfer = vtkSmartPointer<MeshColorTransfer>::New();
     meshPair->colorTransfer->setStageScalar(m_stageScalar);
     meshPair->colorTransfer->setReseau(reseau);
 
     vtkNew<vtkPolyDataMapper> meshActorMapper;
-    meshActorMapper->SetInputConnection(normalGenerator->GetOutputPort());
+    meshActorMapper->SetInputConnection(meshPair->normalGenerator->GetOutputPort());
     meshActorMapper->SetUseLookupTableScalarRange(true);
     meshActorMapper->SetLookupTable(meshPair->colorTransfer);
     meshActorMapper->SetColorModeToMapScalars();

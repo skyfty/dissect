@@ -57,6 +57,7 @@ class EliminateSource;
 class MappingPointSource;
 class ReseauShowFilter;
 class ElectricalPantFilter;
+class vtkPolyDataNormals;
 
 struct DetectorPair : public vtkObject {
     static DetectorPair *New();
@@ -83,6 +84,7 @@ struct MeshPair : public vtkObject {
     vtkSmartPointer<vtkActor> actor;
     vtkSmartPointer<EliminateSource> source;
     vtkSmartPointer<vtkPointInterpolator> interpolator;
+    vtkSmartPointer<vtkPolyDataNormals> normalGenerator;
     vtkSmartPointer<MeshColorTransfer> colorTransfer;
     vtkSmartPointer<ReseauShowFilter> reseauShowFilter;
 };
