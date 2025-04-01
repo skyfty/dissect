@@ -133,9 +133,7 @@ private:
     void addBlendCatheter(const QList<Catheter *> &catheters);
     void removeBlendCatheter(Catheter *catheter);
     bool isValidBlendCatheter(Catheter *catheter);
-    bool isCentralityTrackData(Catheter *catheter,const TrackData &trackData);
     void prepareElectricalCatheter();
-    void setPantTrackCenterPoint();
     void inspectPantCatheterPort(const QSharedPointer<CatheterTrackPackage> &catheterTracks);
     void inspectReproduceCatheter(const QSharedPointer<CatheterTrackPackage> &catheterTracks);
     void inspectMagneticReproduceCatheter(const QSharedPointer<CatheterTrackPackage> &catheterTracks);

@@ -5,6 +5,7 @@ import QtQuick.Window
 import QtQuick.Layouts
 import Halve 1.0
 import Qt.labs.platform as Platform
+import "models"
 
 
 ColumnLayout {
@@ -56,7 +57,9 @@ ColumnLayout {
                     id:kernelSizeSlider
                     Layout.fillWidth: true
                     Layout.preferredHeight: 25
-                    model: [3,5,7,9,11, 13, 15]
+                    textRole: "text"
+                    valueRole: "value"
+                    model: KernelSizeModel{}
                     onActivated: {
                         options.kernelSize = currentValue
                     }

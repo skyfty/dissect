@@ -117,6 +117,10 @@ Halve::TrackStatus Combined::reproductCatheterStatus() const
     return m_reproductCatheterStatus;
 }
 
+double  Combined::squaredDistance() {
+    return std::sqrt(vtkMath::Distance2BetweenPoints(m_centerPolemicsPosition.GetData(), m_centerPoint.GetData()));
+}
+
 void Combined::setReproductCatheterStatus(Halve::TrackStatus newReproductCatheterStatus)
 {
     if (m_reproductCatheterStatus == newReproductCatheterStatus)
@@ -239,14 +243,6 @@ void Combined::abruptionTrackData(TrackData::List &currentTrackDataList) {
     emit catheterTrackChanged(catheterTracks);
 }
 
-bool Combined::isCentralityTrackData(Catheter *catheter,const TrackData &trackData) {
-    Q_ASSERT(catheter!= nullptr);
-    return trackData.port() - catheter->bseat() == catheter->centrality();
-}
-
-double  Combined::squaredDistance() {
-    return std::sqrt(vtkMath::Distance2BetweenPoints(m_centerPolemicsPosition.GetData(), m_centerPoint.GetData()));
-}
 
 void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
     QSharedPointer<CatheterTrackPackage> catheterTracks(new CatheterTrackPackage());
@@ -298,9 +294,6 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
         pantCatheterTrackList.append(createCatheterTrack(MagnetismPant1Port, Halve::CET_PANT, Halve::TrackStatus_Valid, position, quaternion, Pant1ID));
     }
 
-    CheckEnvironmentHelper flags(m_environmentFlags);
-    flags(Halve::AN_ELECTRIC_REFERENCE_POSITION_IS_TOO_OFFSET, squaredDistance() > m_displacement);
-    setEnvironmentFlags(flags);
     inspectReproduceCatheter(catheterTracks);
 
     emit catheterTrackChanged(catheterTracks);
@@ -590,14 +583,11 @@ void Combined::setMagnetismTrainRate(qint32 newMagnetismTrainRate)
 void Combined::onChannelTrackData(const ChannelTrackData &dataInput) {
     if (m_profile->useBackReference())
     {
-        if (m_channel->mode() == Halve::CHANNELMODE_MAGNETIC ||
-            m_channel->mode() == Halve::CHANNELMODE_BLEND)
+        if (m_channel->mode() == Halve::CHANNELMODE_MAGNETIC || m_channel->mode() == Halve::CHANNELMODE_BLEND)
         {
             auto& p0 = dataInput.n[MagnetismPant0Port];
-            for (int i=0; i<MagnetismPortAmount; ++i)
-            {
-                if (i == MagnetismPant0Port ||
-                    i == MagnetismPant1Port)
+            for (int i=0; i<MagnetismPortAmount; ++i) {
+                if (i == MagnetismPant0Port || i == MagnetismPant1Port)
                     continue;
                 auto& pi = dataInput.n[i];
                 vtkMath::Subtract(pi.pos.GetData(), p0.pos.GetData(), (float*)pi.pos.GetData());
@@ -666,6 +656,8 @@ void Combined::resetCenterPoint() {
 
 void Combined::resetCenterPoint(double x, double y, double z) {
     m_centerPoint.Set(x,y, z);
+    m_centerPolemicsPosition = m_centerPoint;
+    m_lastCenterPolemicsPosition = m_centerPolemicsPosition;
 }
 
 void Combined::resetCenterPoint(double pos[3])
