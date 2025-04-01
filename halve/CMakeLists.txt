@@ -4,15 +4,24 @@ set(CMAKE_INCLUDE_CURRENT_DIRS ON)
 set(CUDA_SEPARABLE_COMPILATION ON)
 set(CMAKE_CUDA_STANDARD 14)
 
+# 读取 version.txt
+set(VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/version.txt")
+set(RC_FILE "${CMAKE_CURRENT_BINARY_DIR}/halve.rc")  # 现在输出到 build 目录
+set(RC_IN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/halve.rc.in")
+set(HALVE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/halve.ico")
+
+file(READ "${VERSION_FILE}" VERSION_STRING)
+string(STRIP "${VERSION_STRING}" VERSION_STRING)
+string(REPLACE "." "," VERSION_COMMA "${VERSION_STRING}")
+configure_file("${RC_IN_FILE}" "${RC_FILE}")
+
 find_package(Qt6 REQUIRED COMPONENTS Quick Concurrent Charts Core Qml Gui RemoteObjects SerialPort Test LinguistTools)
 qt_standard_project_setup(REQUIRES 6.6)
 
 find_package(TBB REQUIRED)
 
 find_package(VTK REQUIRED)
-if (VTK_FOUND)
-    set(VTK_INCLUDE_DIRS "${VTK_PREFIX_PATH}/include/vtk-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
-endif()
+set(VTK_INCLUDE_DIRS "${VTK_PREFIX_PATH}/include/vtk-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
 
 find_package(VTKm REQUIRED QUIET)
 
@@ -20,13 +29,13 @@ if (POLICY CMP0146)
     cmake_policy(SET CMP0146 OLD)
 endif()
 
-# find_package(CUDA REQUIRED)
-# LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_52,code=sm_52 -rdc=true)
-# enable_language(CUDA)
-
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/config.h"
+)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-qt_add_executable(halve "resource.qrc" "halve.rc")
+qt_add_executable(halve "resource.qrc"  "${RC_FILE}")
 
 qt_add_resources(halve "configuration"
     PREFIX "/"
@@ -46,10 +55,12 @@ qt_add_translations(halve
         i18n/en.ts
         i18n/zh.ts
 )
-
 include_directories("src")
 add_subdirectory(src)
-add_subdirectory(tests)
+
+if (HALVE_BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
 
 set_target_properties(halve PROPERTIES
   WIN32_EXECUTABLE TRUE
@@ -129,7 +140,6 @@ target_include_directories(halve
         "${VTK_INCLUDE_DIRS}/vtkvtkm/vtk-m/vtkm/thirdparty/diy/vtkmdiy/include"
         "${VTK_INCLUDE_DIRS}/vtkvtkm/vtk-m/vtkm/thirdparty/lcl/vtkmlcl"
 )
-
 
 qt_import_qml_plugins(halve)
 qt_finalize_executable(halve)
