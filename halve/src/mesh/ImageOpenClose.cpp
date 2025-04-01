@@ -23,10 +23,8 @@ ImageOpenClose::ImageOpenClose()
     this->KernelSize[2] = 5;
     this->DilateValue = 0;
     this->ErodeValue = 1;
-    m_dilateErode = new DilateErode();
 }
 ImageOpenClose::~ImageOpenClose() {
-    delete m_dilateErode;
 }
 void ImageOpenClose::SetKernelSize(int size0, int size1, int size2)
 {
@@ -63,29 +61,33 @@ int ImageOpenClose::RequestData(vtkInformation* vtkNotUsed(request), vtkInformat
         vtkErrorMacro(<< "Output data is nullptr.");
         return 0;
     }
+
+    auto i = QDateTime::currentMSecsSinceEpoch();
 #ifdef  HALVE_USE_CUDA
     vtkNew<vtkImageData> imageData;
     imageData->DeepCopy(input0);
     vtkIntArray* scalars = dynamic_cast<vtkIntArray*>(imageData->GetPointData()->GetScalars());
     int dimensions[3]{};
     imageData->GetDimensions(dimensions);
-    m_dilateErode->setDilateValue(DilateValue);
-    m_dilateErode->setErodeValue(ErodeValue);
-    m_dilateErode->setKernelSize(KernelSize[0]);
-    m_dilateErode->setDimension(dimensions[0]);
-    m_dilateErode->filter(scalars->GetPointer(0), scalars->GetPointer(0), scalars->GetSize());
+    DilateErode dilateErode;
+    dilateErode.setDilateValue(DilateValue);
+    dilateErode.setErodeValue(ErodeValue);
+    dilateErode.setKernelSize(KernelSize[0]);
+    dilateErode.setDimension(dimensions[0]);
+    dilateErode.filter(scalars->GetPointer(0), scalars->GetPointer(0), scalars->GetSize());
     output->ShallowCopy(imageData);
 #else
+    
     vtkNew<vtkImageOpenClose3D> vtkImageOpenClose;
-    vtkImageOpenClose->SetOpenValue(DilateValue);
-    vtkImageOpenClose->SetCloseValue(ErodeValue);
+    vtkImageOpenClose->SetOpenValue(ErodeValue);
+    vtkImageOpenClose->SetCloseValue(DilateValue);
     vtkImageOpenClose->ReleaseDataFlagOff();
     vtkImageOpenClose->SetKernelSize(KernelSize[0], KernelSize[0], KernelSize[0]);
     vtkImageOpenClose->SetInputData(input0);
     vtkImageOpenClose->Update();
     output->ShallowCopy(vtkImageOpenClose->GetOutput());
 #endif //  HALVE_USE_CUDA
-
+    qDebug() << QDateTime::currentMSecsSinceEpoch() - i;
 
     return 1;
 }

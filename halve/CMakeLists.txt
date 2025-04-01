@@ -20,12 +20,14 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Concurrent Charts Core Qml Gui Remote
 qt_standard_project_setup(REQUIRES 6.6)
 
 find_package(TBB REQUIRED)
-if(HALVE_USE_CUDA)
-    find_package(CUDA REQUIRED)
-endif()
+
 find_package(VTKm REQUIRED)
 find_package(VTK REQUIRED)
 set(VTK_INCLUDE_DIRS "${VTK_PREFIX_PATH}/include/vtk-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
+
+if(HALVE_USE_CUDA)
+    find_package(CUDA REQUIRED)
+endif()
 
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
@@ -56,10 +58,6 @@ qt_add_translations(halve
 include_directories("src")
 add_subdirectory(src)
 
-if (HALVE_BUILD_TESTS)
-    add_subdirectory(tests)
-endif()
-
 list(APPEND DEPENDS_LIBRARYS
     Qt::Charts
     Qt::Core
@@ -89,6 +87,7 @@ target_include_directories(halve
         "${VTK_INCLUDE_DIRS}/vtkvtkm/vtk-m/vtkm/thirdparty/diy/vtkmdiy/include"
         "${VTK_INCLUDE_DIRS}/vtkvtkm/vtk-m/vtkm/thirdparty/lcl/vtkmlcl"
 )
+set_target_properties(halve PROPERTIES WIN32_EXECUTABLE TRUE)
 
 qt_import_qml_plugins(halve)
 qt_finalize_executable(halve)
@@ -98,3 +97,9 @@ install(TARGETS halve
     LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+if (HALVE_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+

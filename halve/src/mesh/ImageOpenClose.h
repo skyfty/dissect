@@ -2,8 +2,6 @@
 #define IMAGEOPENCLOSE_H
 #include "vtkImageAlgorithm.h"
 
-class DilateErode;
-
 class ImageOpenClose : public vtkImageAlgorithm
 {
 public:
@@ -41,7 +39,6 @@ private:
     int KernelSize[3];
     int DilateValue;
     int ErodeValue;
-    DilateErode* m_dilateErode;
 
 private:
     ImageOpenClose(const ImageOpenClose&) = delete;

@@ -19,11 +19,11 @@ option(HALVE_BUILD_TESTS "Build Tests" OFF)
 option(HALVE_USE_CUDA "Enable CUDA complite" OFF)
 
 if(HALVE_USE_CUDA)
+  # This needs to be a top level flag as enable_language needs
+  # to be called from CMake entry point for variables to have
+  # the correct scope.
   enable_language(CUDA)
 endif()
-
-# Forward CUDA option to VTK
-set(VTK_USE_CUDA "${HALVE_USE_CUDA}")
 
 add_subdirectory ("third_party")
 add_subdirectory ("ys")
