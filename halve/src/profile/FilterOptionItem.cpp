@@ -117,4 +117,5 @@ void FilterOptionItem::setNotch10Hz(bool newM_notch10Hz)
         return;
     m_notch10Hz = newM_notch10Hz;
     emit notch10HzChanged();
+    emit changed();
 }
