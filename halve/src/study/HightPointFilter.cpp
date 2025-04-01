@@ -39,7 +39,7 @@ int HightPointFilter::RequestData(vtkInformation * vtkNotUsed(request), vtkInfor
     if (ShowDissolve && CurrentDissolvePointId != -1) {
         auto dissolvePoint = m_dissolveDb->getData(CurrentDissolvePointId);
         if (dissolvePoint) {
-            float radius = DissolvePointRadius + Margen;
+            float radius = DissolvePointRadius * Margen;
             points->InsertNextPoint(dissolvePoint->x, dissolvePoint->y, dissolvePoint->z);
             scalars->InsertNextTuple3(radius, radius, radius);
         }
@@ -47,7 +47,7 @@ int HightPointFilter::RequestData(vtkInformation * vtkNotUsed(request), vtkInfor
     if (ShowSurface && CurrentMappingPointId != -1) {
         auto mappingPoint = m_mappingPointsDb->getData(CurrentMappingPointId);
         if (mappingPoint && mappingPoint->valid && mappingPoint->overcome ==  MappingPoint::EFFECTIVE) {
-            float radius = MappingPointRadius + Margen;
+            float radius = MappingPointRadius * Margen;
             points->InsertNextPoint(mappingPoint->x, mappingPoint->y, mappingPoint->z);
             scalars->InsertNextTuple3(radius, radius, radius);
         }

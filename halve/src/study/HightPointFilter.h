@@ -57,7 +57,7 @@ private:
 private:
     bool ShowDissolve = false;
     bool ShowSurface = false;
-    double Margen = 0.6;
+    double Margen = 3.0;
     double DissolvePointRadius = 1.0;
     double MappingPointRadius = 1.0;
     qint64  CurrentDissolvePointId = -1;
