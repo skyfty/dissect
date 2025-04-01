@@ -20,7 +20,9 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Concurrent Charts Core Qml Gui Remote
 qt_standard_project_setup(REQUIRES 6.6)
 
 find_package(TBB REQUIRED)
-find_package(CUDA REQUIRED)
+if(HALVE_USE_CUDA)
+    find_package(CUDA REQUIRED)
+endif()
 find_package(VTKm REQUIRED)
 find_package(VTK REQUIRED)
 set(VTK_INCLUDE_DIRS "${VTK_PREFIX_PATH}/include/vtk-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
