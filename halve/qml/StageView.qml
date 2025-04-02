@@ -565,7 +565,7 @@ Item {
                 }
                 
                 Item {
-                    visible: root.channel.mode === Halve.CHANNELMODE_ELECTRICAL
+                    visible: root.channel.mode === Halve.CHANNELMODE_ELECTRICAL || root.channel.mode === Halve.CHANNELMODE_BLEND
                     anchors.left: parent.left
                     anchors.bottomMargin: 10
                     anchors.leftMargin: 10

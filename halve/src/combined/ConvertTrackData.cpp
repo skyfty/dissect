@@ -42,6 +42,7 @@ QList<TrackData> Combined::convertTrackData(const ChannelTrackData &dataInput) {
         break;
     }
     case Halve::CHANNELMODE_BLEND: {
+        blendUpdateBloodPoolImpedance(dataBuffer);
         if (m_training) {
             trackDataList = convertBlendTraningTrackData(dataBuffer);
         } else {

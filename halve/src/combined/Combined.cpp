@@ -314,6 +314,19 @@ void Combined::getCS1AndCS9TrackData(const TrackData::List &catheterTrackData, T
     }
 }
 
+void Combined::blendUpdateBloodPoolImpedance(const ChannelTrackData &dataInput)
+{
+    Catheter* reproduceCatheter = m_catheterDb->getData(m_reproduceOptions->catheterId());
+    if (reproduceCatheter == nullptr || !reproduceCatheter->employ() || reproduceCatheter->getAmount() < 2)
+        return;
+    int startSeat = reproduceCatheter->bseat();
+    vtkVector3f diff;
+    vtkMath::Subtract(dataInput.m[startSeat].pos.GetData(), dataInput.m[startSeat + 1].pos.GetData(), diff.GetData());
+    double componentSum = vtkMath::Dot(diff.GetData(), diff.GetData());
+    double impedance = std::sqrt(componentSum);
+    setBloodPoolImpedance(impedance);
+}
+
 bool Combined::getPant0TrackData(const TrackData::List &catheterTrackData, vtkVector3d &pant10Position, vtkQuaterniond &pant10Quaternion) {
     auto iter = std::find_if(catheterTrackData.begin(), catheterTrackData.end(), [](const TrackData &trackData){
         return trackData.port() == MagnetismPant0Port;

@@ -143,6 +143,7 @@ private:
     quint64 checkEnvironmentFlags(quint64 flags, bool s);
     void getCS1AndCS9TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8);
 
+    void blendUpdateBloodPoolImpedance(const ChannelTrackData &dataInput);
 signals:
     void profileChanged();
     void stateChanged(ChannelReplica::State state);
