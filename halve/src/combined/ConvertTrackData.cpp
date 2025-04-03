@@ -42,7 +42,13 @@ QList<TrackData> Combined::convertTrackData(const ChannelTrackData &dataInput) {
         break;
     }
     case Halve::CHANNELMODE_BLEND: {
-        blendUpdateBloodPoolImpedance(dataBuffer);
+        {
+            static qint64 startTime = 0;
+            if (QDateTime::currentMSecsSinceEpoch() - startTime > 500) {
+                startTime = QDateTime::currentMSecsSinceEpoch();
+                blendUpdateBloodPoolImpedance(dataBuffer);
+            }
+        }
         if (m_training) {
             trackDataList = convertBlendTraningTrackData(dataBuffer);
         } else {
