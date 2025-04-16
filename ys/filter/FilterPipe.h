@@ -2,6 +2,7 @@
 
 #include "Filter.h"
 #include "ButterWorth.h"
+#include "TimeSeriesFilter.h"
 
 #include <vector>
 #include <mutex>
@@ -81,17 +82,17 @@ namespace ys
         template <typename FwIt>
         std::vector<DataType> Process(FwIt begin, FwIt end)
         {
-            auto output = std::vector<DataType>(begin, end);
-            if (output.size() > 0)
-            {
-                AddToBuffer(output);
-            }
+            std::vector<DataType> output(begin, end);
+            if (output.empty())
+                return output;
 
+            AddToBuffer(output);
             if (ProcessVector(output))
             {
+                //timeSeriesFilter.processDataInPlace(_queue, output);
                 return output;
             }
-            return std::vector<DataType>();
+            return std::vector<DataType>(output.size(), 0);
         }
 
         ///
@@ -207,6 +208,9 @@ namespace ys
         /// 缓冲区最大大小。
         ///
         uint32_t _maxBufferSize;
+
+        bool _appendTimeSeriesFilter {false};
+        TimeSeriesFilter timeSeriesFilter;
 
         void AddFilter(const FilterType &type, uint32_t order, uint32_t sampleRate,
                        double f, double halfBandWidth, uint32_t fTimes)

@@ -15,6 +15,7 @@ set(SRCS
     "ElecIdentify/DynamicNearestNeighbor.cpp"
     "ElecIdentify/ScaleFactorGetter.cpp"
     "ElecIdentify/Matrix3x4d.cpp"
+    "filter/TimeSeriesFilter.cpp" "filter/TimeSeriesFilter.h"
     "iir_filter/Electric_field_define.h"
     "iir_filter/Electric_field_mapping_algorithm.cpp"
     "iir_filter/Electric_field_mapping_algorithm.h"
