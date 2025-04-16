@@ -54,8 +54,8 @@ signals:
 
 private:
     FilterPipe* getFilterPipes(const ElectrodeNode *electrodeNode) const;
-    FilterPipe* createFilterPipes(FilterOptionItem *filterEcgOption) const;
-    void setFilterOptions(FilterPipe* fp, FilterOptionItem* item) const;
+    FilterPipe* createFilterPipes(int type, FilterOptionItem *filterEcgOption) const;
+    void setFilterOptions(int type, FilterPipe* fp, FilterOptionItem* item) const;
 
 private:
     QPointer<Profile> m_profile;

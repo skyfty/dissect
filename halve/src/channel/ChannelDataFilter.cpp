@@ -48,17 +48,17 @@ FilterPipe *ChannelDataFilter::getFilterPipes(const ElectrodeNode *electrodeNode
         switch(electrodeNode->type()) {
         case  Halve::ECG: {
             filterOption = m_filterOptions->getEcg();
-            m_ecgFilterPipes[electrodeNode] = filterPipe = createFilterPipes(filterOption);
+            m_ecgFilterPipes[electrodeNode] = filterPipe = createFilterPipes(Halve::ECG, filterOption);
             break;
         }
         case  Halve::SINGLE: {
             filterOption = m_filterOptions->getCatheterSingle();
-            m_singleFilterPipes[electrodeNode] = filterPipe = createFilterPipes(filterOption);
+            m_singleFilterPipes[electrodeNode] = filterPipe = createFilterPipes(Halve::SINGLE, filterOption);
             break;
         }
         default: {
             filterOption = m_filterOptions->getCatheterDouble();
-            m_doubleFilterPipes[electrodeNode] = filterPipe = createFilterPipes(filterOption);
+            m_doubleFilterPipes[electrodeNode] = filterPipe = createFilterPipes(Halve::PAIR, filterOption);
             break;
         }
         }
@@ -66,15 +66,15 @@ FilterPipe *ChannelDataFilter::getFilterPipes(const ElectrodeNode *electrodeNode
     return filterPipe;
 }
 
-FilterPipe *ChannelDataFilter::createFilterPipes(FilterOptionItem * filterOption) const {
+FilterPipe *ChannelDataFilter::createFilterPipes(int type, FilterOptionItem * filterOption) const {
     FilterPipe *filterPipe =  new FilterPipe();
     filterPipe->SetSampleRate(m_samplingRate);
     filterPipe->SetSubstractMean(true);
-    setFilterOptions(filterPipe,filterOption);
+    setFilterOptions(type, filterPipe,filterOption);
     return filterPipe;
 }
 
-void ChannelDataFilter::setFilterOptions(FilterPipe *filterPipe, FilterOptionItem *filterOption) const
+void ChannelDataFilter::setFilterOptions(int type, FilterPipe *filterPipe, FilterOptionItem *filterOption) const
 {
     Q_ASSERT(filterPipe != nullptr && filterOption != nullptr );
 
@@ -82,31 +82,86 @@ void ChannelDataFilter::setFilterOptions(FilterPipe *filterPipe, FilterOptionIte
     filterPipe->ClearAllFilter();
     filterPipe->ResetFirstPack();
 
-    auto lowPass = filterOption->lowPass();
-    if (lowPass != -1) {
-        filterPipe->AddLowPass(4, m_samplingRate, lowPass);
-    }
     auto highPass = filterOption->highPass();
     if (highPass != -1) {
-        filterPipe->AddHighPass(filterOption->order(), m_samplingRate, highPass);
+        switch (type)
+        {
+        case Halve::PAIR:
+            filterPipe->AddHighPass(2, m_samplingRate, highPass);
+            break;
+        case Halve::SINGLE:
+            filterPipe->AddHighPass(2, m_samplingRate, highPass);
+            break;
+        default:
+            filterPipe->AddHighPass(4, m_samplingRate, highPass);
+            break;
+        }
+    }
+
+    auto lowPass = filterOption->lowPass();
+    if (lowPass != -1) {
+        switch (type)
+        {
+        case Halve::PAIR:
+            filterPipe->AddLowPass(4, m_samplingRate, lowPass);
+            break;
+        case Halve::SINGLE:
+            filterPipe->AddLowPass(4, m_samplingRate, lowPass);
+            break;
+        default:
+            filterPipe->AddLowPass(4, m_samplingRate, lowPass);
+            break;
+        }
     }
 
     if (filterOption->noise()) {
        for(int i =1; i <= 3; ++i) {
-           filterPipe->AddBandStop(4, m_samplingRate, 50, 0.05, i);
+           switch (type)
+           {
+           case Halve::PAIR:
+               filterPipe->AddBandStop(2, m_samplingRate, 50, 0.2, i);
+               break;
+           case Halve::SINGLE:
+               filterPipe->AddBandStop(2, m_samplingRate, 50, 0.2, i);
+               break;
+           default:
+               filterPipe->AddBandStop(2, m_samplingRate, 50, 0.2, i);
+               break;
+           }
        }
     }
 
     if (filterOption->magnetic()) {
        for(int i =1; i <= 11; ++i) {
-           filterPipe->AddBandStop(4, m_samplingRate, 48.5, 0.05, i);
+           switch (type)
+           {
+           case Halve::PAIR:
+               filterPipe->AddBandStop(2, m_samplingRate, 48.5, 0.2, i);
+               break;
+           case Halve::SINGLE:
+               filterPipe->AddBandStop(2, m_samplingRate, 48.5, 0.2, i);
+               break;
+           default:
+               filterPipe->AddBandStop(2, m_samplingRate, 48.5, 0.2, i);
+               break;
+           }
        }
     }
 
     if (filterOption->notch10Hz()) {
-        filterPipe->AddBandStop(4, m_samplingRate, 10, 0.1, 1);
+        switch (type)
+        {
+        case Halve::PAIR:
+            filterPipe->AddBandStop(2, m_samplingRate, 10, 0.3, 1);
+            break;
+        case Halve::SINGLE:
+            filterPipe->AddBandStop(2, m_samplingRate, 10, 0.3, 1);
+            break;
+        default:
+            filterPipe->AddBandStop(2, m_samplingRate, 10, 0.3, 1);
+            break;
+        }
     }
-
     filterPipe->Unlock();
 }
 
@@ -203,17 +258,17 @@ void ChannelDataFilter::onFilterOptionItemChanged(FilterOptionItem* item) {
 
     if (m_filterOptions->getEcg() == item) {
         for (auto iter = m_ecgFilterPipes.begin(); iter != m_ecgFilterPipes.end(); ++iter) {
-            setFilterOptions(iter.value(),item);
+            setFilterOptions(Halve::ECG, iter.value(),item);
         }
     }
     else if (m_filterOptions->getCatheterDouble() == item) {
         for (auto iter = m_doubleFilterPipes.begin(); iter != m_doubleFilterPipes.end(); ++iter) {
-            setFilterOptions(iter.value(),item);
+            setFilterOptions(Halve::PAIR, iter.value(),item);
         }
     }
     else {
         for (auto iter = m_singleFilterPipes.begin(); iter != m_singleFilterPipes.end(); ++iter) {
-            setFilterOptions(iter.value(),item);
+            setFilterOptions(Halve::SINGLE, iter.value(),item);
         }
     }
 }

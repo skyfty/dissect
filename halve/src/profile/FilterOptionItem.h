@@ -1,6 +1,7 @@
 #ifndef FILTEROPTIONITEM_H
 #define FILTEROPTIONITEM_H
 
+#include <HalveType.h>
 #include <QObject>
 
 class QJsonObject;
@@ -37,7 +38,7 @@ public:
     void setMagnetic(bool newMagnetic);
 
     bool notch10Hz() const;
-    void setNotch10Hz(bool newM_notch10Hz);
+    void setNotch10Hz(bool newNotch10Hz);
 
 signals:
     void highPassChanged();
@@ -48,6 +49,8 @@ signals:
     void noiseChanged();
     void magneticChanged();
     void notch10HzChanged();
+
+    void typeChanged();
 
 private:
     double m_highPass = -1;

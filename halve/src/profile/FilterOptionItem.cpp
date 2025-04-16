@@ -111,11 +111,11 @@ bool FilterOptionItem::notch10Hz() const
     return m_notch10Hz;
 }
 
-void FilterOptionItem::setNotch10Hz(bool newM_notch10Hz)
+void FilterOptionItem::setNotch10Hz(bool newNotch10Hz)
 {
-    if (m_notch10Hz == newM_notch10Hz)
+    if (m_notch10Hz == newNotch10Hz)
         return;
-    m_notch10Hz = newM_notch10Hz;
+    m_notch10Hz = newNotch10Hz;
     emit notch10HzChanged();
     emit changed();
 }
