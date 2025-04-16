@@ -275,13 +275,13 @@ namespace ys
             for (int j = 1; j < (int)input.size() - 1; j++)
             {
                 diff[j] = (input[j + 1] - input[j - 1]) / 2.0f;
-                diffAbs[j] = abs(diff[j]);
+                diffAbs[j] = diff[j] * diff[j];
             }
             diff.front() = input[1] - input.front();
             diff.back() = input.back() - input[input.size() - 2];
 
-            diffAbs.front() = abs(diff.front());
-            diffAbs.back() = abs(diff.back());
+            diffAbs.front() = diff.front() * diff.front();
+            diffAbs.back() = diff.back() * diff.back();
         }
     };
 

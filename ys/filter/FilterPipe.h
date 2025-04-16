@@ -6,8 +6,7 @@
 #include <vector>
 #include <mutex>
 #include <algorithm>
-#include <string>
-#include <iostream>
+#include <deque>
 
 namespace ys
 {
@@ -75,30 +74,6 @@ namespace ys
         /// \brief Process
         /// 保留状态。一般是输入不重叠的、短的数据。
         /// 输入的数据会进入缓冲区。
-        /// \param p
-        /// \param len
-        /// \return
-        ///
-        template <typename InputType>
-        std::vector<DataType> Process(const InputType *p, uint32_t len)
-        {
-            auto output = std::vector<DataType>( &p[0], &p[len]);
-            if (output.size() > 0)
-            {
-                AddToBuffer(output);
-            }
-
-            if (ProcessVector(output))
-            {
-                return output;
-            }
-            return std::vector<DataType>();
-        }
-
-        ///
-        /// \brief Process
-        /// 保留状态。一般是输入不重叠的、短的数据。
-        /// 输入的数据会进入缓冲区。
         /// \param begin
         /// \param end
         /// \return
@@ -113,25 +88,6 @@ namespace ys
             }
 
             if (ProcessVector(output))
-            {
-                return output;
-            }
-            return std::vector<DataType>();
-        }
-
-        ///
-        /// \brief ProcessNoState
-        /// 不保留状态。输入可能重叠的、长的数据。
-        /// 输入的数据不进入缓冲区。
-        /// \param p
-        /// \param len
-        /// \return
-        ///
-        template <typename InputType>
-        std::vector<DataType> ProcessNoState(const InputType *p, uint32_t len)
-        {
-            auto output = std::vector<DataType>( &p[0], &p[len]);
-            if (ProcessVectorNoState(output))
             {
                 return output;
             }
@@ -157,52 +113,14 @@ namespace ys
             return std::vector<DataType>();
         }
 
-        ///
-        /// \brief BatchProcess
-        /// 输入的数据不进入缓冲区。
-        /// \param p
-        /// \param batchNum  批数。数据量batchNum*batchSize。
-        /// \param batchSize  一批处理的数据大小，一般要大于采样率个数据。
-        /// \return
-        ///
-        template <typename InputType>
-        std::vector<DataType> BatchProcess(const InputType *p, size_t batchNum, size_t batchSize)
-        {
-            std::vector<DataType> ret(batchNum *batchSize);
-            ret.clear();
-
-            for (size_t i = 0; i < batchNum; i++)
-            {
-                std::vector<DataType> batch( &p[i *batchSize], &p[(i + 1) *batchSize]);
-
-                double average = std::accumulate(batch.begin(), batch.end(), 0);
-                average /= batchSize;
-                for (auto &v : batch)
-                {
-                    v = (DataType)(v - average);
-                }
-
-                for (size_t k = 0; k < batch.size(); k++)
-                {
-                    for (auto &filt : _filters)
-                    {
-                        batch[k] = filt.CalcOneStep(batch[k]);
-                    }
-                }
-
-                ret.insert(ret.end(), batch.begin(), batch.end());
-            }
-
-            return ret;
-        }
-
         void ClearAllFilter()
         {
             _filters.clear();
         }
         void ClearBuffer()
         {
-            _buffer.clear();
+            _queue.clear();
+            _queueSum = 0;
         }
         void ResetFirstPack()
         {
@@ -224,8 +142,6 @@ namespace ys
 
             //最长缓冲5秒数据
             _maxBufferSize = _sampleRate * 5;
-
-            _buffer.reserve(_maxBufferSize + _sampleRate);
         }
 
         void Lock()
@@ -283,7 +199,8 @@ namespace ys
         /// \brief _buffer
         /// 输入数据缓冲区。
         ///
-        std::vector<DataType> _buffer;
+        std::deque<DataType> _queue;
+        double _queueSum {0};
 
         ///
         /// \brief _maxBufferSize
@@ -339,12 +256,21 @@ namespace ys
     private:
         void AddToBuffer(const std::vector<DataType> &input)
         {
-            _buffer.insert(_buffer.end(), input.cbegin(), input.cend());
+            if (input.empty())
+                return;
 
-            if (_buffer.size() > _maxBufferSize)
+            double inputSum = std::accumulate(input.begin(), input.end(), 0.0);
+            _queueSum += inputSum;
+
+            _queue.insert(_queue.end(), input.begin(), input.end());
+
+            if (_queue.size() > _maxBufferSize)
             {
-                auto length = _buffer.size() - _maxBufferSize;
-                _buffer.erase(_buffer.begin(), _buffer.begin() + length);
+                auto length = _queue.size() - _maxBufferSize;
+                double removeSum = std::accumulate(_queue.begin(), _queue.begin() + length, 0.0);
+                _queueSum -= removeSum;
+
+                _queue.erase(_queue.begin(), _queue.begin() + length);
             }
         }
         bool DirectProcessVector(std::vector<DataType> &inout)
@@ -352,19 +278,12 @@ namespace ys
             if (_substractMean)
             {
                 // 长度不足以计算均值，等待
-                if (_buffer.size() < _sampleRate)
+                if (_queue.size() < _sampleRate)
                 {
                     return false;
                 }
-
-                uint32_t length = std::min((uint32_t)_buffer.size(), _sampleRate);
-                double avg = std::accumulate(_buffer.end() - length, _buffer.end(), 0.0);
-                avg /= length;
-
-                for (auto &v : inout)
-                {
-                    v = (DataType)(v - avg);
-                }
+                double avg = _queueSum / _queue.size();
+                std::transform(inout.begin(), inout.end(), inout.begin(), [avg](DataType v) {return (DataType)(v - avg);});
             }
 
             auto length = inout.size();
@@ -377,7 +296,6 @@ namespace ys
                 }
                 inout[i] = iv;
             }
-
             return true;
         }
         bool ProcessVector(std::vector<DataType> &inout)
@@ -390,7 +308,7 @@ namespace ys
             if (_isFirstPack)
             {
                 //用缓冲区滤波，保留最后一段信号
-                std::vector<DataType> tmp(_buffer);
+                std::vector<DataType> tmp(_queue.begin(), _queue.end());
                 if (!DirectProcessVector(tmp))
                 {
                     return false;

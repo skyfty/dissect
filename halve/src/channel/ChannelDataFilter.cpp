@@ -178,43 +178,40 @@ void ChannelDataFilter::setSamplingRate(quint16 newSamplingRate)
     emit samplingRateChanged();
 }
 
-ChannelData::List ChannelDataFilter::pass(const ChannelData::List &inputChannelData,const ElectrodeNode *electrodeNode, bool batch) const {
+ChannelData::List ChannelDataFilter::pass(const ChannelData::List &inputChannelData,const ElectrodeNode *electrodeNode) const {
     ChannelData::List channelData(inputChannelData.begin(), inputChannelData.end());
-    return pass(channelData, electrodeNode,batch);
+    return pass(channelData, electrodeNode);
 }
 
-ChannelData::List& ChannelDataFilter::pass(ChannelData::List &channelData,const ElectrodeNode *electrodeNode, bool batch) const {
+ChannelData::List& ChannelDataFilter::pass(ChannelData::List &channelData,const ElectrodeNode *electrodeNode) const {
     if (m_filterOptions == nullptr || channelData.size() == 0) {
         return channelData;
     }
 
     FilterPipe* pipe = getFilterPipes(electrodeNode);
-    std::vector<ChannelData::DataType> inputVector(channelData.begin(), channelData.end());
-
     pipe->Lock();
-    std::vector<ChannelData::DataType> outVector = batch?pipe->BatchProcess(&inputVector[0], inputVector.size(), 0):pipe->Process(&inputVector[0], inputVector.size());
+    std::vector<ChannelData::DataType> outVector = pipe->Process(channelData.begin(), channelData.end());
     pipe->Unlock();
     channelData.assign(outVector.begin(), outVector.end());
 
     return channelData;
 }
 
-std::vector<ChannelData::DataType> ChannelDataFilter::pass(const std::vector<ChannelData::DataType> &inputVector, const ElectrodeNode *electrodeNode, bool batch) const
+std::vector<ChannelData::DataType> ChannelDataFilter::pass(const std::vector<ChannelData::DataType> &inputVector, const ElectrodeNode *electrodeNode) const
 {
     if (m_filterOptions == nullptr || inputVector.size() == 0) {
         return inputVector;
     }
     FilterPipe *pipe = getFilterPipes(electrodeNode);
-    return batch?pipe->BatchProcess(&inputVector[0], inputVector.size(), 0): pipe->Process(&inputVector[0], inputVector.size());
+    return pipe->Process(inputVector.begin(), inputVector.end());
 }
 ChannelData::List ChannelDataFilter::passNoState(ChannelData::List &channelData, const ElectrodeNode *electrodeNode) const {
     if (m_filterOptions == nullptr || channelData.size() == 0) {
         return channelData;
     }
     FilterPipe* pipe = getFilterPipes(electrodeNode);
-    std::vector<ChannelData::DataType> inputVector(channelData.begin(), channelData.end());
     pipe->Lock();
-    std::vector<ChannelData::DataType> outVector = pipe->ProcessNoState(&inputVector[0], inputVector.size());
+    std::vector<ChannelData::DataType> outVector = pipe->ProcessNoState(channelData.begin(), channelData.end());
     pipe->Unlock();
     channelData.assign(outVector.begin(), outVector.end());
     return channelData;
