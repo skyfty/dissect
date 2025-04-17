@@ -1,6 +1,7 @@
 #ifndef FILTEROPTIONITEM_H
 #define FILTEROPTIONITEM_H
 
+#include <HalveType.h>
 #include <QObject>
 
 class QJsonObject;
@@ -14,6 +15,7 @@ class FilterOptionItem : public QObject
     Q_PROPERTY(bool noise READ noise WRITE setNoise NOTIFY noiseChanged FINAL)
     Q_PROPERTY(bool magnetic READ magnetic WRITE setMagnetic NOTIFY magneticChanged FINAL)
     Q_PROPERTY(bool notch10Hz READ notch10Hz WRITE setNotch10Hz NOTIFY notch10HzChanged FINAL)
+    Q_PROPERTY(bool timeSeriesProcess READ getTimeSeriesProcess WRITE setTimeSeriesProcess NOTIFY signalTimeSeriesProcessChanged FINAL)
 
 public:
     explicit FilterOptionItem(QObject *parent = nullptr);
@@ -37,7 +39,10 @@ public:
     void setMagnetic(bool newMagnetic);
 
     bool notch10Hz() const;
-    void setNotch10Hz(bool newM_notch10Hz);
+    void setNotch10Hz(bool newNotch10Hz);
+
+    bool getTimeSeriesProcess() const;
+    void setTimeSeriesProcess(bool newTimeSeriesProcess);
 
 signals:
     void highPassChanged();
@@ -48,6 +53,7 @@ signals:
     void noiseChanged();
     void magneticChanged();
     void notch10HzChanged();
+    void signalTimeSeriesProcessChanged();
 
 private:
     double m_highPass = -1;
@@ -56,7 +62,7 @@ private:
     bool m_noise = true;
     bool m_magnetic = true;
     bool m_notch10Hz = true;
-
+    bool timeSeriesProcess = false;
 };
 
 #endif // FILTEROPTIONITEM_H

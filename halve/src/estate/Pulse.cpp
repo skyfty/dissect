@@ -24,7 +24,7 @@ void Pulse::processChannelData(const QList<ChannelData> &channelDatas) {
     ChannelDataCalculate channelCalc(m_electrodeNode);
     std::vector<ChannelData::DataType> dataList(channelDatas.size());
     std::transform(channelDatas.begin(), channelDatas.end(), dataList.begin(), channelCalc);
-    auto datas = m_channelDataFilter->pass(dataList, m_electrodeNode);
+    auto datas = m_channelDataFilter->passNoState(dataList, m_electrodeNode);
     if (datas.empty()) {
         m_profile->setPulse(0);
     } else {
