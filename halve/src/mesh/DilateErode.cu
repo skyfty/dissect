@@ -1,4 +1,4 @@
-
+﻿
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Invoker.h>
@@ -84,15 +84,49 @@ void DilateErode::setDimension(int v) {
 
 }
 
+VTKM_CONT vtkm::cont::DataSet DilateErode::DoExecute(const vtkm::cont::DataSet& input)
+{
+    const auto& field = this->GetFieldFromDataSet(input);
+    if (!field.IsPointField()) {
+        throw vtkm::cont::ErrorBadValue("Active field for ImageConnectivity must be a point field.");
+    }
+
+	vtkm::cont::DataSet output = input;
+	//vtkm::cont::ArrayHandle<vtkm::Int32> outBuffer;
+	//vtkm::cont::ArrayCopy(field.GetData(), outBuffer);
+
+	//vtkm::Id3 dimensions(m_dim, m_dim, m_dim);
+	//vtkm::cont::ArrayHandleUniformPointCoordinates coords(dimensions);
+	//vtkm::cont::CoordinateSystem coordinates("coordinates", coords);
+
+	//vtkm::cont::ArrayHandle<vtkm::Int32> workBufferHandle;
+	//workBufferHandle.Allocate(m_dim * m_dim * m_dim);  // 默认会在当前活动设备上分配内存
+
+ //   {
+ //       DilateErodeWorklet worklet(m_kernelSize, m_dim, m_dilateValue, m_erodeValue);
+ //       vtkm::cont::Invoker invoker;
+ //       invoker(worklet, coordinates.GetData(), workBufferHandle, field.GetData(), workBufferHandle);
+
+ //   }
+ //   auto outBuffHandle = vtkm::cont::make_ArrayHandle(outBuffer.GetPortalConstControl(), vtkm::CopyFlag::Off);
+ //   {
+ //       DilateErodeWorklet worklet(m_kernelSize, m_dim, m_erodeValue, m_dilateValue);
+ //       invoker(worklet, coordinates.GetData(), outBuffHandle, workBufferHandle, outBuffHandle);
+ //   }
+
+	//output.AddField(vtkm::cont::Field("DilateErode", vtkm::cont::Field::Association::POINTS, outBuffHandle));
+	return output;
+
+}
+
 void DilateErode::filter(const int* inBuffer, int* outBuffer, int bufferSize)
 {
-    m_workBuffer.resize(bufferSize);
-
     vtkm::Id3 dimensions(m_dim, m_dim, m_dim);
     vtkm::cont::ArrayHandleUniformPointCoordinates coords(dimensions);
     vtkm::cont::CoordinateSystem coordinates("coordinates", coords);
 
-    auto workBufferHandle = vtkm::cont::make_ArrayHandle(m_workBuffer, vtkm::CopyFlag::Off);
+    vtkm::cont::ArrayHandle<vtkm::Int32> workBufferHandle;
+    workBufferHandle.Allocate(bufferSize);  // 默认会在当前活动设备上分配内存
     {
         DilateErodeWorklet worklet(m_kernelSize, m_dim, m_dilateValue, m_erodeValue);
         vtkm::cont::Invoker invoker;

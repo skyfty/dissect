@@ -1,6 +1,7 @@
 ﻿set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_INCLUDE_CURRENT_DIRS ON)
+
 set(CUDA_SEPARABLE_COMPILATION ON)
 set(CMAKE_CUDA_STANDARD 14)
 set(CMAKE_CUDA_ARCHITECTURES OFF)
@@ -20,15 +21,13 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Concurrent Charts Core Qml Gui Remote
 qt_standard_project_setup(REQUIRES 6.6)
 
 find_package(TBB REQUIRED)
-
 find_package(VTKm REQUIRED)
 find_package(VTK REQUIRED)
 set(VTK_INCLUDE_DIRS "${VTK_PREFIX_PATH}/include/vtk-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
 
-if(HALVE_USE_CUDA)
-    find_package(CUDA REQUIRED)
-endif()
-
+list(INSERT CMAKE_MODULE_PATH 0
+  "${VTK_INCLUDE_DIRS}/ThirdParty/vtkm/vtkvtkm/vtk-m/CMake")
+  
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
     "${CMAKE_CURRENT_BINARY_DIR}/config.h"

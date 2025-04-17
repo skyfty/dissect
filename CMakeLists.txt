@@ -6,24 +6,13 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
-
-project(dissect VERSION 0.1 LANGUAGES CXX)
+project(dissect VERSION 0.1 LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/halve)
-
-
 option(HALVE_BUILD_TESTS "Build Tests" OFF)
-option(HALVE_USE_CUDA "Enable CUDA complite" OFF)
-
-if(HALVE_USE_CUDA)
-  # This needs to be a top level flag as enable_language needs
-  # to be called from CMake entry point for variables to have
-  # the correct scope.
-  enable_language(CUDA)
-endif()
 
 add_subdirectory ("third_party")
 add_subdirectory ("ys")

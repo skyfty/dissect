@@ -16,6 +16,7 @@
 
 vtkStandardNewMacro(ImageOpenClose);
 
+
 ImageOpenClose::ImageOpenClose()
 {
     this->KernelSize[0] = 5;
@@ -63,7 +64,6 @@ int ImageOpenClose::RequestData(vtkInformation* vtkNotUsed(request), vtkInformat
     }
 
     auto i = QDateTime::currentMSecsSinceEpoch();
-#ifdef  HALVE_USE_CUDA
     vtkNew<vtkImageData> imageData;
     imageData->DeepCopy(input0);
     vtkIntArray* scalars = dynamic_cast<vtkIntArray*>(imageData->GetPointData()->GetScalars());
@@ -76,17 +76,6 @@ int ImageOpenClose::RequestData(vtkInformation* vtkNotUsed(request), vtkInformat
     dilateErode.setDimension(dimensions[0]);
     dilateErode.filter(scalars->GetPointer(0), scalars->GetPointer(0), scalars->GetSize());
     output->ShallowCopy(imageData);
-#else
-    
-    vtkNew<vtkImageOpenClose3D> vtkImageOpenClose;
-    vtkImageOpenClose->SetOpenValue(ErodeValue);
-    vtkImageOpenClose->SetCloseValue(DilateValue);
-    vtkImageOpenClose->ReleaseDataFlagOff();
-    vtkImageOpenClose->SetKernelSize(KernelSize[0], KernelSize[0], KernelSize[0]);
-    vtkImageOpenClose->SetInputData(input0);
-    vtkImageOpenClose->Update();
-    output->ShallowCopy(vtkImageOpenClose->GetOutput());
-#endif //  HALVE_USE_CUDA
     qDebug() << QDateTime::currentMSecsSinceEpoch() - i;
 
     return 1;

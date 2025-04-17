@@ -25,12 +25,8 @@ set(SRCS
     "ImageOpenClose.h"
     "CarpenterSource.cpp"
     "CarpenterSource.h"
+    "DilateErode.h"
+    "DilateErode.cu"
 )
-if(HALVE_USE_CUDA)
-    list(APPEND SRCS
-       "DilateErode.h"
-       "DilateErode.cu"
-    )
-endif()
 
 target_sources(halve PRIVATE ${SRCS})
