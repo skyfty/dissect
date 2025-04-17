@@ -16,15 +16,16 @@ public:
     int getSampleRate() const;
     void setSampleRate(int newSampleRate);
 
-    void appendFilteredToBuffer(const std::vector<float>& filtered);
+    void appendFilteredToBuffer(const std::vector<float>& filtered, int windowSize);
 
 private:
     std::vector<std::pair<int, int> > getQrsSections(const std::vector<bool> &qrs);
-    void checkBuffeSize(std::deque<float>& buffer);
+    void checkBufferSize(std::deque<float>& buffer);
 
 private:
     int sampleRate;
     std::deque<float> filteredBuffer;
     std::deque<float> moveAvgBuffer;
+    std::deque<float> beforeMoveBuffer;
     size_t maxFilteredSize;
 };

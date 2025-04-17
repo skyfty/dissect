@@ -20,47 +20,43 @@ bool TimeSeriesFilter::processDataInPlace(std::deque<float>& buffer, std::vector
     if (inout.size() <= 1)
         return false;
 
-    std::vector<float> outBuffer(inout.size());
-    std::vector<float> avgBuffer(inout.size());
-
-    // 做差分
-    std::adjacent_difference(inout.begin(), inout.end(), outBuffer.begin());
-    outBuffer[0] = outBuffer[1];
-    // 平方
-    std::transform(outBuffer.begin(), outBuffer.end(), outBuffer.begin(), [](float v) {return v * v;});
-    // 计算滑动平均
+    // 滑动平均窗口大小
     const int windowSize = (int)(sampleRate * 0.05);
-    for (int i = 0; i < outBuffer.size(); ++i)
+    appendFilteredToBuffer(inout, windowSize);
+
+    auto it = std::max_element(moveAvgBuffer.begin(), moveAvgBuffer.end());
+    float splitY = *it * 0.33;
+    std::vector<bool> qrs(filteredBuffer.size());
+    std::transform(moveAvgBuffer.begin(), moveAvgBuffer.end(), qrs.begin(), [splitY](float v){return v >= splitY;});
+    //向前扩张0.5窗口
+    for (int i = 0; i < qrs.size() - 1; ++i)
     {
-        double sum = 0.0;
-        int count = 0;
-        // 取 [i - window_size + 1, i] 范围内的数据
-        for (int j = std::max(0, i - windowSize + 1); j <= i; ++j) {
-            sum += outBuffer[j];
-            count++;
+        if (!qrs[i] && qrs[i + 1])
+        {
+            for (int j = std::max(i - windowSize, 0); j <= i; ++j)
+            {
+                qrs[j] = true;
+            }
         }
-        avgBuffer[i] = (count > 0) ? sum / count : 0.0;
     }
-    int offset = windowSize / 2;
 
-    // 找最大值，其实不需要找这么长，10000个点足够。
-    //TODO
-    auto it = std::max_element(avgBuffer.begin(), avgBuffer.end());
-    float splity = *it * 0.33;
-
-    std::vector<bool> qrs(input.size());
-    std::transform(avgBuffer.begin(), avgBuffer.end(), qrs.begin(), [splity](float v){return v >= splity;});
-    //auto qrsPairs = getQrsSections(qrs);
-    for (int i = 0; i < (int)qrs.size(); ++i)
+    int i = (int)qrs.size() - 1;
+    int j = (int)inout.size() - 1;
+    for (; i >= 0 && j >= 0; --i, --j)
     {
-        // 该段数据是qrs范围，不变。
-        // 其它数据按比例缩小。
-        if (!qrs[i])
-            continue;
-        if (i < offset)
-            continue;
-        zeroBuffer[i] = input[i - offset];
+        inout[j] = qrs[i] ? filteredBuffer[i] : 0;
     }
+    // //auto qrsPairs = getQrsSections(qrs);
+    // for (int i = 0; i < (int)qrs.size(); ++i)
+    // {
+    //     // 该段数据是qrs范围，不变。
+    //     // 其它数据按比例缩小。
+    //     if (!qrs[i])
+    //         continue;
+    //     if (i < offset)
+    //         continue;
+    //     zeroBuffer[i] = input[i - offset];
+    // }
     return true;
 }
 
@@ -77,20 +73,32 @@ void TimeSeriesFilter::setSampleRate(int newSampleRate)
     maxFilteredSize = sampleRate * 5;
 }
 
-void TimeSeriesFilter::appendFilteredToBuffer(const std::vector<float> &filtered)
+void TimeSeriesFilter::appendFilteredToBuffer(const std::vector<float> &filtered, int windowSize)
 {
     filteredBuffer.insert(filteredBuffer.end(), filtered.begin(), filtered.end());
-    checkBuffeSize(filteredBuffer);
+    checkBufferSize(filteredBuffer);
 
-    if (moveAvgBuffer.empty())
+    std::vector<float> out(filtered.size());
+    std::adjacent_difference(filtered.begin(), filtered.end(), out.begin());
+    out[0] = beforeMoveBuffer.empty() ? out[1] : (filtered[0] - filteredBuffer[filteredBuffer.size() - filtered.size()]);//第1包和非第1包数据
+
+    std::transform(out.begin(), out.end(), out.begin(), [](float v) {return v * v;});
+    beforeMoveBuffer.insert(beforeMoveBuffer.end(), out.begin(), out.end());
+    checkBufferSize(beforeMoveBuffer);
+
+    int startIndex = (int)beforeMoveBuffer.size() - (int)filtered.size();
+    for (int i = startIndex; i < (int)beforeMoveBuffer.size(); ++i)
     {
-        //第一包数据
-        std::vector<float> out(filtered.size());
-        std::adjacent_difference(filtered.begin(), filtered.end(), out.begin() + 1);
-        out[0] = out[1];
-        moveAvgBuffer.insert(moveAvgBuffer.end(), out.begin(), out.end());
-        checkBuffeSize(moveAvgBuffer);
+        double sum = 0.0;
+        int count = 0;
+        for (int j = std::max(0, i - windowSize + 1); j <= i; ++j)
+        {
+            sum += beforeMoveBuffer[j];
+            count++;
+        }
+        moveAvgBuffer.push_back((float)(sum / count));
     }
+    checkBufferSize(moveAvgBuffer);
 }
 
 std::vector<std::pair<int, int>> TimeSeriesFilter::getQrsSections(const std::vector<bool> &qrs)
@@ -137,11 +145,11 @@ std::vector<std::pair<int, int>> TimeSeriesFilter::getQrsSections(const std::vec
     return pairs;
 }
 
-void TimeSeriesFilter::checkBuffeSize(std::deque<float> &buffer)
+void TimeSeriesFilter::checkBufferSize(std::deque<float> &buffer)
 {
     if (buffer.size() > maxFilteredSize)
     {
         int exceedCount = buffer.size() - maxFilteredSize;
-        filteredBuffer.erase(buffer.begin(), buffer.begin() + exceedCount);
+        buffer.erase(buffer.begin(), buffer.begin() + exceedCount);
     }
 }

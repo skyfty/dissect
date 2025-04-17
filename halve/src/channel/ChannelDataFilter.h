@@ -32,7 +32,7 @@ public:
     ChannelData::List pass(const ChannelData::List &channelData,const ElectrodeNode *electrodeNode) const;
     ChannelData::List& pass(ChannelData::List &channelData, const ElectrodeNode *electrodeNode) const;
     ChannelData::List passNoState(ChannelData::List &channelData, const ElectrodeNode *electrodeNode) const;
-    std::vector<ChannelData::DataType> pass(const  std::vector<ChannelData::DataType> &channelData, const ElectrodeNode *electrodeNode) const;
+    std::vector<ChannelData::DataType> passNoState(const  std::vector<ChannelData::DataType> &channelData, const ElectrodeNode *electrodeNode) const;
 
     void setProfile(Profile* profile);
     Profile *profile() const;

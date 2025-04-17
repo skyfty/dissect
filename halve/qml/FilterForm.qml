@@ -54,13 +54,16 @@ ColumnLayout {
         text:"磁场滤波器"
         checked: mode.magnetic
         onClicked: mode.magnetic = checked
-
     }
     CheckBox {
         text:"10Hz陷波器"
         checked: mode.notch10Hz
         onClicked: mode.notch10Hz = checked
-
+    }
+    CheckBox {
+        text:"时域处理"
+        checked: mode.timeSeriesProcess
+        onClicked: mode.timeSeriesProcess = checked
     }
 }
 

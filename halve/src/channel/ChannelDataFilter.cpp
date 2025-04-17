@@ -82,6 +82,8 @@ void ChannelDataFilter::setFilterOptions(int type, FilterPipe *filterPipe, Filte
     filterPipe->ClearAllFilter();
     filterPipe->ResetFirstPack();
 
+    filterPipe->setAppendTimeSeriesFilter(filterOption->getTimeSeriesProcess());
+
     auto highPass = filterOption->highPass();
     if (highPass != -1) {
         switch (type)
@@ -197,13 +199,13 @@ ChannelData::List& ChannelDataFilter::pass(ChannelData::List &channelData,const 
     return channelData;
 }
 
-std::vector<ChannelData::DataType> ChannelDataFilter::pass(const std::vector<ChannelData::DataType> &inputVector, const ElectrodeNode *electrodeNode) const
+std::vector<ChannelData::DataType> ChannelDataFilter::passNoState(const std::vector<ChannelData::DataType> &inputVector, const ElectrodeNode *electrodeNode) const
 {
     if (m_filterOptions == nullptr || inputVector.size() == 0) {
         return inputVector;
     }
     FilterPipe *pipe = getFilterPipes(electrodeNode);
-    return pipe->Process(inputVector.begin(), inputVector.end());
+    return pipe->ProcessNoState(inputVector.begin(), inputVector.end());
 }
 ChannelData::List ChannelDataFilter::passNoState(ChannelData::List &channelData, const ElectrodeNode *electrodeNode) const {
     if (m_filterOptions == nullptr || channelData.size() == 0) {

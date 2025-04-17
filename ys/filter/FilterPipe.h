@@ -89,7 +89,8 @@ namespace ys
             AddToBuffer(output);
             if (ProcessVector(output))
             {
-                //timeSeriesFilter.processDataInPlace(_queue, output);
+                if (appendTimeSeriesFilter)
+                    timeSeriesFilter.processDataInPlace(_queue, output);
                 return output;
             }
             return std::vector<DataType>(output.size(), 0);
@@ -143,6 +144,8 @@ namespace ys
 
             //最长缓冲5秒数据
             _maxBufferSize = _sampleRate * 5;
+
+            timeSeriesFilter.setSampleRate((int)newSampleRate);
         }
 
         void Lock()
@@ -161,6 +164,15 @@ namespace ys
         void SetSubstractMean(bool newSubstractMean)
         {
             _substractMean = newSubstractMean;
+        }
+
+        bool getAppendTimeSeriesFilter() const
+        {
+            return appendTimeSeriesFilter;
+        }
+        void setAppendTimeSeriesFilter(bool newAppendTimeSeriesFilter)
+        {
+            appendTimeSeriesFilter = newAppendTimeSeriesFilter;
         }
 
     protected:
@@ -209,7 +221,7 @@ namespace ys
         ///
         uint32_t _maxBufferSize;
 
-        bool _appendTimeSeriesFilter {false};
+        bool appendTimeSeriesFilter {false};
         TimeSeriesFilter timeSeriesFilter;
 
         void AddFilter(const FilterType &type, uint32_t order, uint32_t sampleRate,
@@ -370,5 +382,4 @@ namespace ys
             return true;
         }
     };
-
 }

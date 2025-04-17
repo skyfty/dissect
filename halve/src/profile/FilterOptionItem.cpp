@@ -119,3 +119,17 @@ void FilterOptionItem::setNotch10Hz(bool newNotch10Hz)
     emit notch10HzChanged();
     emit changed();
 }
+
+bool FilterOptionItem::getTimeSeriesProcess() const
+{
+    return timeSeriesProcess;
+}
+
+void FilterOptionItem::setTimeSeriesProcess(bool newTimeSeriesProcess)
+{
+    if (timeSeriesProcess == newTimeSeriesProcess)
+        return;
+    timeSeriesProcess = newTimeSeriesProcess;
+    emit signalTimeSeriesProcessChanged();
+    emit changed();
+}
