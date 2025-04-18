@@ -109,6 +109,10 @@ namespace ys
                 _Delay[i] = 0;
             }
         }
+        void SetState(const std::vector<InputType>& newState)
+        {
+            _Delay = newState;
+        }
     protected:
         FilterCoefficients _FilterCoefficients;
         std::vector<InputType> _Delay;

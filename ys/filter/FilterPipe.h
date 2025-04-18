@@ -8,6 +8,7 @@
 #include <mutex>
 #include <algorithm>
 #include <deque>
+#include <iostream>
 
 namespace ys
 {
@@ -90,7 +91,7 @@ namespace ys
             if (ProcessVector(output))
             {
                 if (appendTimeSeriesFilter)
-                    timeSeriesFilter.processDataInPlace(_queue, output);
+                    timeSeriesFilter.processDataInPlace(output);
                 return output;
             }
             return std::vector<DataType>(output.size(), 0);
@@ -142,8 +143,8 @@ namespace ys
         {
             _sampleRate = newSampleRate;
 
-            //最长缓冲5秒数据
-            _maxBufferSize = _sampleRate * 5;
+            //最长缓冲2秒数据
+            _maxBufferSize = _sampleRate * 2;
 
             timeSeriesFilter.setSampleRate((int)newSampleRate);
         }
@@ -270,14 +271,31 @@ namespace ys
         }
 
     private:
+        void setInitialConditions(double steadyStateInput)
+        {
+            // 先重置缓冲区，如果效果不理想，再初始化滤波器状态
+            // 目前先不加这个处理。
+        }
         void AddToBuffer(const std::vector<DataType> &input)
         {
             if (input.empty())
                 return;
 
             double inputSum = std::accumulate(input.begin(), input.end(), 0.0);
-            _queueSum += inputSum;
-
+            if (!_queue.empty())
+            {
+                double oldAvg = _queueSum / _queue.size();
+                double newAvg = inputSum / input.size();
+                if (std::abs(newAvg - oldAvg) >= 15000)
+                {
+                    // 基线已变，重置滤波器状态
+                    std::cout << oldAvg << ", " << newAvg << ", " << std::abs(newAvg - oldAvg) << std::endl;
+                    std::cout << "set initial conditions" << std::endl;
+                    setInitialConditions(0);
+                    initBuffer(input, _sampleRate);
+                }
+            }
+            _queueSum += inputSum;            
             _queue.insert(_queue.end(), input.begin(), input.end());
 
             if (_queue.size() > _maxBufferSize)
@@ -295,9 +313,7 @@ namespace ys
             {
                 // 长度不足以计算均值，等待
                 if (_queue.size() < _sampleRate)
-                {
                     return false;
-                }
                 double avg = _queueSum / _queue.size();
                 std::transform(inout.begin(), inout.end(), inout.begin(), [avg](DataType v) {return (DataType)(v - avg);});
             }
@@ -316,20 +332,25 @@ namespace ys
         }
         bool ProcessVector(std::vector<DataType> &inout)
         {
-            if (inout.size() <= 0)
-            {
+            if (inout.empty())
                 return false;
-            }
-
             if (_isFirstPack)
             {
                 //用缓冲区滤波，保留最后一段信号
                 std::vector<DataType> tmp(_queue.begin(), _queue.end());
-                if (!DirectProcessVector(tmp))
+                //std::cout << "set initial conditions" << std::endl;
+                if (!_substractMean)
                 {
-                    return false;
+                    double inputSum = std::accumulate(tmp.begin(), tmp.end(), 0.0);
+                    setInitialConditions(inputSum / tmp.size());
+                }
+                else
+                {
+                    setInitialConditions(0);//减均值稳态输入0
                 }
 
+                if (!DirectProcessVector(tmp))
+                    return false;
                 for (int i = (int)inout.size() - 1, j = (int)tmp.size() - 1; i >= 0 && j >= 0; --i, --j)
                 {
                     inout[i] = tmp[j];
@@ -338,9 +359,7 @@ namespace ys
             else
             {
                 if (!DirectProcessVector(inout))
-                {
                     return false;
-                }
             }
 
             if (_isFirstPack)
@@ -380,6 +399,30 @@ namespace ys
                 inout[i] = iv;
             }
             return true;
+        }
+        ///
+        /// \brief initBuffer
+        /// 把buffer原数据清空，buffer和数重新计算。
+        /// data复制到length长度
+        ///
+        void initBuffer(const std::vector<DataType> &data, uint32_t length)
+        {
+            if (data.empty())
+                return;
+            _queue.clear();
+            _queueSum = 0;
+
+            double inputSum = std::accumulate(data.begin(), data.end(), 0.0);
+            while (_queue.size() < length)
+            {
+                _queueSum += inputSum;
+                _queue.insert(_queue.end(), data.begin(), data.end());
+            }
+
+            // for (auto& filter : _filters)
+            // {
+            //     filter.ClearState();
+            // }
         }
     };
 }
