@@ -10,8 +10,8 @@ public:
     TimeSeriesFilter();
 
 public:
-    std::vector<float> processData(std::deque<float>& buffer, const std::vector<float>& input);
-    bool processDataInPlace(std::deque<float>& buffer, std::vector<float>& inout);
+    std::vector<float> processData(const std::vector<float>& input);
+    bool processDataInPlace(std::vector<float>& inout);
 
     int getSampleRate() const;
     void setSampleRate(int newSampleRate);
