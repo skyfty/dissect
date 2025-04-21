@@ -1,62 +1,118 @@
 #include "TimeSeriesFilter.h"
 #include <algorithm>
+#include <cassert>
 #include <numeric>
 
 TimeSeriesFilter::TimeSeriesFilter() {}
 
-std::vector<float> TimeSeriesFilter::processData(std::deque<float> &buffer, const std::vector<float> &input)
+std::vector<float> TimeSeriesFilter::processData(const std::vector<float> &input)
 {
     if (input.empty())
         return input;
 
     auto tmp = input;
-    if (!processDataInPlace(buffer, tmp))
+    if (!processDataInPlace(tmp))
         return std::vector<float>();
     return tmp;
 }
 
-bool TimeSeriesFilter::processDataInPlace(std::deque<float>& buffer, std::vector<float> &inout)
+bool TimeSeriesFilter::processDataInPlace(std::vector<float> &inout)
 {
+    assert(inout.size() == 50 && "package size != 50");//每包数据50个点，每秒40包。通信协议修改，需要调整这个值。
     if (inout.size() <= 1)
         return false;
 
     // 滑动平均窗口大小
     const int windowSize = (int)(sampleRate * 0.05);
+    const int offsetX = windowSize / 2;
+    const int externalSize = (int)(sampleRate * 0.01);//1边界扩展
     appendFilteredToBuffer(inout, windowSize);
+    int minNeedSize = windowSize + inout.size();
+
+    if (filteredBuffer.size() < minNeedSize)
+        return false;
 
     auto it = std::max_element(moveAvgBuffer.begin(), moveAvgBuffer.end());
     float splitY = *it * 0.33;
     std::vector<bool> qrs(filteredBuffer.size());
-    std::transform(moveAvgBuffer.begin(), moveAvgBuffer.end(), qrs.begin(), [splitY](float v){return v >= splitY;});
-    //向前扩张0.5窗口
-    for (int i = 0; i < qrs.size() - 1; ++i)
+    std::transform(moveAvgBuffer.end() - minNeedSize, moveAvgBuffer.end(), qrs.end() - minNeedSize, [splitY](float v){return v >= splitY;});
+    int minX = (int)moveAvgBuffer.size() - (int)inout.size();
+    int maxX = (int)qrs.size() - 1;
+    // 从右扫描到1
+    int pos1Right = -1, pos1Left = -1;
+    for (int x = maxX; x >= minX; --x)
     {
-        if (!qrs[i] && qrs[i + 1])
+        if (qrs[x])
         {
-            for (int j = std::max(i - windowSize, 0); j <= i; ++j)
+            if (pos1Right < 0)
+                pos1Right = x;
+        }
+        else
+        {
+            if (pos1Right >= 0)
             {
-                qrs[j] = true;
+                pos1Left = x + 1;
+                break;
+            }
+        }
+    }
+    // 扩张1边界，各10ms
+    if (pos1Right >= 0)
+    {
+        for (int x = pos1Right; x <= std::min(maxX, pos1Right + externalSize); ++x)
+        {
+            qrs[x] = true;
+        }
+    }
+    if (pos1Left >= 0)
+    {
+        for (int x = pos1Left; x >= std::max(minX, pos1Left - externalSize); --x)
+        {
+            qrs[x] = true;
+        }
+    }
+    // 重新扫描
+    pos1Right = -1, pos1Left = -1;
+    for (int x = maxX; x >= minX; --x)
+    {
+        if (qrs[x])
+        {
+            if (pos1Right < 0)
+                pos1Right = x;
+        }
+        else
+        {
+            if (pos1Right >= 0)
+            {
+                pos1Left = x + 1;
+                break;
             }
         }
     }
 
-    int i = (int)qrs.size() - 1;
-    int j = (int)inout.size() - 1;
-    for (; i >= 0 && j >= 0; --i, --j)
+    float factor = 0.4f;
+    if (pos1Right < 0)
     {
-        inout[j] = qrs[i] ? filteredBuffer[i] : 0;
+        //from minX to right, *0.1
+        for (int x = minX, i = 0; x <= maxX; ++x, ++i)
+        {
+            inout[i] = filteredBuffer[x - offsetX] * factor;
+        }
     }
-    // //auto qrsPairs = getQrsSections(qrs);
-    // for (int i = 0; i < (int)qrs.size(); ++i)
-    // {
-    //     // 该段数据是qrs范围，不变。
-    //     // 其它数据按比例缩小。
-    //     if (!qrs[i])
-    //         continue;
-    //     if (i < offset)
-    //         continue;
-    //     zeroBuffer[i] = input[i - offset];
-    // }
+    else
+    {
+        //from pos1Right to maxX, copy 因为输入数据长度不长，不用找0点（找不到）
+        int leftBound = pos1Left < 0 ? minX : pos1Left;
+        int i = (int)inout.size() - 1;
+        for (int x = maxX; x >= leftBound; --x, --i)
+        {
+            inout[i] = filteredBuffer[x - offsetX];
+        }
+        for (int x = leftBound - 1; x >= minX; --x, --i)
+        {
+            inout[i] = filteredBuffer[x - offsetX] * factor;
+        }
+    }
     return true;
 }
 
@@ -70,7 +126,7 @@ void TimeSeriesFilter::setSampleRate(int newSampleRate)
     if (sampleRate == newSampleRate)
         return;
     sampleRate = newSampleRate;
-    maxFilteredSize = sampleRate * 5;
+    maxFilteredSize = sampleRate * 3;
 }
 
 void TimeSeriesFilter::appendFilteredToBuffer(const std::vector<float> &filtered, int windowSize)

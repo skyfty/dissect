@@ -1,13 +1,16 @@
-﻿#pragma once
+#pragma once
 
 #include "Filter.h"
 #include "ButterWorth.h"
+#include "TimeSeriesFilter.h"
 #include "TimeSeriesFilter.h"
 
 #include <vector>
 #include <mutex>
 #include <algorithm>
 #include <deque>
+#include <deque>
+#include <iostream>
 
 namespace ys
 {
@@ -87,12 +90,18 @@ namespace ys
                 return output;
 
             AddToBuffer(output);
+            std::vector<DataType> output(begin, end);
+            if (output.empty())
+                return output;
+
+            AddToBuffer(output);
             if (ProcessVector(output))
             {
                 if (appendTimeSeriesFilter)
                     timeSeriesFilter.processDataInPlace(_queue, output);
                 return output;
             }
+            return std::vector<DataType>(output.size(), 0);
             return std::vector<DataType>(output.size(), 0);
         }
 
@@ -142,8 +151,8 @@ namespace ys
         {
             _sampleRate = newSampleRate;
 
-            //最长缓冲5秒数据
-            _maxBufferSize = _sampleRate * 5;
+            //最长缓冲2秒数据
+            _maxBufferSize = _sampleRate * 2;
 
             timeSeriesFilter.setSampleRate((int)newSampleRate);
         }
@@ -270,6 +279,11 @@ namespace ys
         }
 
     private:
+        void setInitialConditions(double steadyStateInput)
+        {
+            // 先重置缓冲区，如果效果不理想，再初始化滤波器状态
+            // 目前先不加这个处理。
+        }
         void AddToBuffer(const std::vector<DataType> &input)
         {
             if (input.empty())
@@ -280,6 +294,7 @@ namespace ys
 
             _queue.insert(_queue.end(), input.begin(), input.end());
 
+            if (_queue.size() > _maxBufferSize)
             if (_queue.size() > _maxBufferSize)
             {
                 auto length = _queue.size() - _maxBufferSize;
@@ -316,20 +331,14 @@ namespace ys
         }
         bool ProcessVector(std::vector<DataType> &inout)
         {
-            if (inout.size() <= 0)
-            {
+            if (inout.empty())
                 return false;
-            }
-
             if (_isFirstPack)
             {
                 //用缓冲区滤波，保留最后一段信号
                 std::vector<DataType> tmp(_queue.begin(), _queue.end());
                 if (!DirectProcessVector(tmp))
-                {
                     return false;
-                }
-
                 for (int i = (int)inout.size() - 1, j = (int)tmp.size() - 1; i >= 0 && j >= 0; --i, --j)
                 {
                     inout[i] = tmp[j];
@@ -338,9 +347,7 @@ namespace ys
             else
             {
                 if (!DirectProcessVector(inout))
-                {
                     return false;
-                }
             }
 
             if (_isFirstPack)
@@ -380,6 +387,30 @@ namespace ys
                 inout[i] = iv;
             }
             return true;
+        }
+        ///
+        /// \brief initBuffer
+        /// 把buffer原数据清空，buffer和数重新计算。
+        /// data复制到length长度
+        ///
+        void initBuffer(const std::vector<DataType> &data, uint32_t length)
+        {
+            if (data.empty())
+                return;
+            _queue.clear();
+            _queueSum = 0;
+
+            double inputSum = std::accumulate(data.begin(), data.end(), 0.0);
+            while (_queue.size() < length)
+            {
+                _queueSum += inputSum;
+                _queue.insert(_queue.end(), data.begin(), data.end());
+            }
+
+            // for (auto& filter : _filters)
+            // {
+            //     filter.ClearState();
+            // }
         }
     };
 }
