@@ -479,6 +479,22 @@ Study {
                             ToolTip.visible: hovered
                             ToolTip.text: qsTr("Album")
                         }
+
+                        ToolButton {
+                            icon {
+                                source: "qrc:/assets/images/registration.png"
+                                height: 30
+                                width:30
+                            }
+                            Layout.margins: 3
+                            onClicked:  {
+                                windowSettingPopup.toggleDockWidget(dockRegistrationPage);
+                                dockRegistrationPage.moveToCenter();
+                            }
+                            hoverEnabled: true
+                            ToolTip.visible: hovered
+                            ToolTip.text: qsTr("Registration")
+                        }
                         ToolSeparator {}
                     }
                     ToolButton {
@@ -1073,6 +1089,28 @@ Study {
                         profile:root.profile
                     }
                 }
+
+                KDDW.DockWidget {
+                    id: dockRegistrationPage
+                    uniqueName: "dockRegistrationPage"
+                    title:qsTr("Registration")
+                    isFloating: true
+                    focus: true
+                    options:KDDW.KDDockWidgets.DockWidgetOption_NotDockable
+                    RegistrationPage {
+                        anchors.fill: parent
+                        profile:root.profile
+                        obscurity:currentObscurity
+                        combined:root.combined
+                        channel: root.channel
+                        reseauListModel:reseauListModel
+                        options:root.profile.stageSettings.getOptions(dockStageLeftView.uniqueName)
+                        //stageScalar:currentStageScalar
+                        //scalarModel:currentScalarModel
+                        //azimuthModel:azimuthModel
+                    }
+                }
+
                 KDDW.DockWidget {
                     id: dockMappingView
                     uniqueName: "dockMappingView"

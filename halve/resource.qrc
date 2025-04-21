@@ -410,5 +410,9 @@
         <file>assets/configures/hotkey.json</file>
         <file>qml/HotkeyAction.qml</file>
         <file>qml/models/KernelSizeModel.qml</file>
+        <file>qml/RegistrationPage.qml</file>
+        <file>assets/images/open_file.png</file>
+        <file>assets/images/registration.png</file>
+        <file>assets/images/select_points.png</file>
     </qresource>
 </RCC>
