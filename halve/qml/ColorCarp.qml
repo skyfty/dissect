@@ -42,6 +42,8 @@ Rectangle {
                         height: 200
                         enableDetails:false
                         enableAlphaChannel:false
+                        paletteMode: true
+                        enablePaletteMode: false
                         onColorChanged: (changedColor) => {
                             if (colorPicker.init) {
                                 colorPane.color = changedColor;
