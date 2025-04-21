@@ -9,6 +9,7 @@
 #include <vtkObjectFactory.h>
 #include <vtkCallbackCommand.h>
 #include <vtkRenderWindowInteractor.h>
+#include <vtkMatrix4x4.h>
 
 extern Qt::HANDLE VtkRenderThreadHandle;
 
@@ -73,7 +74,31 @@ void Stage::resetCameraAzimuth() {
         }
         auto camera = userData->renderer->GetActiveCamera();
         camera->SetFocalPoint(0, 0, 0);
+        onCameraInfoChanged();
     });
+}
+
+void Stage::resetCameraScale()
+{
+    dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
+        StageData* userData = StageData::SafeDownCast(vtkObject);
+        if (userData == nullptr || userData->renderer == nullptr || m_profile.isNull()) {
+            return;
+        }
+        auto camera = userData->renderer->GetActiveCamera();
+        camera->SetViewAngle(45);
+        onCameraInfoChanged();
+    });
+}
+
+double Stage::getCameraScale() const
+{
+    if (!m_camera)
+        return 1;
+
+    // 初始是45度视角
+    return std::tan(vtkMath::RadiansFromDegrees(22.5)) /
+           std::tan(vtkMath::RadiansFromDegrees(m_camera->GetViewAngle() * 0.5));
 }
 
 void Stage::setCameraPosition(StageData* userData, const vtkVector3d &pos, const vtkVector3d &viewUp) {
@@ -89,7 +114,7 @@ void Stage::setCameraPosition(StageData* userData, const double pos[3], const do
     userData->renderer->Render();
     m_camera->DeepCopy(camera);
     onAzimuthChanged(m_azimuthDb->getData(pos));
-    emit cameraInfoChanged();
+    onCameraInfoChanged();
 }
 
 void Stage::setAzimuthDb(AzimuthDb *newAzimuthDb)
@@ -100,6 +125,14 @@ void Stage::setAzimuthDb(AzimuthDb *newAzimuthDb)
     emit azimuthDbChanged();
 }
 
+void Stage::onCameraInfoChanged()
+{
+    dispatch_async([this](vtkRenderWindow* renderWindow, vtkUserData vtkObject) {
+        auto* userData = StageData::SafeDownCast(vtkObject);
+        m_camera->DeepCopy(userData->renderer->GetActiveCamera());
+        emit cameraInfoChanged();
+    });
+}
 
 CameraInfo Stage::cameraInfo() const
 {

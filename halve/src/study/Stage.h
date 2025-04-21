@@ -116,6 +116,8 @@ public:
     Q_INVOKABLE void refreshHighlight();
     Q_INVOKABLE void setCameraAzimuth(const QString &name);
     Q_INVOKABLE void resetCameraAzimuth();
+    Q_INVOKABLE void resetCameraScale();
+    Q_INVOKABLE double getCameraScale() const;
     void setCameraPosition(StageData* userData, const double pos[3], const double viewUp[3]);
     void setCameraPosition(StageData* userData, const vtkVector3d &pos, const vtkVector3d &viewUp);
     void setCombined(Combined *combined);
@@ -208,6 +210,7 @@ public slots:
     void onMappingTypeChanged();
     void onDissolveOptionsRadiusChanged();
     void onStageScalarChanged();
+    void onCameraInfoChanged();
 
 
 private:

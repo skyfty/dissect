@@ -320,6 +320,26 @@ Item {
                     ToolTip.text: qsTr("Ruler")
                 }
                 ToolSeparator {}
+                Label {
+                    id: scalerLabel
+                    leftPadding: 10
+                    rightPadding: 10
+                    text: "1.00 X"
+                }
+                ToolButton {
+                    Layout.alignment: Qt.AlignRight|Qt.AlignVCenter
+                    icon {
+                        source: "qrc:/assets/images/fullscreen.svg"
+                        height: 19
+                        width:19
+                    }
+                    onClicked: {
+                        stage.resetCameraScale();
+                    }
+                    hoverEnabled: true
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Reset zoom to 1.00")
+                }
                 Item{
                     Layout.fillWidth: true
                 }
@@ -370,6 +390,9 @@ Item {
             combined:root.combined
             obscurity:root.obscurity
             mappingSetting:root.profile.mappingSetting
+            onCameraInfoChanged: {
+                scalerLabel.text = stage.getCameraScale().toFixed(2) + " X";
+            }
 
             Item {
                 anchors.fill: parent
@@ -705,5 +728,6 @@ Item {
 
     Component.onCompleted: function() {
         orientation.setNewAP();
+        stage.resetCameraScale();
     }
 }
