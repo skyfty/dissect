@@ -1,14 +1,12 @@
-#pragma once
+﻿#pragma once
 
 #include "Filter.h"
 #include "ButterWorth.h"
-#include "TimeSeriesFilter.h"
 #include "TimeSeriesFilter.h"
 
 #include <vector>
 #include <mutex>
 #include <algorithm>
-#include <deque>
 #include <deque>
 #include <iostream>
 
@@ -90,18 +88,12 @@ namespace ys
                 return output;
 
             AddToBuffer(output);
-            std::vector<DataType> output(begin, end);
-            if (output.empty())
-                return output;
-
-            AddToBuffer(output);
             if (ProcessVector(output))
             {
                 if (appendTimeSeriesFilter)
-                    timeSeriesFilter.processDataInPlace(_queue, output);
+                    timeSeriesFilter.processDataInPlace(output);
                 return output;
             }
-            return std::vector<DataType>(output.size(), 0);
             return std::vector<DataType>(output.size(), 0);
         }
 
@@ -290,11 +282,22 @@ namespace ys
                 return;
 
             double inputSum = std::accumulate(input.begin(), input.end(), 0.0);
-            _queueSum += inputSum;
-
+            if (!_queue.empty())
+            {
+                double oldAvg = _queueSum / _queue.size();
+                double newAvg = inputSum / input.size();
+                if (std::abs(newAvg - oldAvg) >= 15000)
+                {
+                    // 基线已变，重置滤波器状态
+                    std::cout << oldAvg << ", " << newAvg << ", " << std::abs(newAvg - oldAvg) << std::endl;
+                    std::cout << "set initial conditions" << std::endl;
+                    setInitialConditions(0);
+                    initBuffer(input, _sampleRate);
+                }
+            }
+            _queueSum += inputSum;            
             _queue.insert(_queue.end(), input.begin(), input.end());
 
-            if (_queue.size() > _maxBufferSize)
             if (_queue.size() > _maxBufferSize)
             {
                 auto length = _queue.size() - _maxBufferSize;
@@ -310,9 +313,7 @@ namespace ys
             {
                 // 长度不足以计算均值，等待
                 if (_queue.size() < _sampleRate)
-                {
                     return false;
-                }
                 double avg = _queueSum / _queue.size();
                 std::transform(inout.begin(), inout.end(), inout.begin(), [avg](DataType v) {return (DataType)(v - avg);});
             }
@@ -337,6 +338,17 @@ namespace ys
             {
                 //用缓冲区滤波，保留最后一段信号
                 std::vector<DataType> tmp(_queue.begin(), _queue.end());
+                //std::cout << "set initial conditions" << std::endl;
+                if (!_substractMean)
+                {
+                    double inputSum = std::accumulate(tmp.begin(), tmp.end(), 0.0);
+                    setInitialConditions(inputSum / tmp.size());
+                }
+                else
+                {
+                    setInitialConditions(0);//减均值稳态输入0
+                }
+
                 if (!DirectProcessVector(tmp))
                     return false;
                 for (int i = (int)inout.size() - 1, j = (int)tmp.size() - 1; i >= 0 && j >= 0; --i, --j)
