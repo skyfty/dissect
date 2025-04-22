@@ -1,15 +1,11 @@
 #ifndef PULSE_H
 #define PULSE_H
 
-
 #include <QFuture>
 #include <QObject>
 #include <QPointer>
 #include <channel/ChannelData.h>
-
-namespace ys {
-class HeartRateFilter;
-}
+#include <heartrate/HeartRate.h>
 
 class Profile;
 class Channel;
@@ -58,7 +54,7 @@ private:
     QPointer<ChannelDataFilter> m_channelDataFilter;
     QPointer<FilterOptions> m_filterOptions;
     QPointer<ElectrodeNode> m_electrodeNode;
-    std::unique_ptr<ys::HeartRateFilter> m_heartRateFilter;
+    std::unique_ptr<ys::HeartRate<ChannelData::DataType>> m_heartRate;
     QFuture<void> m_loadDataFuture;
 };
 

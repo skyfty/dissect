@@ -1,10 +1,7 @@
 #include "Pulse.h"
 #include "channel/Channel.h"
-#include "heartrate\HeartRateFilter.h"
 #include "channel/ChannelDataCalculate.h"
 #include "channel/ChannelDataFilter.h"
-#include "EcgMethod\FindMaxPeak.h"
-#include "profile/FilterOptionItem.h"
 #include "profile/Profile.h"
 #include "utility/ConnectCheck.h"
 
@@ -13,7 +10,7 @@
 
 Pulse::Pulse(QObject *parent)
     : QObject{parent} {
-    m_heartRateFilter.reset(new ys::HeartRateFilter(m_samplingRate));
+    m_heartRate.reset(new ys::HeartRate<ChannelData::DataType>(m_samplingRate));
 }
 
 Pulse::~Pulse() {
@@ -28,14 +25,20 @@ void Pulse::processChannelData(const QList<ChannelData> &channelDatas) {
     if (datas.empty()) {
         m_profile->setPulse(0);
     } else {
-        ys::FindMaxPeak<ChannelData::DataType> findMax(m_samplingRate);
-        std::vector<int> maxPos = findMax.ProcessVector(datas);
-        auto rate = m_heartRateFilter->Process(maxPos);//rate就是心率
-        int intRate = (int)round(rate);//整数型心率
+        int intRate = m_heartRate->GetHeartRate(datas);
+        {
+            // median value
+            static int a{0}, b{0}, c{0};
+            a = b;
+            b = c;
+            c = intRate;
+            intRate = (a > b) ? ( (b > c) ? b : (a > c) ? c : a )
+                              : ( (a > c) ? a : (b > c) ? c : b );
+        }
         m_profile->setPulse(intRate);
     }
 }
-constexpr qint64 selectLimit = 15000;
+constexpr qint64 selectLimit = 30000;
 
 void Pulse::onChannelSampleChanged(const QList<ChannelData> &channelDatas) {
     m_channelDataCache.append(channelDatas);
@@ -61,7 +64,8 @@ void Pulse::update() {
     if (m_channelDataFilter == nullptr) {
         createDefaultFilter();
     }
-    if (m_channelDataCache.size() > selectLimit) {
+    else
+    {
         processChannelData(m_channelDataCache);
     }
 }
@@ -75,7 +79,7 @@ void Pulse::setSamplingRate(quint16 newSamplingRate)
     if (m_samplingRate == newSamplingRate)
         return;
     m_samplingRate = newSamplingRate;
-    m_heartRateFilter.reset(new ys::HeartRateFilter(m_samplingRate));
+    m_heartRate->SetSampleRate(newSamplingRate);
     emit samplingRateChanged();
 }
 

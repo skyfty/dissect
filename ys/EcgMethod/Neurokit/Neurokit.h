@@ -139,9 +139,9 @@ namespace ys
             {
                 bkgWeight = 1.25;
             }
-            if (bkgWeight > 2.5)
+            if (bkgWeight > 2.75)
             {
-                bkgWeight = 2.5;
+                bkgWeight = 2.75;
             }
 
             std::vector<InputType> bkg(inputSize);
