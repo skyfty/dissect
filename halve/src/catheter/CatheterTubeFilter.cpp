@@ -100,14 +100,13 @@ int CatheterTubeFilter::RequestData(vtkInformation * vtkNotUsed(request),
         vtkErrorMacro(<< "Input Output data is nullptr.");
         return 0;
     }
-
     vtkIntArray* nodeMeshIndex = dynamic_cast<vtkIntArray*>(input0->GetPointData()->GetArray(NodeMeshIndexName));
     vtkUnsignedCharArray* nodeMeshColors = dynamic_cast<vtkUnsignedCharArray*>(input0->GetPointData()->GetArray(ColorsPointDataName));
     vtkDoubleArray* connectivityRadius = dynamic_cast<vtkDoubleArray*>(input0->GetCellData()->GetArray(ConnectivityRadiusName));
     vtkIntArray* connectivityResolution = dynamic_cast<vtkIntArray*>(input0->GetCellData()->GetArray(ResolutionName));
     vtkIntArray* connectivitySides = dynamic_cast<vtkIntArray*>(input0->GetCellData()->GetArray(TubeSidesName));
 
-	QMap<vtkIdType, QList<QPair<vtkIdType,vtkVector3d>>> pointDirections;
+	QMap<vtkIdType, QMap<vtkIdType,vtkVector3d>> pointMeshDirections;
 
     PointDirectionsListListType pointDirectionsListList;
     for(int i = 0; i < input0->GetNumberOfCells(); ++i) {
@@ -185,10 +184,10 @@ int CatheterTubeFilter::RequestData(vtkInformation * vtkNotUsed(request),
                 tangent[2] /= norm;
             }
 			vtkIdType meshPointId = meshPointIds->GetId(i1);
-            auto idx = nodeMeshIndex->GetValue(meshPointId);
-            auto pointTangent = std::make_pair(meshPointId, vtkVector3d(tangent[0], tangent[1], tangent[2]));
-            pointDirections[idx].append(pointTangent);
-            pointDirectionsList.append(pointTangent);
+            vtkIdType meshIndex = nodeMeshIndex->GetValue(meshPointId);
+            vtkVector3d tangentVector(tangent[0], tangent[1], tangent[2]);
+            pointMeshDirections[meshIndex][meshPointId] = tangentVector;
+            pointDirectionsList.append(std::make_pair(meshPointId, tangentVector));
         }
         pointDirectionsListList.append(std::make_pair(i,pointDirectionsList));
     }
@@ -209,18 +208,14 @@ int CatheterTubeFilter::RequestData(vtkInformation * vtkNotUsed(request),
     });
 
     vtkUnsignedCharArray* pointColorArray = dynamic_cast<vtkUnsignedCharArray*>(input0->GetPointData()->GetArray(ColorsPointDataName));
-    auto pointDirectionKeys = pointDirections.keys();
-    auto pointDirectionsFuture = QtConcurrent::mapped(pointDirectionKeys, [&](vtkIdType meshIndex) {
+    auto pointMeshDirectionKeys = pointMeshDirections.keys();
+    auto pointDirectionsFuture = QtConcurrent::mapped(pointMeshDirectionKeys, [&](vtkIdType meshIndex) {
         vtkSmartPointer<vtkPolyData> polyData = nullptr;
         if (meshIndex == -1) {
             return polyData;
         }
-        auto idx = nodeMeshIndex->GetValue(meshIndex);
-        if (idx >= m_meshPolyDatas.size()) {
-            return polyData;
-        }
-        const QList<QPair<vtkIdType, vtkVector3d>>& pointDirectionsList = pointDirections[meshIndex];
-        vtkSmartPointer<vtkPolyData> nodePolyData = m_meshPolyDatas[idx];
+        const QMap<vtkIdType, vtkVector3d>& pointDirectionsList = pointMeshDirections[meshIndex];
+        vtkSmartPointer<vtkPolyData> nodePolyData = m_meshPolyDatas[meshIndex];
 
         vtkNew<vtkPoints> points;
         vtkNew<vtkDoubleArray> directions;
@@ -230,12 +225,11 @@ int CatheterTubeFilter::RequestData(vtkInformation * vtkNotUsed(request),
         colors->SetNumberOfComponents(3);
         colors->SetName(ColorsPointDataName);
 
-        for (const auto& pointDirection : pointDirectionsList) {
-            vtkIdType pointId = pointDirection.first;
+        for (const auto& pointId : pointDirectionsList.keys()) {
             double pp[3]{};
             input0->GetPoint(pointId, pp);
             points->InsertNextPoint(pp);
-            vtkVector3d direction = pointDirection.second;
+            vtkVector3d direction = pointDirectionsList[pointId];
             directions->InsertNextTuple3(direction[0], direction[1], direction[2]);
             unsigned char color[3];
             pointColorArray->GetTypedTuple(pointId, color);
@@ -262,7 +256,7 @@ int CatheterTubeFilter::RequestData(vtkInformation * vtkNotUsed(request),
     });
 
     vtkNew<vtkAppendFilter> appendFilter;
-    for (int i = 0; i < pointDirectionKeys.size(); ++i) {
+    for (int i = 0; i < pointMeshDirectionKeys.size(); ++i) {
         vtkSmartPointer<vtkPolyData> tubePolyData = pointDirectionsFuture.resultAt(i);
         if (tubePolyData != nullptr) {
             appendFilter->AddInputData(tubePolyData);
@@ -275,7 +269,6 @@ int CatheterTubeFilter::RequestData(vtkInformation * vtkNotUsed(request),
         }
     }
     appendFilter->Update();
-
     output->ShallowCopy(appendFilter->GetOutput());
     return 1;
 }
