@@ -100,9 +100,6 @@ int CatheterTubeFilter::RequestData(vtkInformation * vtkNotUsed(request),
         vtkErrorMacro(<< "Input Output data is nullptr.");
         return 0;
     }
-
-    auto i = QDateTime::currentMSecsSinceEpoch();
-
     vtkIntArray* nodeMeshIndex = dynamic_cast<vtkIntArray*>(input0->GetPointData()->GetArray(NodeMeshIndexName));
     vtkUnsignedCharArray* nodeMeshColors = dynamic_cast<vtkUnsignedCharArray*>(input0->GetPointData()->GetArray(ColorsPointDataName));
     vtkDoubleArray* connectivityRadius = dynamic_cast<vtkDoubleArray*>(input0->GetCellData()->GetArray(ConnectivityRadiusName));
@@ -272,8 +269,6 @@ int CatheterTubeFilter::RequestData(vtkInformation * vtkNotUsed(request),
         }
     }
     appendFilter->Update();
-    qDebug() << QDateTime::currentMSecsSinceEpoch() - i;
-
     output->ShallowCopy(appendFilter->GetOutput());
     return 1;
 }
