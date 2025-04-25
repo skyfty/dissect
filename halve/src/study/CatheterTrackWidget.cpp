@@ -39,7 +39,6 @@ using namespace std::placeholders;
 CatheterTrackWidget::CatheterTrackWidget(QQuickItem *parent)
     : QQuickItem{parent}
 {
-    m_frameRate = new FrameRate(this);
     m_worker = new CatheterTrackWorker();
 }
 
