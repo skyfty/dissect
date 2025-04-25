@@ -67,7 +67,23 @@ Page {
                 ToolTip.visible: hovered
                 ToolTip.text: qsTr("Edit")
             }
+            
+            ToolButton {
+                Layout.alignment: Qt.AlignVCenter
+                icon {
+                    source: "qrc:/assets/images/refresh.svg"
+                    height: 25
+                    width:25
+                }
+                onClicked:  {
+                    stage.refresh();
+                }
 
+                hoverEnabled: true
+                ToolTip.visible: hovered
+                ToolTip.text: qsTr("Refresh")
+            }
+           
             ToolButton {
                 Layout.alignment: Qt.AlignVCenter
                 icon {

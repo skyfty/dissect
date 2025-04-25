@@ -330,7 +330,9 @@ void Catheter::setGap(const QList<quint16>& v) {
     Q_ASSERT(v.size() == m_amount -1);
     if (m_gap != v) {
         m_gap = v;
-        delete m_catheterMould;
+        if (m_catheterMould != nullptr) {
+            m_catheterMould->load(m_meshName, m_gap, m_electrodeLength);
+        }
         emit gapChanged();
     }
 }
@@ -573,7 +575,9 @@ void Catheter::setMeshName(const QString &newMeshName)
     if (m_meshName == newMeshName)
         return;
     m_meshName = newMeshName;
-    delete m_catheterMould;
+    if (m_catheterMould != nullptr) {
+        m_catheterMould->load(m_meshName, m_gap, m_electrodeLength);
+    }
     emit meshNameChanged();
 }
 
@@ -589,7 +593,7 @@ void Catheter::deleteMesh(const QString &meshPath) {
 CatheterMould *Catheter::catheterMould() {
     if(m_catheterMould == nullptr) {
         Q_ASSERT(Thread::currentlyOn(Thread::UI));
-        m_catheterMould = new CatheterMould(m_meshName, m_gap, this);
+        m_catheterMould = new CatheterMould(m_meshName, m_gap, m_electrodeLength, this);
     }
     return m_catheterMould;
 }

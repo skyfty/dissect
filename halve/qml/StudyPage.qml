@@ -23,7 +23,6 @@ Study {
         magnetismTrainRate:AppSettings.magnetismTrainRate
         coefficient:AppSettings.coefficient
         electricCenterShifting:AppSettings.electricCenter
-        keepSave: AppSettings.keepSave
         onTrainingChanged: {
             root.profile.catheterDb.save();
             notebookDataSource.autoRecord(currentCombined.training?"Start training":"End training");
@@ -876,7 +875,6 @@ Study {
                             combined:root.combined
                             breathSurvey:currentBreathSurvey
                             consultPrecision:AppSettings.consultPrecision
-                            rate: AppSettings.catheterTrackRate
 
                             ChannelModeModel {
                                 id:channelModeModel

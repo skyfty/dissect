@@ -47,9 +47,9 @@ Item {
     Channel {
         id:currentChannel
         profilePath:root.profile.path
+        trackRate: AppSettings.catheterTrackRate
         mode: root.profile.channelMode
-        keepSave: AppSettings.keepSave
-        port:AppSettings.channelPort
+        port:AppSettings.channelPort   
         onPortChanged: {
             currentChannel.launch()
         }

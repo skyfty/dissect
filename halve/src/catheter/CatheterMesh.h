@@ -12,7 +12,7 @@ public:
     explicit CatheterMesh(QObject *parent = nullptr);
     vtkUnstructuredGrid* grid();
     vtkSmartPointer<vtkUnstructuredGrid> mesh();
-    void setMesh(const vtkSmartPointer<vtkUnstructuredGrid> &mesh);
+    void setMeshAndGrid(const vtkSmartPointer<vtkUnstructuredGrid> &mesh, const vtkSmartPointer<vtkUnstructuredGrid>& grid);
 
 signals:
     void changed();

@@ -21,7 +21,6 @@ class Channel
     PROP(qint32 size = 0 READWRITE)
     PROP(qint32 index = -1 READWRITE)
     PROP(qint32 lookbackSpeed = 30 READWRITE)
-    PROP(bool keepSave = false READWRITE)
     PROP(qint32 trainInterval = 5 READWRITE)
 
     SIGNAL(sampleChanged(QList<ChannelData> data))

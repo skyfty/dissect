@@ -28,6 +28,9 @@ public:
     ~CatheterStage() override = default;
     Q_INVOKABLE void resetRender();
     Q_INVOKABLE void resetCamera();
+    Q_INVOKABLE void refresh();
+
+    
 
     void setInteractor(vtkRenderWindow *renderWindow, CatheterStageData *userData);
     void setMouseInteractorStyle(CatheterStageData *userData);
@@ -37,7 +40,6 @@ public:
     void setPlaceholderCube(CatheterStageData* userData);
 
 public slots:
-    void onCatheterMeshChanged();
     void onCatheterDyestuffChanged();
 
 signals:
@@ -48,7 +50,7 @@ private:
     vtkUserData initializeVTK(vtkRenderWindow* renderWindow) override;
     void destroyingVTK(vtkRenderWindow* renderWindow, vtkUserData userData) override;
     void refreshCatheterTube(vtkSmartPointer<vtkUnstructuredGrid> tubeMesh, const QList<vtkSmartPointer<vtkFollower>> &followers);
-    void refreshCatheterTube(vtkSmartPointer<vtkUnstructuredGrid> grid);
+    void refreshCatheterTube();
     void resetTextFollower(CatheterStageData* userData,const QList<vtkSmartPointer<vtkFollower>> &followers);
     void cleanTextFollower(CatheterStageData* userData);
     vtkSmartPointer<vtkFollower> createCatheterLabelFollower(vtkIdType id, double pos[3]);

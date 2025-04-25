@@ -10,6 +10,7 @@ struct ChannelTrack;
 class ChannelTrackDb;
 class CatheterMagnetism;
 class ChannelTrackData;
+class FrameRate;
 
 class ChannelHost : public ChannelSimpleSource {
   Q_OBJECT

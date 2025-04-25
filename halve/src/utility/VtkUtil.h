@@ -9,6 +9,7 @@ class vtkSelection;
 class vtkPoints;
 class vtkVector3d;
 class QJsonObject;
+class vtkPolyData;
 class vtkUnsignedCharArray;
 class vtkIdTypeArray;
 
@@ -25,6 +26,9 @@ namespace vtkutil {
     vtkSmartPointer<vtkPoints> pointsFrom(QString ba);
     vtkVector3d determineEuler(double dtRotMatrix[3][3]);
     vtkSmartPointer<vtkUnsignedCharArray> assignColorsPointData(vtkIdTypeArray* ids, vtkUnsignedCharArray* gridColors);
+    vtkSmartPointer<vtkPolyData> importPolyData(const QString& filePath);
+    vtkVector3d randomUndulation(const vtkVector3d& trackPosition);
+
 }
 
 

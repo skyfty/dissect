@@ -4,6 +4,11 @@
 #include <QThread>
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridAlgorithm.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkTransformFilter.h>
+#include <vtkTransform.h>
+#include <vtkPoints.h>
+#include <vtkAppendFilter.h>
 
 #include <catheter/Catheter.h>
 #include <catheter/CatheterTubeFilter.h>
@@ -14,6 +19,7 @@ CatheterTrackWorker::CatheterTrackWorker(QObject* parent)
     moveToThread(m_thread);
     connect(m_thread, &QThread::finished, this, &QObject::deleteLater);
     QObject::connect(this, &CatheterTrackWorker::carpenter, this, &CatheterTrackWorker::onCarpenter);
+
 }
 
 CatheterTrackWorker::~CatheterTrackWorker() {
@@ -42,7 +48,7 @@ private:
 void CatheterTrackWorker::onCarpenter(Catheter *catheter, UnstructuredGridWarp::Ptr inData) {
     CatheterTrackWorkerHelper helper(m_running);
     vtkSmartPointer<vtkUnstructuredGrid> data = createCatheterTubeMesh(catheter, inData->Data);
-    emit carpenterResult(catheter,UnstructuredGridWarp::Ptr::create(data));
+    emit carpenterResult(catheter, inData, UnstructuredGridWarp::Ptr::create(data));
 }
 
 bool CatheterTrackWorker::running() const
@@ -57,10 +63,14 @@ vtkSmartPointer<vtkUnstructuredGrid> CatheterTrackWorker::createCatheterTubeMesh
         filter = vtkSmartPointer<PantCatheterFilter>::New();
         filter->AddInputData(grid);
     } else {
+        CatheterMould* catheterMould = catheter->catheterMould();
         vtkSmartPointer<CatheterTubeFilter> tube = vtkSmartPointer<CatheterTubeFilter>::New();
         tube->SetInputData(grid);
+		tube->SetNodePolyDatas(catheterMould->getNodePolyDatas());
         tube->SetColor(catheter->getDyestuff3ub());
-        tube->SetGlyphName(MeshName::ELECTRODE_NODE);
+        tube->SetRadius(catheter->getDiameter());
+        tube->SetLength(catheter->electrodeLength());
+
         filter = tube;
     }
     filter->Update();

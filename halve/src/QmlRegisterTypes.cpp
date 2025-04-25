@@ -164,6 +164,8 @@ double ElectrodeNodeRadius = 0.5;
 double CatheterTubeRadius = 0.2;
 double PantCatheterTubeRadius = 0.5;
 quint32 DefaultCoefficient = 100;
+int DefaultTubeSide = 10;
+int DefaultTubeResolution = 70;
 
 
 std::string MainBodyMeshColorName = "LightGrey";

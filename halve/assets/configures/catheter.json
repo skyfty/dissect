@@ -94,5 +94,38 @@
         ],
         "single":[
         ]
+    },
+    {
+        "id":"builtin.builtin.4",
+        "name":"PFA 16",
+        "manufacturer":"PFA 16",
+        "amount":24,
+        "type":"PFA",
+        "version":"PFA00011",
+        "electrode":0,
+        "far":1,
+        "diameter":2.7,
+        "fr":"5.4",
+        "gap":2,
+        "centrality":2,
+        "employ":false,
+        "prefab":true,
+        "mesh": "catheter_pfa18.json",
+        "magnetismOption":{
+            "magnetism":false,
+            "consult":0,
+            "consultDistance":0.0,
+            "target":0,
+            "targetDistance":0.0
+        },
+        "dyestuff":"white",
+        "electrodeLength":1.5,
+
+        "pair":[
+        ],
+        "both":[
+        ],
+        "single":[
+        ]
     }
 ]

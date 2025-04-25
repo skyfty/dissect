@@ -27,6 +27,7 @@ public:
     vtkSmartPointer<vtkPolyData> mesh(MeshName name);
     vtkSmartPointer<vtkLookupTable> lookupTable(LookupTableName name);
     const vtkStdString& colorName(Halve::CatheterElectrodeType name) const;
+    static vtkSmartPointer<vtkPolyData> loadMeshFile(const char* fileName);
 
     vtkColor3d color3d(const vtkStdString& name);
     vtkColor3ub color3ub(const vtkStdString& name);
@@ -37,7 +38,6 @@ Q_SIGNALS:
 
 private:
     vtkSmartPointer<vtkPolyData> loadMesh(MeshName name);
-    vtkSmartPointer<vtkPolyData> loadMeshFile(const char *fileName);
 
     void initColors();
 

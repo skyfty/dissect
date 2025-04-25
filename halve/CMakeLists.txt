@@ -80,45 +80,7 @@ target_link_libraries(halve
         Qt::RemoteObjects
         Qt::RemoteObjectsPrivate
         Qt::SerialPort
-        VTK::GUISupportQt
-        VTK::GUISupportQtQuick
-        VTK::IOPLY
-        VTK::IOGeometry
-        VTK::IOXML
-        VTK::IOImage
-        VTK::IOLegacy
-        VTK::RenderingAnnotation
-        VTK::RenderingContextOpenGL2
-        VTK::RenderingCore
-        VTK::RenderingFreeType
-        VTK::RenderingGL2PSOpenGL2
-        VTK::RenderingOpenGL2
-        # VTK::AcceleratorsVTKmCore
-        # VTK::AcceleratorsVTKmDataModel
-        # VTK::AcceleratorsVTKmFilters
-
-        VTK::png
-        VTK::sqlite
-        VTK::eigen
-        VTK::FiltersCore
-        VTK::FiltersSources
-        VTK::CommonDataModel
-        VTK::CommonCore
-        VTK::InteractionStyle
-        VTK::CommonComputationalGeometry
-        VTK::FiltersGeometry
-        VTK::FiltersHybrid
-        VTK::FiltersExtraction
-        VTK::FiltersPoints
-        VTK::CommonColor
-        VTK::ImagingHybrid
-        VTK::ImagingSources
-        VTK::ImagingMorphological
-        VTK::ImagingStencil
-        VTK::RenderingContext2D
-        VTK::RenderingContextOpenGL2
-        VTK::FiltersStatistics
-        VTK::InfovisCore
+        ${VTK_LIBRARIES}
         vtkm::cont
         vtkm::io
         vtkm::worklet

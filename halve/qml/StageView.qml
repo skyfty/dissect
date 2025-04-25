@@ -603,14 +603,22 @@ Item {
                         radius: 4
                         border.color: "white"
                         Label {
-                            text: root.combined.bloodPoolImpedance.toFixed(0)
+                            id: bloodPoolImpedanceLabel
+                            text: "0.0"
                             color: "white"
                             font.weight: 1200
                             font.pixelSize: 18
                             anchors.centerIn: parent
                         }
-                    }
 
+                        Timer {
+                            interval: 500;
+                            repeat: true
+                            onTriggered: {
+                                bloodPoolImpedanceLabel.text = root.combined.bloodPoolImpedance.toFixed(0);
+                            }
+                        }
+                    }
                 }
 
                 Item {

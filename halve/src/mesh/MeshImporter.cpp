@@ -10,6 +10,7 @@
 #include <vtkSTLReader.h>
 #include <vtkTransform.h>
 #include <vtkTransformPolyDataFilter.h>
+#include "utility/VtkUtil.h"
 
 #include <profile/Profile.h>
 
@@ -20,47 +21,7 @@ void MeshImporter::open(const QString& filePath) {
     setRunning(true);
     QFileInfo fileInfo(filePath);
     QString extension = fileInfo.suffix().toLower();
-    vtkSmartPointer<vtkPolyData> polyData;
-    if (extension == "ply")
-    {
-        auto reader = vtkSmartPointer<vtkPLYReader>::New();
-        reader->GlobalWarningDisplayOff(); // hide VTK errors
-        reader->SetFileName(filePath.toStdString().c_str());
-        reader->Update();
-        polyData = reader->GetOutput();
-    }
-    else if (extension == "vtp")
-    {
-        auto reader = vtkSmartPointer<vtkXMLPolyDataReader>::New();
-        reader->GlobalWarningDisplayOff(); // hide VTK errors
-        reader->SetFileName(filePath.toStdString().c_str());
-        reader->Update();
-        polyData = reader->GetOutput();
-    }
-    else if (extension == "obj")
-    {
-        auto reader = vtkSmartPointer<vtkOBJReader>::New();
-        reader->GlobalWarningDisplayOff(); // hide VTK errors
-        reader->SetFileName(filePath.toStdString().c_str());
-        reader->Update();
-        polyData = reader->GetOutput();
-    }
-    else if (extension == "stl")
-    {
-        auto reader = vtkSmartPointer<vtkSTLReader>::New();
-        reader->GlobalWarningDisplayOff(); // hide VTK errors
-        reader->SetFileName(filePath.toStdString().c_str());
-        reader->Update();
-        polyData = reader->GetOutput();
-    }
-    else if (extension == "vtk")
-    {
-        auto reader = vtkSmartPointer<vtkPolyDataReader>::New();
-        reader->GlobalWarningDisplayOff(); // hide VTK errors
-        reader->SetFileName(filePath.toStdString().c_str());
-        reader->Update();
-        polyData = reader->GetOutput();
-    }
+    vtkSmartPointer<vtkPolyData> polyData = vtkutil::importPolyData(filePath);
     if (polyData != nullptr) {
         double bounds[6];
         polyData->GetBounds(bounds);

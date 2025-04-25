@@ -14,6 +14,7 @@
 #include <vtkCubeSource.h>
 #include <vtkPlatonicSolidSource.h>
 #include "HalveType.h"
+#include <vtkArrowSource.h>
 
 static ModelCache *modelCache = nullptr;
 
@@ -71,10 +72,7 @@ vtkSmartPointer<vtkPolyData> ModelCache::loadMesh(MeshName name) {
         return loadMeshFile(":/assets/model/body.ply");
     }
     if (name == MeshName::ELECTRODE_NODE) {
-        vtkNew<vtkSphereSource> sphereSource;
-        sphereSource->SetRadius(ElectrodeNodeRadius);
-        sphereSource->Update();
-        return sphereSource->GetOutput();
+        return loadMeshFile(":/assets/model/catheter_node.ply");
     }
     if (name == MeshName::PANT0_ELECTRODE_NODE) {
         vtkNew<vtkCylinderSource> source;

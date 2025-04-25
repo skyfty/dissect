@@ -7,7 +7,6 @@ import QtQml
 Settings {
     category:"deploy"
     property int combinedInterval: 50
-    property bool keepSave: false
 
     property real basis:325.42
     property real ecgBasis:271.18

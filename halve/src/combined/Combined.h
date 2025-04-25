@@ -33,7 +33,6 @@ class Combined : public QObject
     Q_PROPERTY(Profile *profile WRITE setProfile READ profile NOTIFY profileChanged);
     Q_PROPERTY(ChannelReplica::State state READ state NOTIFY stateChanged FINAL)
     Q_PROPERTY(QVector3D centerPoint READ centerPoint WRITE setCenterPoint NOTIFY centerPointChanged FINAL)
-    Q_PROPERTY(bool keepSave READ keepSave WRITE setKeepSave NOTIFY keepSaveChanged FINAL)
     Q_PROPERTY(Halve::TrackStatus reproductCatheterStatus READ reproductCatheterStatus WRITE setReproductCatheterStatus NOTIFY reproductCatheterStatusChanged FINAL)
     Q_PROPERTY(Channel *channel READ channel WRITE setChannel NOTIFY channelChanged FINAL)
     Q_PROPERTY(double displacement READ displacement WRITE setDisplacement NOTIFY displacementChanged FINAL)
@@ -69,10 +68,6 @@ public:
 
     int interval() const;
     void setInterval(int newInterval);
-
-
-    bool keepSave() const;
-    void setKeepSave(bool newKeepSave);
 
     Halve::TrackStatus reproductCatheterStatus() const;
     void setReproductCatheterStatus(Halve::TrackStatus newReproductCatheterStatus);
@@ -197,7 +192,7 @@ private:
     qint32 m_magnetismTrainRate = 5;
     quint64 m_environmentFlags = 0;
     quint32 m_reproductCatheterMissedCount = 0;
-    double m_bloodPoolImpedance = 0.0;
+    float m_bloodPoolImpedance = 0.0;
 
     QList<QPair<Catheter*, QSharedPointer<BlendMagnetism>>> m_blendsMagnetism;
     QList<QPair<Catheter*, QSharedPointer<BlendDint>>> m_blendsDint;

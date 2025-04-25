@@ -34,7 +34,7 @@ void CombinedHost::timerEvent(QTimerEvent *event) {
     if (event->timerId() == m_timer) {
         TrackData::List currentTrackDataList = getCurrentTrackData();
         if (!currentTrackDataList.isEmpty()) {
-            if(m_combinedDb != nullptr && keepSave()) {
+            if(m_combinedDb != nullptr) {
                 m_combinedDb->add(currentTrackDataList);
             }
             emit trackDataChanged(currentTrackDataList);

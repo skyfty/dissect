@@ -25,7 +25,13 @@
 #include "utility/VtkUtil.h"
 #include <utility/ModelCache.h>
 #include <utility/Thread.h>
+#include <vtkThinPlateSplineTransform.h>
 #include <vtkCameraOrientationWidget.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkPLYReader.h>
+#include <vtkPLYWriter.h>
+#include <vtkAppendPolyData.h>
+#include <vtkGeometryFilter.h>
 
 class CatheterStage;
 
@@ -93,6 +99,7 @@ QQuickVTKItem::vtkUserData CatheterStage::initializeVTK(vtkRenderWindow* renderW
     userData->rendererFollower->SetLayer(1);
     userData->rendererFollower->InteractiveOff();
     userData->rendererFollower->SetActiveCamera(camera);
+ 
 
     renderWindow->AddRenderer(userData->rendererFollower);
     setMouseInteractorStyle(userData);
@@ -152,29 +159,27 @@ void CatheterStage::setMouseInteractorStyle(CatheterStageData* userData) {
     userData->interactor->SetInteractorStyle(userData->mouseInteractorStyle);
 }
 
-
 void CatheterStage::resetRender() {
     Q_ASSERT(m_catheter != nullptr);
     Q_ASSERT(Thread::currentlyOn(Thread::UI));
-    vtkSmartPointer<vtkUnstructuredGrid> grid = m_catheter->catheterMould()->grid(true);
-    dispatch_async([this, grid](vtkRenderWindow*, vtkUserData vtkObject) {
+
+    dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         CatheterStageData* userData = CatheterStageData::SafeDownCast(vtkObject);
         userData->tubeFilter = vtkSmartPointer<CatheterTubeFilter>::New();
-        userData->tubeFilter->SetInputData(grid);
-        userData->tubeFilter->SetGlyphName(MeshName::ELECTRODE_NODE);
-        userData->tubeFilter->SetColor(m_catheter->getDyestuff3ub());
-
         vtkSmartPointer<vtkDataSetMapper> tubeMapper = vtkSmartPointer<vtkDataSetMapper>::New();
         tubeMapper->SetInputConnection(userData->tubeFilter->GetOutputPort());
-
         userData->tubeActor = vtkSmartPointer<vtkActor>::New();
         userData->tubeActor->SetPickable(false);
         userData->tubeActor->SetMapper(tubeMapper);
         userData->renderer->AddActor(userData->tubeActor);
-        userData->renderer->ResetCamera();
     });
+    refreshCatheterTube();
+    resetCamera();
 }
-
+void CatheterStage::refresh() {
+    CatheterMould* catheterMould = m_catheter->catheterMould();
+    catheterMould->reload();
+}
 
 void CatheterStage::resetCamera() {
     if (VtkRenderThreadHandle == nullptr) {
@@ -199,13 +204,11 @@ void CatheterStage::setCatheter(Catheter *newPointDb)
     if (m_catheter == newPointDb)
         return;
     m_catheter = newPointDb;
-    QObject::connect(m_catheter->catheterMould(), &CatheterMould::changed, this, &CatheterStage::onCatheterMeshChanged);
+    QObject::connect(m_catheter->catheterMould(), &CatheterMould::changed, this, [this] {
+       refreshCatheterTube();
+    });
     QObject::connect(m_catheter, &Catheter::dyestuffChanged, this, &CatheterStage::onCatheterDyestuffChanged);
     emit catheterChanged();
-}
-
-void CatheterStage::onCatheterMeshChanged() {
-    refreshCatheterTube(m_catheter->catheterMould()->grid(true));
 }
 
 void CatheterStage::onCatheterDyestuffChanged() {
@@ -220,11 +223,12 @@ void CatheterStage::onCatheterDyestuffChanged() {
     });
 }
 
-void CatheterStage::refreshCatheterTube(vtkSmartPointer<vtkUnstructuredGrid> grid) {
+void CatheterStage::refreshCatheterTube() {
     Q_ASSERT(Thread::currentlyOn(Thread::UI));
     if (VtkRenderThreadHandle == nullptr) {
         return;
     }
+    vtkSmartPointer<vtkUnstructuredGrid> grid = m_catheter->catheterMould()->grid(true);
     QList<vtkSmartPointer<vtkFollower>> followers = createCatheterLabelFollower(grid);
     refreshCatheterTube(grid, followers);
 }
@@ -234,9 +238,17 @@ void CatheterStage::refreshCatheterTube(vtkSmartPointer<vtkUnstructuredGrid> gri
     if (VtkRenderThreadHandle == nullptr) {
         return;
     }
-    dispatch_async([this, grid, followers = std::move(followers)](vtkRenderWindow*, vtkUserData vtkObject) {
+    CatheterMould* catheterMould = m_catheter->catheterMould();
+    auto meshPolyDatas = catheterMould->getNodePolyDatas();
+
+    dispatch_async([this, grid, meshPolyDatas = std::move(meshPolyDatas), catheterMould, followers = std::move(followers)](vtkRenderWindow*, vtkUserData vtkObject) {
         CatheterStageData* userData = CatheterStageData::SafeDownCast(vtkObject);
         userData->tubeFilter->SetInputData(grid);
+        userData->tubeFilter->SetNodePolyDatas(meshPolyDatas);
+        userData->tubeFilter->SetColor(m_catheter->getDyestuff3ub());
+        userData->tubeFilter->SetRadius(m_catheter->getDiameter());
+        userData->tubeFilter->SetLength(m_catheter->electrodeLength());
+
         resetTextFollower(userData, followers);
     });
 }

@@ -71,12 +71,8 @@ double Combined::bloodPoolImpedance() const
 
 void Combined::setBloodPoolImpedance(double newBloodPoolImpedance)
 {
-    if (qFuzzyCompare(m_bloodPoolImpedance, newBloodPoolImpedance))
-        return;
     m_bloodPoolImpedance = newBloodPoolImpedance;
-    emit bloodPoolImpedanceChanged();
 }
-
 
 double Combined::displacement() const
 {
@@ -737,13 +733,4 @@ void Combined::setInterval(int newInterval) {
         return;
     m_interval = newInterval;
     emit intervalChanged();
-}
-
-bool Combined::keepSave() const {
-    return m_keepSave;
-}
-
-void Combined::setKeepSave(bool newKeepSave) {
-    m_keepSave = newKeepSave;
-    emit keepSaveChanged();
 }

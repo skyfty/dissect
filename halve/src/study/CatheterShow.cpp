@@ -100,13 +100,19 @@ void CatheterShow::createTextFollower(CatheterShowData* userData, vtkIdType id, 
 void CatheterShow::resetRender() {
     Q_ASSERT(m_catheter != nullptr);
     Q_ASSERT(VtkRenderThreadHandle != nullptr);
-    vtkUnstructuredGrid* grid = m_catheter->catheterMould()->grid();
-    dispatch_async([this, grid](vtkRenderWindow*, vtkUserData vtkObject) {
+    CatheterMould* catheterMould = m_catheter->catheterMould();
+    vtkUnstructuredGrid* grid = catheterMould->grid();
+    auto meshPolyDatas = catheterMould->getNodePolyDatas();
+
+    dispatch_async([this, grid, meshPolyDatas, catheterMould](vtkRenderWindow*, vtkUserData vtkObject) {
         CatheterShowData* userData = CatheterShowData::SafeDownCast(vtkObject);
 
         userData->tubeFilter = vtkSmartPointer<CatheterTubeFilter>::New();
         userData->tubeFilter->SetInputData(grid);
+        userData->tubeFilter->SetNodePolyDatas(meshPolyDatas);
         userData->tubeFilter->SetColor(m_catheter->getDyestuff3ub());
+        userData->tubeFilter->SetRadius(m_catheter->getDiameter());
+        userData->tubeFilter->SetLength(m_catheter->electrodeLength());
 
         vtkSmartPointer<vtkDataSetMapper> tubeMapper = vtkSmartPointer<vtkDataSetMapper>::New();
         tubeMapper->SetInputConnection(userData->tubeFilter->GetOutputPort());

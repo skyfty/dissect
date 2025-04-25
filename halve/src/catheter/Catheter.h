@@ -251,11 +251,11 @@ private:
     QString m_version;
     QList<quint16> m_gap;
     QString m_fr;
-    double m_diameter = 0.0;
+    double m_diameter = 0.5;
     double m_far = 0.0;
     bool m_builtin = true;
     bool m_apparent = true;
-    double m_electrodeLength = 0.0;
+    double m_electrodeLength = 0.3;
     bool m_prefab = false;
     bool m_employ = false;;
     bool m_destroyed = false;
