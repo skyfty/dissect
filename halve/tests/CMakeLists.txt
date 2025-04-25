@@ -16,10 +16,10 @@ list(APPEND DEPENDS_TEST_LIBRARYS
 
 function(add_halve_test test srcs)
     qt_add_executable(${test} ${srcs} ${TESTING_RESOURCES} ${TESTING_SRCS} )
-    target_link_libraries(${test} PRIVATE ${DEPENDS_TEST_LIBRARYS})
-    target_include_directories(${test} PRIVATE ${CMAKE_BINARY_DIR})
+    target_link_libraries(${test} PRIVATE Qt::Core Qt::Gui Qt::Test ${VTK_LIBRARIES})
+    target_include_directories(${test} PRIVATE ${CMAKE_BINARY_DIR} "${VTK_INCLUDE_DIRS}/vtkeigen")
 endfunction()
 
 add_halve_test(tst_receiver tst_receiver.cpp)
 add_halve_test(tst_pantompkins tst_pantompkins.cpp)
-add_halve_test(tst_dilate_erode  tst_dilate_erode.cpp ../src/mesh/DilateErode.h  ../src/mesh/DilateErode.cpp)
+add_halve_test(tst_catheter_perception tst_catheter_perception.cpp ../src/catheter/CatheterPerception.cpp)

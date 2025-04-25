@@ -17,6 +17,17 @@ string(STRIP "${VERSION_STRING}" VERSION_STRING)
 string(REPLACE "." "," VERSION_COMMA "${VERSION_STRING}")
 configure_file("${RC_IN_FILE}" "${RC_FILE}")
 
+# 读取 version.txt
+set(VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/version.txt")
+set(RC_FILE "${CMAKE_CURRENT_BINARY_DIR}/halve.rc")  # 现在输出到 build 目录
+set(RC_IN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/halve.rc.in")
+set(HALVE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/halve.ico")
+
+file(READ "${VERSION_FILE}" VERSION_STRING)
+string(STRIP "${VERSION_STRING}" VERSION_STRING)
+string(REPLACE "." "," VERSION_COMMA "${VERSION_STRING}")
+configure_file("${RC_IN_FILE}" "${RC_FILE}")
+
 find_package(Qt6 REQUIRED COMPONENTS Quick Concurrent Charts Core Qml Gui RemoteObjects SerialPort Test LinguistTools)
 qt_standard_project_setup(REQUIRES 6.6)
 
@@ -57,26 +68,41 @@ qt_add_translations(halve
 include_directories("src")
 add_subdirectory(src)
 
-list(APPEND DEPENDS_LIBRARYS
-    Qt::Charts
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
-    Qt::Concurrent
-    Qt::RemoteObjects
-    Qt::RemoteObjectsPrivate
-    Qt::SerialPort
-    ${VTK_LIBRARIES}
-    vtkm::cont
-    vtkm::worklet
-    kddockwidgets
-    breakpad
-    sqlite_orm
-    screengrab
-    ys
-)
-target_link_libraries(halve PRIVATE ${DEPENDS_LIBRARYS})
+if (HALVE_BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
+
+set_target_properties(halve PROPERTIES
+  WIN32_EXECUTABLE TRUE
+  cuda_architecture_flags "--generate-code=arch=compute_89,code=sm_89"
+  requires_static_builds TRUE)
+set_target_properties(halve PROPERTIES CUDA_ARCHITECTURES "OFF")
+
+
+target_link_libraries(halve
+    PRIVATE
+        Qt::Charts
+        Qt::Core
+        Qt::Gui
+        Qt::Qml
+        Qt::Quick
+        Qt::Concurrent
+        Qt::RemoteObjects
+        Qt::RemoteObjectsPrivate
+        Qt::SerialPort
+        ${VTK_LIBRARIES}
+        vtkm::cont
+        vtkm::io
+        vtkm::worklet
+        vtkm::filter
+        ${CUDA_LIBRARIES}
+        ${CUDA_CUDART_LIBRARY}
+        ${CUDA_cudadevrt_LIBRARY}
+        ys
+        kddockwidgets
+        breakpad
+        sqlite_orm
+        screengrab)
 
 target_include_directories(halve
     PRIVATE

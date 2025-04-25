@@ -9,6 +9,8 @@
 #include "catheter/CatheterMesh.h"
 #include "catheter/CatheterTubeFilter.h"
 #include "combined/CatheterTrackPackage.h"
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkLandmarkTransform.h>
 
 #include <QtConcurrent>
 #include <vtkObjectFactory.h>
@@ -18,18 +20,25 @@
 #include "rep_channel_merged.h"
 #include "study/CatheterTrackWorker.h"
 #include "utility/FrameRate.h"
+#include <vtkMatrix3x3.h>
+#include <vtkThinPlateSplineTransform.h>
+#include <vtkIterativeClosestPointTransform.h>
+#include "utility/VtkUtil.h"
 
 #include <utility/ModelCache.h>
 #include <utility/Thread.h>
+#include <vtkAppendFilter.h>
+#include <vtkTransformFilter.h>
+#include "catheter/CatheterPerception.h"
 
 #include <vtkPointData.h>
+#include <vtkPolyLine.h>
 
 using namespace std::placeholders;
 
 CatheterTrackWidget::CatheterTrackWidget(QQuickItem *parent)
     : QQuickItem{parent}
 {
-    m_frameRate = new FrameRate(this);
     m_worker = new CatheterTrackWorker();
 }
 
@@ -52,7 +61,7 @@ void CatheterTrackWidget::setProfile(Profile* profile) {
     }
     m_profile = profile;
     QObject::connect(m_profile, &Profile::centerPointChanged, this, &CatheterTrackWidget::onCenterPointChanged);
-    QObject::connect(m_worker, &CatheterTrackWorker::carpenterResult, m_profile, std::bind(&CatheterTrackWidget::onCarpenterResult, this, _1, _2));
+    QObject::connect(m_worker, &CatheterTrackWorker::carpenterResult, m_profile, std::bind(&CatheterTrackWidget::onCarpenterResult, this, _1, _2, _3));
     m_worker->init();
 
     m_breathOptions =  m_profile->breathOptions();
@@ -79,13 +88,6 @@ void CatheterTrackWidget::setCombined(Combined* combined) {
     m_combined = combined;
 }
 
-void CatheterTrackWidget::onCarpenterResult(Catheter* catheter, UnstructuredGridWarp::Ptr polyData) {
-    Q_ASSERT(catheter != nullptr);
-    Q_ASSERT(catheter != nullptr);
-    CatheterMesh* catheterMesh = catheter->mesh();  
-    catheterMesh->setMesh(polyData->Data);
-}
-
 Combined *CatheterTrackWidget::combined() const {
     return m_combined;
 }
@@ -96,38 +98,14 @@ bool CatheterTrackWidget::getTrackPosition(const CatheterTrack &track, vtkVector
     }
     return true;
 }
-vtkUnstructuredGrid* CatheterTrackWidget::prepareCatheterGrid(Catheter* catheter) {
-    Q_ASSERT(catheter != nullptr);
-    Q_ASSERT(Thread::currentlyOn(Thread::UI));
-    CatheterMesh* catheterMesh = catheter->mesh();
-    vtkUnstructuredGrid* grid = catheterMesh->grid();
-    if (grid->GetNumberOfPoints() == 0) {
-        grid->DeepCopy(catheter->catheterMould()->grid());
-    }
-    catheterMesh->mesh()->Modified();
-    return grid;
-}
 
-quint64 CatheterTrackWidget::rate() const
-{
-    return m_rate;
-}
-
-void CatheterTrackWidget::setRate(quint64 newRate)
-{
-    if (m_rate == newRate)
-        return;
-    m_rate = newRate;
-    m_frameRate->setRate(newRate);
-    emit rateChanged();
-}
 void CatheterTrackWidget::onCatheterAlined(Catheter *catheter) {
     Q_ASSERT(catheter != nullptr);
 }
 
 void CatheterTrackWidget::onCatheterDyestuffChanged(Catheter *catheter) {
     Q_ASSERT(catheter != nullptr);
-    vtkUnstructuredGrid* grid = prepareCatheterGrid(catheter);
+    vtkUnstructuredGrid* grid = prepareCatheterMesh(catheter);
     Q_ASSERT(grid != nullptr);
     refreshCatheterTube(catheter, grid);
 }
@@ -145,17 +123,116 @@ void CatheterTrackWidget::refreshCatheterTube(Catheter* catheter, vtkSmartPointe
     emit m_worker->carpenter(catheter, UnstructuredGridWarp::Ptr::create(grid));
 }
 
+void CatheterTrackWidget::onCarpenterResult(Catheter* catheter, UnstructuredGridWarp::Ptr grid, UnstructuredGridWarp::Ptr mesh) {
+    Q_ASSERT(catheter != nullptr);
+    Q_ASSERT(Thread::currentlyOn(Thread::UI));
+    CatheterMesh* catheterMesh = catheter->mesh();
+    catheterMesh->setMeshAndGrid(mesh->Data, grid->Data);
+}
+
+vtkUnstructuredGrid* CatheterTrackWidget::prepareCatheterMesh(Catheter* catheter) {
+    Q_ASSERT(catheter != nullptr);
+    Q_ASSERT(Thread::currentlyOn(Thread::UI));
+    CatheterMesh* catheterMesh = catheter->mesh();
+    vtkUnstructuredGrid* grid = catheterMesh->grid();
+    if (grid->GetNumberOfPoints() == 0) {
+        grid->DeepCopy(catheter->catheterMould()->grid());
+    }
+    catheterMesh->mesh()->Modified();
+    return grid;
+}
 void CatheterTrackWidget::checkCatheterTrack(Catheter* catheter, const QList<CatheterTrack> &trackDatas) {
     Q_ASSERT(catheter != nullptr);
     Q_ASSERT(Thread::currentlyOn(Thread::UI));
-    vtkUnstructuredGrid* grid = prepareCatheterGrid(catheter);
-    for(const CatheterTrack &track:trackDatas) {
-        vtkVector3d trackPosition;
-        getTrackPosition(track, trackPosition);
-        quint16 seatIdx = track.seat() - catheter->bseat();
-        grid->GetPoints()->SetPoint(seatIdx, trackPosition.GetData());
+
+    CatheterMould* catheterMould = catheter->catheterMould();
+    vtkUnstructuredGrid* mouldGrid = catheterMould->grid();
+
+    //vtkSmartPointer<vtkUnstructuredGrid> targetGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
+    //targetGrid->DeepCopy(mouldGrid);
+    //for (const CatheterTrack& track : trackDatas) {
+    //    vtkVector3d trackPosition;
+    //    getTrackPosition(track, trackPosition);
+    //    quint16 seatIdx = track.seat() - catheter->bseat();
+    //    targetGrid->GetPoints()->SetPoint(seatIdx, trackPosition.GetData());
+    //}
+    //refreshCatheterTube(catheter, targetGrid);
+
+
+    QMap<vtkIdType,vtkVector3d> targetPointMap;
+    vtkNew<vtkPoints> sourcePoints, targetPoints;
+    vtkIntArray* sourcePerceptions = dynamic_cast<vtkIntArray*>(mouldGrid->GetPointData()->GetArray(PerceptionsPointDataName));
+    for (vtkIdType numberOfPerceptions = 0; numberOfPerceptions < sourcePerceptions->GetNumberOfValues(); ++numberOfPerceptions) {
+        vtkIdType perceptionIdx = sourcePerceptions->GetValue(numberOfPerceptions);
+        vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(perceptionIdx);
+        if (perception->mode() != 0) {
+            continue;
+        }
+		// Get the spline points
+        vtkIdType precValue = -1;
+        perception->getSpline(precValue);
+
+        auto iter = std::find_if(std::begin(trackDatas), std::end(trackDatas), [&](const CatheterTrack& track) {
+            quint16 seatIdx = track.seat() - catheter->bseat();
+			return seatIdx == precValue;
+        });
+		if (iter != std::end(trackDatas)) {
+            vtkVector3d trackPosition;
+            getTrackPosition(*iter, trackPosition);
+            targetPoints->InsertNextPoint(trackPosition.GetData());
+            vtkVector3d sourcePosition;
+            mouldGrid->GetPoint(numberOfPerceptions, sourcePosition.GetData());
+            sourcePosition = vtkutil::randomUndulation(sourcePosition);
+            sourcePoints->InsertNextPoint(sourcePosition.GetData());
+            targetPointMap[numberOfPerceptions] = trackPosition;
+		}
     }
-    refreshCatheterTube(catheter, grid);
+
+	// Check if the points are coplanar
+    vtkNew<vtkLandmarkTransform> tps;
+    tps->SetSourceLandmarks(sourcePoints);
+    tps->SetTargetLandmarks(targetPoints);
+    tps->SetModeToAffine();
+    tps->Update();
+
+    vtkNew<vtkTransformFilter> transformFilter;
+    transformFilter->SetInputData(mouldGrid);
+    transformFilter->SetTransform(tps);
+    transformFilter->Update();
+
+    vtkSmartPointer<vtkUnstructuredGrid> targetGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
+    targetGrid->ShallowCopy(vtkUnstructuredGrid::SafeDownCast(transformFilter->GetOutput()));
+
+   vtkIntArray* targetPerceptions = dynamic_cast<vtkIntArray*>(targetGrid->GetPointData()->GetArray(PerceptionsPointDataName));
+    for (vtkIdType numberOfPerceptions = 0; numberOfPerceptions < targetPerceptions->GetNumberOfValues(); ++numberOfPerceptions) {
+        vtkIdType perceptionIdx = targetPerceptions->GetValue(numberOfPerceptions);
+		vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(perceptionIdx);
+        if (perception->mode() == 0 && targetPointMap.contains(numberOfPerceptions)) {
+            vtkVector3d targetPoint = targetPointMap[numberOfPerceptions];
+            targetGrid->GetPoints()->SetPoint(numberOfPerceptions, targetPoint.GetData());
+        }
+	}
+ 
+    //for (vtkIdType numberOfPerceptions = 0; numberOfPerceptions < targetPerceptions->GetNumberOfValues(); ++numberOfPerceptions) {
+    //    vtkIdType perceptionIdx = targetPerceptions->GetValue(numberOfPerceptions);
+    //    vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(perceptionIdx);
+    //    if (perception->mode() == 2 && perception->train()) {
+    //        vtkVector3d predictPoint;
+    //        if (perception->predict(targetGrid->GetPoints(), predictPoint)) {
+    //            vtkVector3d sourcePoint{0.0,0.0, 0.0};
+    //            mouldGrid->GetPoint(numberOfPerceptions, sourcePoint.GetData());
+    //            vtkMath::Subtract(predictPoint.GetData(), sourcePoint.GetData(), sourcePoint.GetData());
+
+    //            vtkVector3d targetPoint;
+    //            targetGrid->GetPoint(numberOfPerceptions, targetPoint.GetData());
+    //            vtkMath::Add(targetPoint.GetData(), sourcePoint.GetData(), targetPoint.GetData());
+    //            targetGrid->GetPoints()->SetPoint(numberOfPerceptions, targetPoint.GetData());
+    //        }
+    //    }
+    //}
+
+    refreshCatheterTube(catheter, targetGrid);
+
 }
 
 void CatheterTrackWidget::onCenterPointChanged() {
@@ -170,7 +247,7 @@ void CatheterTrackWidget::checkPantCatheterTrack(Catheter* catheter, const QList
     getTrackPosition(trackDatas[0], pant0TrackPosition);
     getTrackPosition(trackDatas[1], pant1TrackPosition);
 
-    vtkUnstructuredGrid* grid = prepareCatheterGrid(catheter);
+    vtkUnstructuredGrid* grid = prepareCatheterMesh(catheter);
     if (m_combined->mode() == Halve::CHANNELMODE_ELECTRICAL) {
         static const double pantOriginPosition[] = { 0, 0, 0 };
         if (m_pantElectricalNeedInit) {
@@ -189,14 +266,9 @@ void CatheterTrackWidget::checkPantCatheterTrack(Catheter* catheter, const QList
     refreshCatheterTube(catheter, grid);
 }
 
-void CatheterTrackWidget::onCatheterTrackChanged(const QSharedPointer<CatheterTrackPackage> &trackDataPackage) {
-    Q_ASSERT(m_profile != nullptr);
-    if (m_frameRate->charge() || m_profile->renovating()) {
-        return;
-    }
-    QList<Catheter*> catheters = trackDataPackage->getCatheters();
-    for(Catheter* catheter:catheters) {
-        QList<CatheterTrack> &trackDatas = trackDataPackage->getTracks(catheter);
+void CatheterTrackWidget::checkCatheterTracks(const QList<Catheter*> &catheters, const QSharedPointer<CatheterTrackPackage>& trackDataPackage) {
+    for (Catheter* catheter : catheters) {
+        QList<CatheterTrack>& trackDatas = trackDataPackage->getTracks(catheter);
         if (trackDatas.isEmpty()) {
             continue;
         }
@@ -205,6 +277,17 @@ void CatheterTrackWidget::onCatheterTrackChanged(const QSharedPointer<CatheterTr
         } else {
             checkCatheterTrack(catheter, trackDatas);
         }
+    }
+}
+
+void CatheterTrackWidget::onCatheterTrackChanged(const QSharedPointer<CatheterTrackPackage> &trackDataPackage) {
+    Q_ASSERT(m_profile != nullptr);
+    if (m_profile->renovating()) {
+        return;
+    }
+    QList<Catheter*> catheters = trackDataPackage->getCatheters();
+    if (!m_worker->running()) {
+        checkCatheterTracks(catheters, trackDataPackage);
     }
     for(Catheter* catheter: m_catheterDb->getEmployDatas()) {
         catheter->setValid(catheters.indexOf(catheter) != -1);

@@ -25,6 +25,7 @@ public:
     CatheterElectrodeNodePointDb(QObject *parent = nullptr);
     Q_INVOKABLE void editMesh();
     Q_INVOKABLE void resetMesh();
+    Q_INVOKABLE void importMesh(const QString& file);
 
     Catheter *catheter() const;
     void setCatheter(Catheter *newCatheter);

@@ -8,23 +8,23 @@
 #include <vtkTransformPolyDataFilter.h>
 #include "catheter/CatheterMagnetism.h"
 #include <catheter/Catheter.h>
+#include "ChannelWorker.h"
 
 Channel::Channel(QObject *parent)
     : QObject{parent}
 {
-    m_remoteNode.reset(new QRemoteObjectNode()); // create remote object node
-    m_remoteNode->connectToNode(QUrl(QStringLiteral("local:channel"))); // connect with remote host node
-    m_remoteNode->setHeartbeatInterval(1000);
-    m_channelReplica.reset(m_remoteNode->acquire<ChannelReplica>()); // acquire replica of source from host node
-    QObject::connect(m_channelReplica.data(), &ChannelReplica::sampleChanged, this, &Channel::sampleChanged);
-    QObject::connect(m_channelReplica.data(), &ChannelReplica::trackData, this, &Channel::trackData);
-    QObject::connect(m_channelReplica.data(), &ChannelReplica::shipChanged, this, &Channel::shipChanged);
-    QObject::connect(m_channelReplica.data(), &ChannelReplica::stateChanged, this, &Channel::stateChanged);
-    QObject::connect(m_channelReplica.data(), &ChannelReplica::indexChanged, this, &Channel::indexChanged);
-    QObject::connect(m_channelReplica.data(), &ChannelReplica::sizeChanged, this, &Channel::sizeChanged);
+    m_worker = new ChannelWorker();
+    QObject::connect(m_worker, &ChannelWorker::sampleChanged, this, &Channel::sampleChanged);
+    QObject::connect(m_worker, &ChannelWorker::trackData, this, &Channel::trackData);
+    QObject::connect(m_worker, &ChannelWorker::shipChanged, this, &Channel::shipChanged);
+    QObject::connect(m_worker, &ChannelWorker::stateChanged, this, &Channel::onStateChanged);
+    QObject::connect(m_worker, &ChannelWorker::indexChanged, this, &Channel::indexChanged);
+    QObject::connect(m_worker, &ChannelWorker::sizeChanged, this, &Channel::sizeChanged);
+    m_worker->init();
 }
 
 Channel::~Channel() {
+    m_worker->exit();
     m_process = nullptr;
 }
 
@@ -38,7 +38,6 @@ void Channel::launch() {
     QStringList arguments;
     arguments << "--pid" << QString("%1").arg(QCoreApplication::applicationPid())
               << "--process-type" << "channel"
-              << "--keep-save" << (m_keepSave ? "1" : "0")
               << "--channel-mode" << QString("%1").arg(m_mode)
               << "--profile" << m_profilePath;
     m_process = new QProcess(this);;
@@ -79,53 +78,75 @@ void Channel::setMode(const Halve::ChannelMode &newMode)
     emit modeChanged();
 }
 
-bool Channel::keepSave() const
+quint64 Channel::trackRate() const
 {
-    return m_keepSave;
+    return m_trackRate;
 }
 
-void Channel::setKeepSave(bool newKeepSave)
+void Channel::setTrackRate(quint64 rate)
 {
-    if (m_keepSave == newKeepSave)
+    if (m_trackRate == rate)
         return;
-    m_keepSave = newKeepSave;
-    m_channelReplica->setKeepSave(newKeepSave);
-    emit keepSaveChanged();
+    m_trackRate = rate;
+    m_worker->setTrackRate(rate);
+    emit trackRateChanged();
 }
 
 void Channel::connect() {
-    m_channelReplica->connect(m_port);
+    if (m_worker->replica() == nullptr) {
+        return;
+    }
+    emit m_worker->connectHost(m_port);
 }
 
 void Channel::disconnect()
 {
-    m_channelReplica->disconnect();
+    if (m_worker->replica() == nullptr) {
+        return;
+    }
+    emit m_worker->disconnectHost();
 }
 
 
 qint32 Channel::lookbackSpeed() const
 {
-    return m_channelReplica->lookbackSpeed();
+    return m_lookbackSpeed;
 }
 
 void Channel::setLookbackSpeed(qint32 newSpeed)
 {
-   return m_channelReplica->setLookbackSpeed(newSpeed);
+    if (m_lookbackSpeed == newSpeed) {
+        return;
+    }
+    m_lookbackSpeed = newSpeed;
+    emit  m_worker->setLookbackSpeed(m_lookbackSpeed);
+    emit lookbackSpeedChanged();
 }
 
 qint32 Channel::index() const {
-    return m_channelReplica->index();
+    return m_index;
 }
-void Channel::setIndex(qint32 newSamplingRate) {
-    m_channelReplica->setIndex(newSamplingRate);
+
+void Channel::setIndex(qint32 newIndex) {
+    if (m_index == newIndex) {
+        return;
+    }
+    m_index = newIndex;
+    emit m_worker->setIndex(m_index);
+    emit indexChanged();
 }
 
 qint32 Channel::size() const {
-    return m_channelReplica->size();
+    return m_size;
 }
 
 ChannelReplica::State Channel::state() const {
-    return m_channelReplica == nullptr?ChannelReplica::State_Shutdown:m_channelReplica->state();
+    return m_state;
+}
+
+void Channel::onStateChanged(ChannelReplica::State s) {
+    m_state = s;
+    emit stateChanged(s);
 }
 
 quint16 Channel::port() const {
@@ -140,14 +161,23 @@ void Channel::setPort(quint16 newPort) {
 }
 
 void Channel::lookback(qint64 beginTime, qint64 endTime) {
-    m_channelReplica->lookback(beginTime, endTime);
+    if (m_worker->replica() == nullptr) {
+        return;
+    }
+    emit m_worker->lookback(beginTime, endTime);
 }
 
 void Channel::reconnect() {
-    m_channelReplica->reconnect();
+    if (m_worker->replica() == nullptr) {
+        return;
+    }
+    emit m_worker->reconnect();
 }
 void Channel::ship(qint64 idx, qint64 count) {
-    m_channelReplica->ship(idx, count);
+    if (m_worker->replica() == nullptr) {
+        return;
+    }
+    emit m_worker->ship(idx, count);
 }
 
 void Channel::launchWatch() {

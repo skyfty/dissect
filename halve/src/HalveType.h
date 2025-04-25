@@ -193,7 +193,8 @@ extern quint32 DefaultCoefficient;
 extern double ElectrodeNodeRadius;
 extern double CatheterTubeRadius;
 extern double PantCatheterTubeRadius;
-
+extern int DefaultTubeSide;
+extern int DefaultTubeResolution;
 extern std::string MainBodyMeshColorName;
 
 extern const char *TypesPointDataName;
@@ -201,6 +202,15 @@ extern const char *PointsPointDataName;
 extern const char *ConnectivityPointDataName;
 extern const char *ColorsPointDataName;
 extern const char* PointIdScalarName;
+extern const char* PerceptionsPointDataName;
+extern const char* NodeMeshName;
+extern const char* NodeMeshIndexName;
+extern const char* ConnectivityRadiusName;
+extern const char* FlexibilityName;
+extern const char* TubeSidesName;
+extern const char* FlexibilityName;
+extern const char* ResolutionName;
+extern const char* PointDirectionName;
 
 enum LookupTableName {
     LTN_CATHETER,

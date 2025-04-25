@@ -65,6 +65,8 @@ set(SRCS
     "CatheterNodeFilter.h"
     "PantCatheterFilter.cpp"
     "PantCatheterFilter.h"
+    "CatheterPerception.cpp"
+    "CatheterPerception.h"
     "CatheterElectrodeNodePointDb.h"
     "CatheterElectrodeNodePointDb.cpp"
     "CatheterElectrodeNodePointListModel.h"

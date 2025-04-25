@@ -14,6 +14,11 @@ namespace ys
     class HeartRate
     {
     public:
+        HeartRate(const int sampleRate)
+        {
+            SetSampleRate(sampleRate);
+        }
+
         void SetSampleRate(const int sampleRate)
         {
             _toolkit.SetSampleRate(sampleRate);

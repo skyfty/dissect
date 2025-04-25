@@ -12,8 +12,8 @@ FilterOptions::FilterOptions(QObject *parent)
 FilterOptionItem *FilterOptions::getEcg() {
     if (m_ecg == nullptr) {
         m_ecg = new FilterOptionItem(this);
-       m_ecg->setHighPass(0.05);
-       m_ecg->setLowPass(30);
+        m_ecg->setHighPass(0.05);
+        m_ecg->setLowPass(30);
         QObject::connect(m_ecg, &FilterOptionItem::highPassChanged, this, &FilterOptions::changed);
         QObject::connect(m_ecg, &FilterOptionItem::lowPassChanged, this, &FilterOptions::changed);
     }
@@ -24,8 +24,11 @@ FilterOptionItem *FilterOptions::getCatheterDouble()
 {
     if (m_catheterDouble == nullptr) {
         m_catheterDouble = new FilterOptionItem(this);
-       m_catheterDouble->setHighPass(0.05);
-       m_catheterDouble->setLowPass( 30);
+        m_catheterDouble->setHighPass(0.05);
+        m_catheterDouble->setLowPass(30);
+        m_catheterDouble->setNoise(false);
+        m_catheterDouble->setMagnetic(false);
+        m_catheterDouble->setNotch10Hz(false);
         QObject::connect(m_catheterDouble, &FilterOptionItem::highPassChanged, this, &FilterOptions::changed);
         QObject::connect(m_catheterDouble, &FilterOptionItem::lowPassChanged, this, &FilterOptions::changed);
     }
@@ -37,8 +40,8 @@ FilterOptionItem *FilterOptions::getCatheterSingle()
 {
     if (m_catheterSingle == nullptr) {
         m_catheterSingle = new FilterOptionItem(this);
-       m_catheterSingle->setHighPass(0.05);
-       m_catheterSingle->setLowPass( 30);
+        m_catheterSingle->setHighPass(0.05);
+        m_catheterSingle->setLowPass( 30);
         QObject::connect(m_catheterSingle, &FilterOptionItem::highPassChanged, this, &FilterOptions::changed);
         QObject::connect(m_catheterSingle, &FilterOptionItem::lowPassChanged, this, &FilterOptions::changed);
     }

@@ -409,5 +409,18 @@
         <file>assets/images/train.svg</file>
         <file>assets/configures/hotkey.json</file>
         <file>qml/HotkeyAction.qml</file>
+        <file>qml/models/KernelSizeModel.qml</file>
+        <file>qml/RegistrationPage.qml</file>
+        <file>assets/images/open_file.png</file>
+        <file>assets/images/registration.png</file>
+        <file>assets/images/select_points.png</file>
+        <file>assets/model/catheter_node.ply</file>
+        <file>assets/images/refresh.svg</file>
+        <file>assets/model/catheter_pfa18.json</file>
+        <file>assets/model/pfa18/far.ply</file>
+        <file>assets/model/pfa18/far_blue.ply</file>
+        <file>assets/model/pfa18/long.ply</file>
+        <file>assets/model/pfa18/near.ply</file>
+        <file>assets/model/pfa18/short.ply</file>
     </qresource>
 </RCC>

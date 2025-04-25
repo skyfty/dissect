@@ -154,6 +154,8 @@ Pane {
                                     height: 200
                                     enableDetails:false
                                     enableAlphaChannel:false
+                                    paletteMode: true
+                                    enablePaletteMode: false
                                     onColorChanged: (changedColor) => {
                                         dissolveModel.setDatas(childButtonGroup.getCheckedRowIds(), changedColor, DissolveListModel.DYESTUFF);
                                     }

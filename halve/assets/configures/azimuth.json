@@ -18,34 +18,34 @@
     },
     {
         "id":2,
-        "name":"LAO",
+        "name":"RAO",
         "enabled":true,
         "buildin":true,
-        "pos":[-144,144,144],
+        "pos":[-125,0,216],
         "viewUp":[0,1,0]
     },
     {
         "id":3,
-        "name":"RAO",
-        "enabled":true,
-        "buildin":true,
-        "pos":[144,144,144],
-        "viewUp":[0,1,0]
-    },
-    {
-        "id":4,
-        "name":"RL",
+        "name":"LAO",
         "enabled":true,
         "buildin":true,
         "pos":[176,0,176],
         "viewUp":[0,1,0]
     },
     {
-        "id":5,
+        "id":4,
         "name":"LL",
         "enabled":true,
         "buildin":true,
-        "pos":[-176,0,176],
+        "pos":[250,0,0],
+        "viewUp":[0,1,0]
+    },
+    {
+        "id":5,
+        "name":"RL",
+        "enabled":true,
+        "buildin":true,
+        "pos":[-250,0,0],
         "viewUp":[0,1,0]
     }
 ]

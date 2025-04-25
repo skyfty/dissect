@@ -11,7 +11,21 @@
 #include <vtkSelection.h>
 #include <vtkSelectionNode.h>
 #include <vtkUnsignedCharArray.h>
+#include <vtkPolyData.h>
 #include <vtkVector.h>
+
+#include "vtkPLYReader.h"
+#include "vtkXMLPolyDataReader.h"
+
+#include <QFileInfo>
+#include <QtConcurrent>
+#include <vtkCallbackCommand.h>
+#include <vtkOBJReader.h>
+#include <vtkPolyDataReader.h>
+#include <vtkSTLReader.h>
+#include <vtkTransform.h>
+#include <vtkTransformPolyDataFilter.h>
+
 namespace vtkutil {
 QColor fromVtkColor() {
     return QColor();
@@ -184,6 +198,59 @@ vtkSmartPointer<vtkUnsignedCharArray> assignColorsPointData(vtkIdTypeArray* ids,
         colors->SetTypedTuple(j, color);
     }
     return colors;
+}
+vtkSmartPointer<vtkPolyData> importPolyData(const QString& filePath) {
+    QFileInfo fileInfo(filePath);
+    QString extension = fileInfo.suffix().toLower();
+    vtkSmartPointer<vtkPolyData> polyData;
+    if (extension == "ply")
+    {
+        auto reader = vtkSmartPointer<vtkPLYReader>::New();
+        reader->GlobalWarningDisplayOff(); // hide VTK errors
+        reader->SetFileName(filePath.toStdString().c_str());
+        reader->Update();
+        polyData = reader->GetOutput();
+    }
+    else if (extension == "vtp")
+    {
+        auto reader = vtkSmartPointer<vtkXMLPolyDataReader>::New();
+        reader->GlobalWarningDisplayOff(); // hide VTK errors
+        reader->SetFileName(filePath.toStdString().c_str());
+        reader->Update();
+        polyData = reader->GetOutput();
+    }
+    else if (extension == "obj")
+    {
+        auto reader = vtkSmartPointer<vtkOBJReader>::New();
+        reader->GlobalWarningDisplayOff(); // hide VTK errors
+        reader->SetFileName(filePath.toStdString().c_str());
+        reader->Update();
+        polyData = reader->GetOutput();
+    }
+    else if (extension == "stl")
+    {
+        auto reader = vtkSmartPointer<vtkSTLReader>::New();
+        reader->GlobalWarningDisplayOff(); // hide VTK errors
+        reader->SetFileName(filePath.toStdString().c_str());
+        reader->Update();
+        polyData = reader->GetOutput();
+    }
+    else if (extension == "vtk")
+    {
+        auto reader = vtkSmartPointer<vtkPolyDataReader>::New();
+        reader->GlobalWarningDisplayOff(); // hide VTK errors
+        reader->SetFileName(filePath.toStdString().c_str());
+        reader->Update();
+        polyData = reader->GetOutput();
+    }
+    return polyData;
+}
+
+vtkVector3d randomUndulation(const vtkVector3d& trackPosition) {
+    return vtkVector3d(
+        trackPosition[0] + vtkMath::Random(-0.01, 0.01),
+        trackPosition[1] + vtkMath::Random(-0.01, 0.01),
+        trackPosition[2] + vtkMath::Random(-0.01, 0.01));
 }
 
 }

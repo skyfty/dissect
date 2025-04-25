@@ -63,7 +63,6 @@ int ImageOpenClose::RequestData(vtkInformation* vtkNotUsed(request), vtkInformat
         return 0;
     }
 
-    auto i = QDateTime::currentMSecsSinceEpoch();
     vtkNew<vtkImageData> imageData;
     imageData->DeepCopy(input0);
     vtkIntArray* scalars = dynamic_cast<vtkIntArray*>(imageData->GetPointData()->GetScalars());
@@ -76,7 +75,6 @@ int ImageOpenClose::RequestData(vtkInformation* vtkNotUsed(request), vtkInformat
     dilateErode.setDimension(dimensions[0]);
     dilateErode.filter(scalars->GetPointer(0), scalars->GetPointer(0), scalars->GetSize());
     output->ShallowCopy(imageData);
-    qDebug() << QDateTime::currentMSecsSinceEpoch() - i;
 
     return 1;
 }

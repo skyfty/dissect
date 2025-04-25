@@ -9,12 +9,20 @@ CatheterMesh::CatheterMesh(QObject *parent)
     Q_ASSERT(Thread::currentlyOn(Thread::UI));
 }
 
-void CatheterMesh::setMesh(const vtkSmartPointer<vtkUnstructuredGrid> & mesh) {
-    if (mesh == nullptr || mesh == m_mesh) {
-        return;
+void CatheterMesh::setMeshAndGrid(const vtkSmartPointer<vtkUnstructuredGrid>& mesh, const vtkSmartPointer<vtkUnstructuredGrid>& grid) {
+    bool c = false;
+    if (grid != nullptr && grid != m_grid) {
+        m_grid = grid;
+        c = true;
+
     }
-    m_mesh = mesh;
-    emit changed();
+    if (mesh != nullptr && mesh != m_mesh) {
+        m_mesh = mesh;
+        c = true;
+    }
+    if (c) {
+        emit changed();
+    }
 }
 
 vtkSmartPointer<vtkUnstructuredGrid> CatheterMesh::mesh() {

@@ -149,16 +149,6 @@ Rectangle{
                 Layout.fillWidth: true
             }
 
-            Label {
-                text: qsTr("Save NDI data")
-                font.pixelSize: 14
-                Layout.alignment: Qt.AlignRight
-            }
-            CheckBox {
-                id:keepSave
-                Layout.alignment: Qt.AlignLeft
-                checked:AppSettings.keepSave
-            }
 
 
             Label {

@@ -13,6 +13,8 @@
 #include <QUrl>
 #include "utility/FileUtils.h"
 #include <QTimer>
+#include "vtkPLYReader.h"
+#include "utility/VtkUtil.h"
 
 CatheterElectrodeNodePointDb::CatheterElectrodeNodePointDb(QObject *parent)
     :QObject(parent){
@@ -43,6 +45,15 @@ void CatheterElectrodeNodePointDb::resetMesh() {
         mould->toJson(json);
         saveMeshFile(meshPath, json);
     }
+}
+
+void CatheterElectrodeNodePointDb::importMesh(const QString& filePath) {
+    QFileInfo fileInfo(filePath);
+    QString meshFileName = QString("%1__%2").arg(m_catheter->meshName(), fileInfo.fileName());
+    CatheterMould* mould = m_catheter->catheterMould();
+	//mould->makeGrid(filePath);
+    QString meshPath = file_utils::getCatheterMeshPath(meshFileName);
+    QFile::copy(filePath, meshPath);
 }
 
 void CatheterElectrodeNodePointDb::saveMeshFile(const QString &file, const QJsonObject &json) {

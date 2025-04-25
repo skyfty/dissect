@@ -71,12 +71,8 @@ double Combined::bloodPoolImpedance() const
 
 void Combined::setBloodPoolImpedance(double newBloodPoolImpedance)
 {
-    if (qFuzzyCompare(m_bloodPoolImpedance, newBloodPoolImpedance))
-        return;
     m_bloodPoolImpedance = newBloodPoolImpedance;
-    emit bloodPoolImpedanceChanged();
 }
-
 
 double Combined::displacement() const
 {
@@ -115,6 +111,10 @@ Halve::ChannelMode Combined::mode() const {
 Halve::TrackStatus Combined::reproductCatheterStatus() const
 {
     return m_reproductCatheterStatus;
+}
+
+double  Combined::squaredDistance() {
+    return std::sqrt(vtkMath::Distance2BetweenPoints(m_centerPolemicsPosition.GetData(), m_centerPoint.GetData()));
 }
 
 void Combined::setReproductCatheterStatus(Halve::TrackStatus newReproductCatheterStatus)
@@ -163,6 +163,7 @@ void Combined::appendElectrodeTrackData(const TrackData &trackData, Halve::Track
 
 }
 void Combined::adjuestTrackAngle(vtkVector3d &position, const vtkQuaterniond &pant10Quaternion) {
+    return;
     // Manipulate the transform to reflect the rotation
     m_transform->Identity();
     double direction[4]{};
@@ -190,9 +191,6 @@ void Combined::abruptionTrackData(TrackData::List &currentTrackDataList) {
     vtkVector3d pant0Position{0.0,0.0,0.0};
     vtkQuaterniond pant0Quaternion{0.0,0.0,0.0,0.0};
     bool pantResult = m_profile->useBackReference() ? getPant0TrackData(currentTrackDataList, pant0Position, pant0Quaternion):true;
-    if (m_centerPoint[0] != -1) {
-        vtkMath::Subtract(m_centerPoint.GetData(), pant0Position, m_centerPolemicsPosition.GetData());
-    }
     QSharedPointer<CatheterTrackPackage> catheterTracks(new CatheterTrackPackage());
     for(TrackData &trackData : currentTrackDataList) {
         Catheter* catheter = trackData.catheter();
@@ -227,7 +225,6 @@ void Combined::abruptionTrackData(TrackData::List &currentTrackDataList) {
 
                 if (catheter->employ()) {
                     adjuestTrackAngle(position, pant0Quaternion);
-                    vtkMath::Subtract(position, pant0Position, position);
                     vtkMath::Subtract(position, m_centerPolemicsPosition.GetData(), position);
                     appendElectrodeTrackData(trackData, status, catheter, position, catheterTrackList);
                 }
@@ -242,14 +239,6 @@ void Combined::abruptionTrackData(TrackData::List &currentTrackDataList) {
     emit catheterTrackChanged(catheterTracks);
 }
 
-bool Combined::isCentralityTrackData(Catheter *catheter,const TrackData &trackData) {
-    Q_ASSERT(catheter!= nullptr);
-    return trackData.port() - catheter->bseat() == catheter->centrality();
-}
-
-double  Combined::squaredDistance() {
-    return std::sqrt(vtkMath::Distance2BetweenPoints(m_centerPolemicsPosition.GetData(), m_centerPoint.GetData()));
-}
 
 void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
     QSharedPointer<CatheterTrackPackage> catheterTracks(new CatheterTrackPackage());
@@ -301,9 +290,6 @@ void Combined::electricalTrackData(TrackData::List &currentTrackDataList) {
         pantCatheterTrackList.append(createCatheterTrack(MagnetismPant1Port, Halve::CET_PANT, Halve::TrackStatus_Valid, position, quaternion, Pant1ID));
     }
 
-    CheckEnvironmentHelper flags(m_environmentFlags);
-    flags(Halve::AN_ELECTRIC_REFERENCE_POSITION_IS_TOO_OFFSET, squaredDistance() > m_displacement);
-    setEnvironmentFlags(flags);
     inspectReproduceCatheter(catheterTracks);
 
     emit catheterTrackChanged(catheterTracks);
@@ -324,6 +310,19 @@ void Combined::getCS1AndCS9TrackData(const TrackData::List &catheterTrackData, T
     }
 }
 
+void Combined::blendUpdateBloodPoolImpedance(const ChannelTrackData &dataInput)
+{
+    Catheter* reproduceCatheter = m_catheterDb->getData(m_reproduceOptions->catheterId());
+    if (reproduceCatheter == nullptr || !reproduceCatheter->employ() || reproduceCatheter->getAmount() < 2)
+        return;
+    int startSeat = reproduceCatheter->bseat();
+    vtkVector3f diff;
+    vtkMath::Subtract(dataInput.m[startSeat].pos.GetData(), dataInput.m[startSeat + 1].pos.GetData(), diff.GetData());
+    double componentSum = vtkMath::Dot(diff.GetData(), diff.GetData());
+    double impedance = std::sqrt(componentSum);
+    setBloodPoolImpedance(impedance);
+}
+
 bool Combined::getPant0TrackData(const TrackData::List &catheterTrackData, vtkVector3d &pant10Position, vtkQuaterniond &pant10Quaternion) {
     auto iter = std::find_if(catheterTrackData.begin(), catheterTrackData.end(), [](const TrackData &trackData){
         return trackData.port() == MagnetismPant0Port;
@@ -337,6 +336,8 @@ bool Combined::getPant0TrackData(const TrackData::List &catheterTrackData, vtkVe
 }
 void Combined::setTrackCenterPoint(const TrackData &trackData, const vtkVector3d &pant0Position, const vtkQuaterniond &pant0Quaternion)  {
     trackData.getPosition(m_centerPoint);
+    m_centerPolemicsPosition = m_centerPoint;
+    m_lastCenterPolemicsPosition = m_centerPolemicsPosition;
     adjuestTrackAngle(m_centerPoint, pant0Quaternion);
     emit centerPointChanged();
 }
@@ -346,12 +347,6 @@ void Combined::blendTrackData(const TrackData::List &currentTrackDataList) {
     vtkQuaterniond pant0Quaternion{0.0,0.0,0.0,0.0};
     bool pantResult = m_profile->useBackReference() ? getPant0TrackData(currentTrackDataList, pant0Position, pant0Quaternion):true;
     if (pantResult) {
-        if (m_centerPoint[0] != -1) {
-            vtkMath::Subtract(m_centerPoint.GetData(), pant0Position, m_centerPolemicsPosition.GetData());
-            if (m_lastCenterPolemicsPosition[0] == -1) {
-                m_lastCenterPolemicsPosition = m_centerPolemicsPosition;
-            }
-        }
         blendTrackData(currentTrackDataList, pant0Position, pant0Quaternion);
     }
 }
@@ -360,7 +355,6 @@ void Combined::blendTrackData(const TrackData &trackData,const vtkVector3d &pant
     vtkVector3d position;
     trackData.getPosition(position);
     adjuestTrackAngle(position, pant10Quaternion);
-    vtkMath::Subtract(position, pant10Position, position);
     vtkMath::Subtract(position, m_centerPolemicsPosition.GetData(), position);
     vtkQuaterniond quaternion;
     trackData.getQuaternion(quaternion);
@@ -596,6 +590,21 @@ void Combined::setMagnetismTrainRate(qint32 newMagnetismTrainRate)
 }
 
 void Combined::onChannelTrackData(const ChannelTrackData &dataInput) {
+    if (m_profile->useBackReference())
+    {
+        if (m_channel->mode() == Halve::CHANNELMODE_MAGNETIC || m_channel->mode() == Halve::CHANNELMODE_BLEND)
+        {
+            auto& p0 = dataInput.n[MagnetismPant0Port];
+            for (int i=0; i<MagnetismPortAmount; ++i) {
+                if (i == MagnetismPant0Port || i == MagnetismPant1Port)
+                    continue;
+                auto& pi = dataInput.n[i];
+                vtkMath::Subtract(pi.pos.GetData(), p0.pos.GetData(), (float*)pi.pos.GetData());
+            }
+        }
+    }
+
+
     m_currentTrackDataList = convertTrackData(dataInput);
     switch(m_channel->mode()) {
     case Halve::CHANNELMODE_MAGNETIC: {
@@ -650,11 +659,14 @@ const static vtkVector3d OrgCenterPoint{-1,-1,-1};
 void Combined::resetCenterPoint() {
     m_centerPoint = OrgCenterPoint;
     m_lastCenterPolemicsPosition = OrgCenterPoint;
+    m_centerPolemicsPosition = OrgCenterPoint;
     emit centerPointChanged();
 }
 
 void Combined::resetCenterPoint(double x, double y, double z) {
     m_centerPoint.Set(x,y, z);
+    m_centerPolemicsPosition = m_centerPoint;
+    m_lastCenterPolemicsPosition = m_centerPolemicsPosition;
 }
 
 void Combined::resetCenterPoint(double pos[3])
@@ -721,13 +733,4 @@ void Combined::setInterval(int newInterval) {
         return;
     m_interval = newInterval;
     emit intervalChanged();
-}
-
-bool Combined::keepSave() const {
-    return m_keepSave;
-}
-
-void Combined::setKeepSave(bool newKeepSave) {
-    m_keepSave = newKeepSave;
-    emit keepSaveChanged();
 }

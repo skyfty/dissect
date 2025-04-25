@@ -136,6 +136,9 @@
 #include <notebook/NotebookOptions.h>
 #include <notebook/NotebookSnapshot.h>
 
+#include "registration/RegistrationSourceStage.h"
+#include "registration/RegistrationTargetStage.h"
+
 
 Q_DECLARE_METATYPE(QAbstractSeries *);
 Q_DECLARE_METATYPE(QAbstractAxis *);
@@ -161,6 +164,8 @@ double ElectrodeNodeRadius = 0.5;
 double CatheterTubeRadius = 0.2;
 double PantCatheterTubeRadius = 0.5;
 quint32 DefaultCoefficient = 100;
+int DefaultTubeSide = 10;
+int DefaultTubeResolution = 70;
 
 
 std::string MainBodyMeshColorName = "LightGrey";
@@ -291,6 +296,7 @@ void qmlRegisterTypes() {
     qmlRegisterType<StorageChecker>("Halve",1,0,"StorageChecker");
     qmlRegisterType<Hotkey>("Halve",1,0,"Hotkey");
     qmlRegisterType<MappingSetting>("Halve",1,0,"MappingSetting");
-
+    qmlRegisterType<RegistrationSourceStage>("Halve", 1, 0, "RegistrationSourceStage");
+    qmlRegisterType<RegistrationTargetStage>("Halve", 1, 0, "RegistrationTargetStage");
 }
 

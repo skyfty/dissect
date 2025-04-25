@@ -23,7 +23,6 @@ Study {
         magnetismTrainRate:AppSettings.magnetismTrainRate
         coefficient:AppSettings.coefficient
         electricCenterShifting:AppSettings.electricCenter
-        keepSave: AppSettings.keepSave
         onTrainingChanged: {
             root.profile.catheterDb.save();
             notebookDataSource.autoRecord(currentCombined.training?"Start training":"End training");
@@ -479,6 +478,22 @@ Study {
                             ToolTip.visible: hovered
                             ToolTip.text: qsTr("Album")
                         }
+
+                        ToolButton {
+                            icon {
+                                source: "qrc:/assets/images/registration.png"
+                                height: 30
+                                width:30
+                            }
+                            Layout.margins: 3
+                            onClicked:  {
+                                windowSettingPopup.toggleDockWidget(dockRegistrationPage);
+                                dockRegistrationPage.moveToCenter();
+                            }
+                            hoverEnabled: true
+                            ToolTip.visible: hovered
+                            ToolTip.text: qsTr("Registration")
+                        }
                         ToolSeparator {}
                     }
                     ToolButton {
@@ -860,7 +875,6 @@ Study {
                             combined:root.combined
                             breathSurvey:currentBreathSurvey
                             consultPrecision:AppSettings.consultPrecision
-                            rate: AppSettings.catheterTrackRate
 
                             ChannelModeModel {
                                 id:channelModeModel
@@ -1073,6 +1087,28 @@ Study {
                         profile:root.profile
                     }
                 }
+
+                KDDW.DockWidget {
+                    id: dockRegistrationPage
+                    uniqueName: "dockRegistrationPage"
+                    title:qsTr("Registration")
+                    isFloating: true
+                    focus: true
+                    options:KDDW.KDDockWidgets.DockWidgetOption_NotDockable
+                    RegistrationPage {
+                        anchors.fill: parent
+                        profile:root.profile
+                        obscurity:currentObscurity
+                        combined:root.combined
+                        channel: root.channel
+                        reseauListModel:reseauListModel
+                        options:root.profile.stageSettings.getOptions(dockStageLeftView.uniqueName)
+                        //stageScalar:currentStageScalar
+                        //scalarModel:currentScalarModel
+                        //azimuthModel:azimuthModel
+                    }
+                }
+
                 KDDW.DockWidget {
                     id: dockMappingView
                     uniqueName: "dockMappingView"

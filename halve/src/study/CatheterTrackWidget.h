@@ -30,7 +30,6 @@ class CatheterTrackWidget : public QQuickItem
     Q_PROPERTY(Combined* combined WRITE setCombined READ combined NOTIFY combinedChanged FINAL);
     Q_PROPERTY(double consultPrecision READ consultPrecision WRITE setConsultPrecision NOTIFY consultPrecisionChanged FINAL)
     Q_PROPERTY(BreathSurvey *breathSurvey WRITE setBreathSurvey FINAL)
-    Q_PROPERTY(quint64 rate READ rate WRITE setRate NOTIFY rateChanged FINAL)
 
 public:
     explicit CatheterTrackWidget(QQuickItem *parent = nullptr);
@@ -46,15 +45,13 @@ public:
     double consultPrecision() const;
     void setConsultPrecision(double newConsultPrecision);
 
-    quint64 rate() const;
-    void setRate(quint64 newRate);
 
 public slots:
     void onCatheterTrackChanged(const QSharedPointer<CatheterTrackPackage> &trackData);
     void onCatheterDyestuffChanged(Catheter *catheter);
     void onCatheterEmployChanged(Catheter *catheter);
     void onCatheterAlined(Catheter *catheter);
-    void onCarpenterResult(Catheter *catheter, UnstructuredGridWarp::Ptr polyData);
+    void onCarpenterResult(Catheter *catheter, UnstructuredGridWarp::Ptr grid, UnstructuredGridWarp::Ptr polyData);
     void onCenterPointChanged();
 
 
@@ -64,7 +61,6 @@ signals:
     void pant0Changed();
     void consultPrecisionChanged();
     void initRender();
-    void rateChanged();
 
 private:
     bool getTrackPosition(const CatheterTrack &track, vtkVector3d &position);
@@ -72,7 +68,8 @@ private:
     void checkPantCatheterTrack(Catheter* catheter, const QList<CatheterTrack> &trackDatas);
     void refreshCatheterTube(Catheter* catheter, vtkSmartPointer<vtkUnstructuredGrid> grid);
     void checkPant0Position(const QSharedPointer<CatheterTrackPackage> &trackDat);
-    vtkUnstructuredGrid* prepareCatheterGrid(Catheter* catheter);
+    vtkUnstructuredGrid* prepareCatheterMesh(Catheter* catheter);
+    void checkCatheterTracks(const QList<Catheter*> &catheters, const QSharedPointer<CatheterTrackPackage>& trackDataPackage);
 
 private:
     QPointer<Profile> m_profile;
@@ -80,9 +77,7 @@ private:
     QPointer<Combined> m_combined;
     QPointer<BreathOptions> m_breathOptions;
     QPointer<BreathSurvey> m_breathSurvey;
-    QPointer<FrameRate> m_frameRate;
     QPointer<CatheterTrackWorker> m_worker;
-    quint64 m_rate = 8;
     bool m_pantElectricalNeedInit = true;
 
     vtkBoundingBox m_pant0BoundingBox{0,-1,0,-1,0,-1};

@@ -320,6 +320,26 @@ Item {
                     ToolTip.text: qsTr("Ruler")
                 }
                 ToolSeparator {}
+                Label {
+                    id: scalerLabel
+                    leftPadding: 10
+                    rightPadding: 10
+                    text: "1.00 X"
+                }
+                ToolButton {
+                    Layout.alignment: Qt.AlignRight|Qt.AlignVCenter
+                    icon {
+                        source: "qrc:/assets/images/fullscreen.svg"
+                        height: 19
+                        width:19
+                    }
+                    onClicked: {
+                        stage.resetCameraScale();
+                    }
+                    hoverEnabled: true
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Reset zoom to 1.00")
+                }
                 Item{
                     Layout.fillWidth: true
                 }
@@ -370,6 +390,9 @@ Item {
             combined:root.combined
             obscurity:root.obscurity
             mappingSetting:root.profile.mappingSetting
+            onCameraInfoChanged: {
+                scalerLabel.text = stage.getCameraScale().toFixed(2) + " X";
+            }
 
             Item {
                 anchors.fill: parent
@@ -565,7 +588,7 @@ Item {
                 }
                 
                 Item {
-                    visible: root.channel.mode === Halve.CHANNELMODE_ELECTRICAL
+                    visible: root.channel.mode === Halve.CHANNELMODE_ELECTRICAL || root.channel.mode === Halve.CHANNELMODE_BLEND
                     anchors.left: parent.left
                     anchors.bottomMargin: 10
                     anchors.leftMargin: 10
@@ -580,14 +603,22 @@ Item {
                         radius: 4
                         border.color: "white"
                         Label {
-                            text: root.combined.bloodPoolImpedance.toFixed(0)
+                            id: bloodPoolImpedanceLabel
+                            text: "0.0"
                             color: "white"
                             font.weight: 1200
                             font.pixelSize: 18
                             anchors.centerIn: parent
                         }
-                    }
 
+                        Timer {
+                            interval: 500;
+                            repeat: true
+                            onTriggered: {
+                                bloodPoolImpedanceLabel.text = root.combined.bloodPoolImpedance.toFixed(0);
+                            }
+                        }
+                    }
                 }
 
                 Item {
@@ -705,5 +736,6 @@ Item {
 
     Component.onCompleted: function() {
         orientation.setNewAP();
+        stage.resetCameraScale();
     }
 }

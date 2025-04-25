@@ -42,6 +42,13 @@ QList<TrackData> Combined::convertTrackData(const ChannelTrackData &dataInput) {
         break;
     }
     case Halve::CHANNELMODE_BLEND: {
+        {
+            static qint64 startTime = 0;
+            if (QDateTime::currentMSecsSinceEpoch() - startTime > 500) {
+                startTime = QDateTime::currentMSecsSinceEpoch();
+                blendUpdateBloodPoolImpedance(dataBuffer);
+            }
+        }
         if (m_training) {
             trackDataList = convertBlendTraningTrackData(dataBuffer);
         } else {
@@ -94,8 +101,8 @@ int Combined::electricCSMapping(ChannelTrackData& dataBuffer) {
             respiratoryMode = RESPIRATORY_MODE::GATING;
         }
     }
-    float bloodPoolImpedance;
     float position_zero_out[2]{};
+    std::vector<ChannelTrackM> tempdata = mdata;
     m_electricMappingAlgorithm->Electric_field_mapping_algorithm_all(
         m_profile->state() == Profile::Reproduce ? OPERATION_STATE::MODELING : OPERATION_STATE::MAPPING,
         reproduceCatheter->bseat(),
@@ -105,10 +112,10 @@ int Combined::electricCSMapping(ChannelTrackData& dataBuffer) {
         respiratoryMode,
         const_cast<float*>(mdata[0].pos.GetData()),
         &breathGateSync,
-        reinterpret_cast<float*>(dataBuffer.m[0].pos.GetData()),
-        &bloodPoolImpedance,
+        reinterpret_cast<float*>(tempdata[0].pos.GetData()),
+        &m_bloodPoolImpedance,
         position_zero_out);
-    setBloodPoolImpedance(bloodPoolImpedance);
+
     return breathGateSync;
 }
 

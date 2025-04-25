@@ -33,7 +33,6 @@ class Combined : public QObject
     Q_PROPERTY(Profile *profile WRITE setProfile READ profile NOTIFY profileChanged);
     Q_PROPERTY(ChannelReplica::State state READ state NOTIFY stateChanged FINAL)
     Q_PROPERTY(QVector3D centerPoint READ centerPoint WRITE setCenterPoint NOTIFY centerPointChanged FINAL)
-    Q_PROPERTY(bool keepSave READ keepSave WRITE setKeepSave NOTIFY keepSaveChanged FINAL)
     Q_PROPERTY(Halve::TrackStatus reproductCatheterStatus READ reproductCatheterStatus WRITE setReproductCatheterStatus NOTIFY reproductCatheterStatusChanged FINAL)
     Q_PROPERTY(Channel *channel READ channel WRITE setChannel NOTIFY channelChanged FINAL)
     Q_PROPERTY(double displacement READ displacement WRITE setDisplacement NOTIFY displacementChanged FINAL)
@@ -69,10 +68,6 @@ public:
 
     int interval() const;
     void setInterval(int newInterval);
-
-
-    bool keepSave() const;
-    void setKeepSave(bool newKeepSave);
 
     Halve::TrackStatus reproductCatheterStatus() const;
     void setReproductCatheterStatus(Halve::TrackStatus newReproductCatheterStatus);
@@ -133,9 +128,7 @@ private:
     void addBlendCatheter(const QList<Catheter *> &catheters);
     void removeBlendCatheter(Catheter *catheter);
     bool isValidBlendCatheter(Catheter *catheter);
-    bool isCentralityTrackData(Catheter *catheter,const TrackData &trackData);
     void prepareElectricalCatheter();
-    void setPantTrackCenterPoint();
     void inspectPantCatheterPort(const QSharedPointer<CatheterTrackPackage> &catheterTracks);
     void inspectReproduceCatheter(const QSharedPointer<CatheterTrackPackage> &catheterTracks);
     void inspectMagneticReproduceCatheter(const QSharedPointer<CatheterTrackPackage> &catheterTracks);
@@ -145,6 +138,7 @@ private:
     quint64 checkEnvironmentFlags(quint64 flags, bool s);
     void getCS1AndCS9TrackData(const TrackData::List &catheterTrackData, TrackData &cs4, TrackData &cs8);
 
+    void blendUpdateBloodPoolImpedance(const ChannelTrackData &dataInput);
 signals:
     void profileChanged();
     void stateChanged(ChannelReplica::State state);
@@ -198,7 +192,7 @@ private:
     qint32 m_magnetismTrainRate = 5;
     quint64 m_environmentFlags = 0;
     quint32 m_reproductCatheterMissedCount = 0;
-    double m_bloodPoolImpedance = 0.0;
+    float m_bloodPoolImpedance = 0.0;
 
     QList<QPair<Catheter*, QSharedPointer<BlendMagnetism>>> m_blendsMagnetism;
     QList<QPair<Catheter*, QSharedPointer<BlendDint>>> m_blendsDint;

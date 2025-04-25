@@ -16,6 +16,8 @@ set(SRCS
     "ChannelStorageWorket.h"
     "ChannelHost.cpp"
     "ChannelHost.h"
+    "ChannelWorker.cpp"
+    "ChannelWorker.h"
     "Channel.cpp"
     "Channel.h"
     "ChannelDataStorage.h"

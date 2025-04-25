@@ -17,7 +17,6 @@ class Combined
     PROP(State state = State_Disconect READWRITE)
     PROP(bool tracking = false READWRITE)
     PROP(bool connected = false READWRITE)
-    PROP(bool keepSave = false READWRITE)
 
     SIGNAL(detectorChanged())
     SIGNAL(trackDataChanged(const TrackData::List &data))

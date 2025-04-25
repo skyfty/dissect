@@ -83,9 +83,7 @@ int runStorageChecker(QApplication &app, const QString &path, qint32 threshold) 
     return result;
 }
 struct ChannelHostOption {
-    quint16 keepSave;
     Halve::ChannelMode mode;
-
 };
 
 int runChannel(QApplication& app, const QString& profile,ChannelHostOption &options) {
@@ -99,7 +97,6 @@ int runChannel(QApplication& app, const QString& profile,ChannelHostOption &opti
     ChannelHost channelHost; // create simple switch
     srcNode.enableRemoting(&channelHost); // enable remoting
     channelHost.init(profile, options.mode);
-    channelHost.setKeepSave(options.keepSave);
     channelHost.setState(ChannelHost::State_Ready);
     auto result = app.exec();
     ioWorker->exit();
@@ -277,8 +274,6 @@ int main(int argc, char* argv[]) {
     parser.addOption(hostOption);
     QCommandLineOption kidOption("kid", "want to kill process id", "kid");
     parser.addOption(kidOption);
-    QCommandLineOption keepSaveOption("keep-save", "want to kill process id", "ks");
-    parser.addOption(keepSaveOption);
     QCommandLineOption channelModeOption("channel-mode", "channel model", "cm");
     parser.addOption(channelModeOption);
     QCommandLineOption thresholdOption("threshold", "channel model", "cm");
@@ -300,7 +295,6 @@ int main(int argc, char* argv[]) {
         return 0;
     } else if (processType == "channel") {
         ChannelHostOption optons;
-        optons.keepSave = parser.value(keepSaveOption).toUShort();
         optons.mode = (Halve::ChannelMode)parser.value(channelModeOption).toUShort();
         return runChannel(app,parser.value(profileOption),optons);
     }else if (processType == "storagechecker"){

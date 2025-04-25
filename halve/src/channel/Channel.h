@@ -12,6 +12,7 @@
 class Profile;
 class Channel;
 class BreathSurvey;
+class ChannelWorker;
 
 class Channel : public QObject
 {
@@ -21,9 +22,9 @@ class Channel : public QObject
     Q_PROPERTY(qint32 index READ index  WRITE setIndex  NOTIFY indexChanged FINAL)
     Q_PROPERTY(qint32 size READ size  NOTIFY sizeChanged FINAL)
     Q_PROPERTY(qint32 lookbackSpeed READ lookbackSpeed WRITE setLookbackSpeed NOTIFY lookbackSpeedChanged FINAL)
-    Q_PROPERTY(bool keepSave READ keepSave WRITE setKeepSave NOTIFY keepSaveChanged FINAL)
     Q_PROPERTY(Halve::ChannelMode mode READ mode WRITE setMode NOTIFY modeChanged FINAL)
     Q_PROPERTY(QString profilePath READ profilePath WRITE setProfilePath NOTIFY profilePathChanged FINAL)
+    Q_PROPERTY(quint64 trackRate READ trackRate WRITE setTrackRate NOTIFY trackRateChanged FINAL)
 
 
 public:
@@ -36,8 +37,8 @@ public:
     qint32 size() const;
     qint32 lookbackSpeed() const;
     void setLookbackSpeed(qint32 newSpeed);
-    bool keepSave() const;
-    void setKeepSave(bool newKeepSave);
+    quint64 trackRate() const;
+    void setTrackRate(quint64 newSpeed);
 
     Halve::ChannelMode mode() const;
     void setMode(const Halve::ChannelMode &newMode);
@@ -69,21 +70,26 @@ signals:
 
     void keepSaveChanged();
     void modeChanged();
+    void trackRateChanged();
 
 
     void profilePathChanged();
 
 public slots:
     void onFinised();
+    void onStateChanged(ChannelReplica::State s);
 
 private:
-    bool m_keepSave = false;
     quint16 m_port;
-    QScopedPointer<QRemoteObjectNode> m_remoteNode;
-    QScopedPointer<ChannelReplica> m_channelReplica;
+    quint64 m_trackRate = 5;
+    QPointer<ChannelWorker> m_worker;
     QProcess *m_process = nullptr;
     Halve::ChannelMode m_mode = Halve::CHANNELMODE_MAGNETIC;
     QString m_profilePath;
+    qint32 m_lookbackSpeed;
+    qint32 m_index;
+    qint32 m_size;
+    ChannelReplica::State m_state = ChannelReplica::State_Shutdown;
 };
 
 #endif // CHANNEL_H

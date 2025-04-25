@@ -22,9 +22,10 @@ public:
 
 public slots:
     void onCarpenter(Catheter *catheter, UnstructuredGridWarp::Ptr polyData);
+
 signals:
     void carpenter(Catheter *catheter, UnstructuredGridWarp::Ptr polyData);
-    void carpenterResult(Catheter *catheter, UnstructuredGridWarp::Ptr polyData);
+    void carpenterResult(Catheter *catheter, UnstructuredGridWarp::Ptr grid, UnstructuredGridWarp::Ptr polyData);
 
 private:
     QPointer<QThread> m_thread;

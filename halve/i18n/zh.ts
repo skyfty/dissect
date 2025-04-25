@@ -514,6 +514,10 @@
         <source>Album</source>
         <translation>相册</translation>
     </message>
+	<message>
+        <source>Registration</source>
+        <translation>配准</translation>
+    </message>
     <message>
         <source>Imaging 1</source>
         <translation>成像窗口1</translation>
@@ -2298,6 +2302,21 @@
     <message>
         <source>Respiratory compensation</source>
         <translation>呼吸补偿</translation>
+    </message>
+</context>
+<context>
+    <name>RegistrationPage</name>
+	<message>
+        <source>Start Registration</source>
+        <translation>开始配准</translation>
+    </message>
+	<message>
+        <source>Open File</source>
+        <translation>选择基准文件</translation>
+    </message>
+	<message>
+        <source>Select Points</source>
+        <translation>开始选点</translation>
     </message>
 </context>
 </TS>

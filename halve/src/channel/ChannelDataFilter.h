@@ -29,10 +29,10 @@ public:
     explicit ChannelDataFilter(QObject *parent = nullptr);
     ~ChannelDataFilter() override;
 
-    ChannelData::List pass(const ChannelData::List &channelData,const ElectrodeNode *electrodeNode, bool batch = false) const;
-    ChannelData::List& pass(ChannelData::List &channelData, const ElectrodeNode *electrodeNode, bool batch = false) const;
+    ChannelData::List pass(const ChannelData::List &channelData,const ElectrodeNode *electrodeNode) const;
+    ChannelData::List& pass(ChannelData::List &channelData, const ElectrodeNode *electrodeNode) const;
     ChannelData::List passNoState(ChannelData::List &channelData, const ElectrodeNode *electrodeNode) const;
-    std::vector<ChannelData::DataType> pass(const  std::vector<ChannelData::DataType> &channelData, const ElectrodeNode *electrodeNode, bool batch = false) const;
+    std::vector<ChannelData::DataType> passNoState(const  std::vector<ChannelData::DataType> &channelData, const ElectrodeNode *electrodeNode) const;
 
     void setProfile(Profile* profile);
     Profile *profile() const;
@@ -54,8 +54,8 @@ signals:
 
 private:
     FilterPipe* getFilterPipes(const ElectrodeNode *electrodeNode) const;
-    FilterPipe* createFilterPipes(FilterOptionItem *filterEcgOption) const;
-    void setFilterOptions(FilterPipe* fp, FilterOptionItem* item) const;
+    FilterPipe* createFilterPipes(int type, FilterOptionItem *filterEcgOption) const;
+    void setFilterOptions(int type, FilterPipe* fp, FilterOptionItem* item) const;
 
 private:
     QPointer<Profile> m_profile;
