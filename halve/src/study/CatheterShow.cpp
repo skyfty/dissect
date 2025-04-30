@@ -105,7 +105,6 @@ void CatheterShow::resetRender() {
     CatheterMould* catheterMould = m_catheter->catheterMould();
     vtkUnstructuredGrid* grid = catheterMould->grid();
     auto meshPolyDatas = catheterMould->getNodePolyDatas();
-    vtkIntArray* sourcePerceptions = dynamic_cast<vtkIntArray*>(grid->GetPointData()->GetArray(PerceptionsPointDataName));
 
     dispatch_async([this, grid, meshPolyDatas, catheterMould](vtkRenderWindow*, vtkUserData vtkObject) {
         CatheterShowData* userData = CatheterShowData::SafeDownCast(vtkObject);

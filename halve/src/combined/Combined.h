@@ -102,7 +102,7 @@ public:
     void setBloodPoolImpedance(double newBloodPoolImpedance);
 
 private:
-    vtkSmartPointer<vtkPoints> produceElectricityPoints(vtkUnstructuredGrid* grid, vtkVector3d &position, const vtkQuaterniond& quaternion);
+    vtkSmartPointer<vtkPoints> produceElectricityPoints(vtkPoints* points, vtkVector3d &position, const vtkQuaterniond& quaternion);
     CatheterTrack createCatheterTrack(quint16 seat, Halve::CatheterElectrodeType type, Halve::TrackStatus status, const vtkVector3d &position, const vtkQuaterniond& quaternion, const QString &id);
     void appendElectrodeTrackData(const TrackData &trackData,
                                     Halve::TrackStatus status,

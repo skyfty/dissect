@@ -81,9 +81,12 @@ void CatheterPerception::ToJson(QJsonObject& json) const {
 }
 
 
-void  CatheterPerception::getSpline(vtkIdType& value, vtkIdType idx) const {
-    Q_ASSERT(idx < m_splines.size());
+bool  CatheterPerception::getSpline(vtkIdType& value, vtkIdType idx) const {
+	if (idx >= m_splines.size()) {
+		return false;
+	}
 	value = m_splines[idx];
+	return true;
 }
 
 void CatheterPerception::addSpline(vtkIdType value) {

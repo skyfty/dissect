@@ -21,6 +21,7 @@
 #include "HalveType.h"
 #include "halitus/BreathOptions.h"
 #include "CheckEnvironmentHelper.h"
+#include "catheter/CatheterPerception.h"
 
 
 Combined::Combined(QObject *parent)
@@ -143,20 +144,46 @@ CatheterTrack Combined::createCatheterTrack(quint16 seat, Halve::CatheterElectro
 
 extern const char *TypesPointDataName ;
 
+vtkSmartPointer<vtkPoints> Combined::produceElectricityPoints(vtkPoints* points, vtkVector3d& position, const vtkQuaterniond& quaternion) {
+    vtkNew<vtkPolyData> gridPolyData;
+    gridPolyData->SetPoints(points);
+
+    vtkNew<vtkTransform> transform;
+    transform->Translate(position.GetData());
+    double direction[4]{};
+    direction[0] = vtkMath::DegreesFromRadians(quaternion.GetRotationAngleAndAxis(direction + 1));
+    transform->RotateWXYZ(direction[0], direction[1], direction[2], direction[3]);
+
+    vtkNew<vtkTransformPolyDataFilter> transformFilter;
+    transformFilter->SetInputData(gridPolyData);
+    transformFilter->SetTransform(transform);
+    transformFilter->Update();
+    return transformFilter->GetOutput()->GetPoints();
+}
+
 void Combined::appendElectrodeTrackData(const TrackData &trackData, Halve::TrackStatus status, Catheter *catheter,vtkVector3d& position, QList<CatheterTrack> &catheterTrackList) {
     Q_ASSERT(catheter != nullptr);
-    vtkSmartPointer<vtkUnstructuredGrid> grid = catheter->catheterMould()->grid();
+    CatheterMould* catheterMould = catheter->catheterMould();
+    vtkSmartPointer<vtkUnstructuredGrid> mouldGrid = catheterMould->grid();
     vtkQuaterniond quaternion;
     trackData.getQuaternion(quaternion);
-    vtkSmartPointer<vtkPoints> points = produceElectricityPoints(grid, position, quaternion);
-    vtkDataArray* types = grid->GetPointData()->GetArray(TypesPointDataName);
 
-    for (vtkIdType idx = 0; idx < points->GetNumberOfPoints(); ++idx) {
-        Halve::CatheterElectrodeType type = (Halve::CatheterElectrodeType)types->GetTuple1(idx);
-        quint16 seat = catheter->bseat() + idx;
+    vtkNew<vtkPoints> mouldPoints;
+    for (vtkIdType pointId = 0; pointId < mouldGrid->GetNumberOfPoints(); ++pointId) {
+        vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(pointId);
+        if (perception->mode() == 0) {
+            mouldPoints->InsertNextPoint(mouldGrid->GetPoint(pointId));
+        }
+    }
+    vtkSmartPointer<vtkPoints> targetPoints = produceElectricityPoints(mouldPoints, position, quaternion);
+    vtkDataArray* types = mouldGrid->GetPointData()->GetArray(TypesPointDataName);
+
+    for (vtkIdType pointId = 0; pointId < targetPoints->GetNumberOfPoints(); ++pointId) {
+        Halve::CatheterElectrodeType type = (Halve::CatheterElectrodeType)types->GetTuple1(pointId);
+        quint16 seat = catheter->bseat() + pointId;
         ElectrodeNode* electrodeNode = catheter->getElectrodeNode(seat);
         vtkVector3d position;
-        points->GetPoint(idx, position.GetData());
+        targetPoints->GetPoint(pointId, position.GetData());
         vtkQuaterniond quaternion;
         catheterTrackList.append(createCatheterTrack(seat, type, status, position, quaternion, electrodeNode->id()));
     }
@@ -626,22 +653,6 @@ void Combined::onChannelTrackData(const ChannelTrackData &dataInput) {
     }
 }
 
-vtkSmartPointer<vtkPoints> Combined::produceElectricityPoints(vtkUnstructuredGrid* grid, vtkVector3d &position, const vtkQuaterniond& quaternion) {
-    vtkNew<vtkPolyData> gridPolyData;
-    gridPolyData->SetPoints(grid->GetPoints());
-
-    vtkNew<vtkTransform> transform;
-    transform->Translate(position.GetData());
-    double direction[4]{};
-    direction[0] = vtkMath::DegreesFromRadians(quaternion.GetRotationAngleAndAxis(direction + 1));
-    transform->RotateWXYZ(direction[0], direction[1], direction[2], direction[3]);
-
-    vtkNew<vtkTransformPolyDataFilter> transformFilter;
-    transformFilter->SetInputData(gridPolyData);
-    transformFilter->SetTransform(transform);
-    transformFilter->Update();
-    return transformFilter->GetOutput()->GetPoints();
-}
 
 ChannelReplica::State Combined::state() const {
     if (m_channel == nullptr) {

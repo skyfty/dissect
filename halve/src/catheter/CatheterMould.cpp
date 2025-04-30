@@ -149,15 +149,11 @@ void CatheterMould::makeDefultGrid(const QList<quint16> &gap) {
     nodeMesh->SetNumberOfTuples(pointCount);
     nodeMesh->FillTypedComponent(0, addNodeMesh(DefaultMeshFile));
 
-    vtkSmartPointer<vtkIntArray> perceptions = vtkSmartPointer<vtkIntArray>::New();
-    perceptions->SetName(PerceptionsPointDataName);
-    perceptions->SetNumberOfComponents(1);
     m_perceptions.resize(pointCount);
     for (qsizetype i = 0; i < m_perceptions.size(); ++i) {
         vtkSmartPointer<CatheterPerception> perc = vtkSmartPointer<CatheterPerception>::New();
         perc->addSpline(i);
 		m_perceptions[i] = perc;
-        perceptions->InsertNextTuple1(i);
     }
     vtkStdString handleColorName = ModelCache::instance()->colorName(Halve::CET_HANDLE);
     vtkIdType pointId = pointCount - 1;
@@ -189,7 +185,6 @@ void CatheterMould::makeDefultGrid(const QList<quint16> &gap) {
     m_grid->GetPointData()->SetScalars(types);
     m_grid->GetPointData()->AddArray(colors);
     m_grid->GetPointData()->AddArray(colorNames);
-    m_grid->GetPointData()->AddArray(perceptions);
     m_grid->GetPointData()->AddArray(nodeMesh);
     m_grid->GetPointData()->AddArray(nodeFlexibility);
 }
@@ -351,7 +346,10 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
             QJsonArray connectivityJson = connectivitysJson[i].toArray();
             auto pointIds = polyLine->GetPointIds();
             for(qsizetype j  = 0; j < connectivityJson.size(); ++j) {
-                pointIds->InsertNextId(connectivityJson[j].toInt());
+                vtkIdType pointId = connectivityJson[j].toInt();
+                if (pointId < numberOfPoints)  {
+                    pointIds->InsertNextId(pointId);
+                }
             }
             cells->InsertNextCell(polyLine);
         }
@@ -369,12 +367,12 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     }
     if (meshJson.contains(ConnectivityRadiusName)) {
         QJsonArray connectivitysJson = meshJson[ConnectivityRadiusName].toArray();
-        for (qsizetype i = 0; i < connectivitysJson.size(); ++i) {
+        qsizetype cnt = std::min(connectivitysJson.size(), numberOfCells);
+        for (qsizetype i = 0; i < cnt; ++i) {
             connectivityRadius->SetTuple1(i, connectivitysJson[i].toDouble());
         }
     }
     m_grid->GetCellData()->AddArray(connectivityRadius);
-
 
     vtkNew<vtkIntArray> tubeSides;
     tubeSides->SetName(TubeSidesName);
@@ -391,13 +389,13 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
             }
         } else {
             QJsonArray tubeSidesJson = meshJson[TubeSidesName].toArray();
-            for (qsizetype i = 0; i < tubeSidesJson.size(); ++i) {
+            qsizetype cnt = std::min(tubeSidesJson.size(), numberOfCells);
+            for (qsizetype i = 0; i < cnt; ++i) {
                 tubeSides->SetTuple1(i, tubeSidesJson[i].toDouble());
             }
         }
     }
     m_grid->GetCellData()->AddArray(tubeSides);
-
 
     vtkNew<vtkIntArray> resolution;
     resolution->SetName(ResolutionName);
@@ -414,7 +412,8 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
             }
         } else {
             QJsonArray resolutionJson = meshJson[ResolutionName].toArray();
-            for (qsizetype i = 0; i < resolutionJson.size(); ++i) {
+            qsizetype cnt = std::min(resolutionJson.size(), numberOfCells);
+            for (qsizetype i = 0; i < cnt; ++i) {
                 resolution->SetTuple1(i, resolutionJson[i].toDouble());
             }
         }
@@ -430,7 +429,8 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     }
     if (meshJson.contains(NodeMeshIndexName)) {
         QJsonArray nodeMeshIndexJson = meshJson[NodeMeshIndexName].toArray();
-        for (qsizetype i = 0; i < numberOfPoints; ++i) {
+        qsizetype cnt = std::min(nodeMeshIndexJson.size(), numberOfPoints);
+        for (qsizetype i = 0; i < cnt; ++i) {
             nodeMeshIndex->SetTuple1(i, nodeMeshIndexJson[i].toInt());
         }
     }
@@ -445,7 +445,8 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     }
     if (meshJson.contains(FlexibilityName)) {
         QJsonArray nodeFlexibilityJson = meshJson[FlexibilityName].toArray();
-        for (qsizetype i = 0; i < numberOfPoints; ++i) {
+        qsizetype cnt = std::min(nodeFlexibilityJson.size(), numberOfPoints);
+        for (qsizetype i = 0; i < cnt; ++i) {
             nodeFlexibility->SetTuple1(i, nodeFlexibilityJson[i].toDouble());
         }
     }
@@ -467,24 +468,17 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     }
     m_grid->GetPointData()->SetScalars(types);
 
-    vtkSmartPointer<vtkIntArray> perceptionsIdx = vtkSmartPointer<vtkIntArray>::New();
-    perceptionsIdx->SetName(PerceptionsPointDataName);
-    perceptionsIdx->SetNumberOfComponents(1);
-    perceptionsIdx->SetNumberOfTuples(numberOfPoints);
     m_perceptions.resize(numberOfPoints);
     for (qsizetype i = 0; i < numberOfPoints; ++i) {
         m_perceptions[i] = vtkSmartPointer<CatheterPerception>::New();
-        perceptionsIdx->SetTuple1(i, 0);
     }
     if (meshJson.contains(PerceptionsPointDataName)) {
-        QJsonArray scalarsJson = meshJson[PerceptionsPointDataName].toArray();
-        auto cnt = std::min(scalarsJson.size(), numberOfPoints);
+        QJsonArray perceptionsJson = meshJson[PerceptionsPointDataName].toArray();
+        auto cnt = std::min(perceptionsJson.size(), numberOfPoints);
         for (qsizetype i = 0; i < cnt; ++i) {
-			perceptionsIdx->SetTuple1(i, i);
-            m_perceptions[i]->FromJson(scalarsJson[i].toObject());
+            m_perceptions[i]->FromJson(perceptionsJson[i].toObject());
         }
     }
-    m_grid->GetPointData()->AddArray(perceptionsIdx);
 
     vtkSmartPointer<vtkStringArray> colorNames = vtkSmartPointer<vtkStringArray>::New();
     colorNames->SetName(ColorNamesPointDataName);
@@ -494,7 +488,8 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     }
     if (meshJson.contains(ColorNamesPointDataName)) {
         QJsonArray colorNamesJson = meshJson[ColorNamesPointDataName].toArray();
-        for(qsizetype i = 0; i < colorNamesJson.size(); ++i) {
+        auto cnt = std::min(colorNamesJson.size(), numberOfPoints);
+        for(qsizetype i = 0; i < cnt; ++i) {
             colorNames->SetValue(i, colorNamesJson[i].toString().toStdString());
         }
     }

@@ -67,7 +67,6 @@ void Stage::createDetectorTextFollower(Catheter *catheter, vtkSmartPointer<Detec
     Q_ASSERT(catheter != nullptr);
     CatheterMould* catheterMould = catheter->catheterMould();
     vtkUnstructuredGrid* grid = catheterMould->grid();
-    vtkIntArray* sourcePerceptions = dynamic_cast<vtkIntArray*>(grid->GetPointData()->GetArray(PerceptionsPointDataName));
 
     for(vtkIdType i = 0; i < grid->GetNumberOfPoints(); ++i) {
         QString label =QString::number(i + 1);

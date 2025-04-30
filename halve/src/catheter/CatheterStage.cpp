@@ -130,7 +130,6 @@ vtkSmartPointer<vtkFollower> CatheterStage::createCatheterLabelFollower(const QS
 }
 
 QList<vtkSmartPointer<vtkFollower>> CatheterStage::createCatheterLabelFollower(CatheterMould* catheterMould, vtkUnstructuredGrid* grid) {
-    vtkIntArray* sourcePerceptions = dynamic_cast<vtkIntArray*>(grid->GetPointData()->GetArray(PerceptionsPointDataName));
     QList<vtkSmartPointer<vtkFollower>> followers;
     for(vtkIdType id = 0; id < grid->GetNumberOfPoints(); ++id) {
         QString label = QString::number(id + 1);

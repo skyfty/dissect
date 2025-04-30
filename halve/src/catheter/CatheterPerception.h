@@ -44,7 +44,7 @@ public:
 		return m_trained;
     }
 
-    void getSpline(vtkIdType& value,vtkIdType idx = 0) const;
+    bool getSpline(vtkIdType& value,vtkIdType idx = 0) const;
     void addSpline(vtkIdType value);
 
 protected:
