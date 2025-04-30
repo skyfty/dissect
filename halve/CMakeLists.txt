@@ -81,10 +81,7 @@ target_link_libraries(halve
         Qt::RemoteObjectsPrivate
         Qt::SerialPort
         ${VTK_LIBRARIES}
-        vtkm::cont
-        vtkm::io
-        vtkm::worklet
-        vtkm::filter
+        ${VTKM_LIBRARIES}
         ${CUDA_LIBRARIES}
         ${CUDA_CUDART_LIBRARY}
         ${CUDA_cudadevrt_LIBRARY}

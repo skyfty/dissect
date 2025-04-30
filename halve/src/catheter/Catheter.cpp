@@ -331,7 +331,7 @@ void Catheter::setGap(const QList<quint16>& v) {
     if (m_gap != v) {
         m_gap = v;
         if (m_catheterMould != nullptr) {
-            m_catheterMould->load(m_meshName, m_gap, m_electrodeLength);
+            m_catheterMould->load(m_amount,m_meshName, m_gap, m_electrodeLength);
         }
         emit gapChanged();
     }
@@ -552,7 +552,6 @@ ElectrodeNode *Catheter::findElectrodeNode(const QList<ElectrodeNode *> &nodes, 
     return iter != nodes.end()?*iter:nullptr;
 }
 
-
 ElectrodeNode* Catheter::getElectrodeNode(Halve::ElectrodeType electrode, quint16 d) {
     QList<ElectrodeNode*> nodeList = getElectrodeNodes(electrode);
     auto iter = std::find_if(nodeList.begin(), nodeList.end(), [d](ElectrodeNode* node) {
@@ -576,7 +575,7 @@ void Catheter::setMeshName(const QString &newMeshName)
         return;
     m_meshName = newMeshName;
     if (m_catheterMould != nullptr) {
-        m_catheterMould->load(m_meshName, m_gap, m_electrodeLength);
+        m_catheterMould->load(m_amount,m_meshName, m_gap, m_electrodeLength);
     }
     emit meshNameChanged();
 }
@@ -593,7 +592,7 @@ void Catheter::deleteMesh(const QString &meshPath) {
 CatheterMould *Catheter::catheterMould() {
     if(m_catheterMould == nullptr) {
         Q_ASSERT(Thread::currentlyOn(Thread::UI));
-        m_catheterMould = new CatheterMould(m_meshName, m_gap, m_electrodeLength, this);
+        m_catheterMould = new CatheterMould(m_amount,m_meshName, m_gap, m_electrodeLength, this);
     }
     return m_catheterMould;
 }

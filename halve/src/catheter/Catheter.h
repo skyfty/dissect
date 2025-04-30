@@ -93,6 +93,7 @@ public:
 
     void setGap(const QList<quint16> &v);
     const QList<quint16>& getGap() const;
+
     void setGap(const QStringList &v);
     static QList<quint16> makeGap(quint32 amount);
 
@@ -232,6 +233,7 @@ signals:
     void mouldChanged();
 
     void meshNameChanged();
+
 
 private:
     void resetElectrodeNames();

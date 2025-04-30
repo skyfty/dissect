@@ -44,9 +44,8 @@ public:
 		return m_trained;
     }
 
-    void getSpline(vtkIdType& idx) const;
-    void getSpline(vtkSmartPointer<vtkIntArray>& spline) const;
-    void addSpline(vtkIdType idx);
+    void getSpline(vtkIdType& value,vtkIdType idx = 0) const;
+    void addSpline(vtkIdType value);
 
 protected:
     CatheterPerception();
@@ -58,8 +57,8 @@ private:
     bool m_trained = false;
 	int m_degree = 2;
     Eigen::MatrixXd m_w;
-    vtkSmartPointer<vtkIntArray> m_spline;
     vtkIdType m_mode = 0;
+    std::vector<vtkIdType> m_splines;
 	std::vector<std::vector<vtkVector3d>> m_du;
 };
 

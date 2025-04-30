@@ -117,6 +117,17 @@ Item {
                 }
 
                 Label {
+                    text:qsTr("Nodes")
+                    Layout.alignment: Qt.AlignRight
+                }
+                Label {
+                    anchors.margins: 1
+                    Layout.alignment: Qt.AlignLeft
+                    text: catheter.nodes
+                    font.bold: true
+                    verticalAlignment: TextInput.AlignVCenter
+                }
+                Label {
                     text:qsTr("diameter (mm)")
                     Layout.alignment: Qt.AlignRight
                 }

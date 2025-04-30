@@ -50,18 +50,19 @@ const char* FlexibilityName = "flexibility";
 const char* ResolutionName = "resolution";
 const char* PointDirectionName = "Direction";
 
-CatheterMould::CatheterMould(const QString &meshName, const QList<quint16> &gap, double flexibility, QObject *parent)
+CatheterMould::CatheterMould(quint16 amount,const QString &meshName, const QList<quint16> &gap, double flexibility, QObject *parent)
     : QObject{parent}
 {
     Q_ASSERT(Thread::currentlyOn(Thread::UI));
-    load(meshName, gap, flexibility);
+    load(amount, meshName, gap, flexibility);
 }
 
 
-void CatheterMould::load(const QString &meshName, const QList<quint16> &gap, double flexibility) {
+void CatheterMould::load(quint16 amount,const QString &meshName, const QList<quint16> &gap, double flexibility) {
     m_meshName = meshName;
     m_gap = gap;
     m_flexibility = flexibility;
+    m_amount = amount;
     reload();
 }
 
@@ -131,9 +132,11 @@ void CatheterMould::makeDefultGrid(const QList<quint16> &gap) {
     nodeFlexibility->SetNumberOfComponents(1);
 
     vtkSmartPointer<vtkPoints> points = makeLinnerPoints(gap);
+    vtkIdType pointCount = points->GetNumberOfPoints();
+
     vtkStdString msgColorName = ModelCache::instance()->colorName(Halve::CET_MAG);
     vtkColor3ub magColor = ModelCache::instance()->color3ub(msgColorName);
-    for (qsizetype i = 0; i < points->GetNumberOfPoints(); ++i) {
+    for (qsizetype i = 0; i < pointCount; ++i) {
         polyLine->GetPointIds()->InsertNextId(i);
         types->InsertNextTuple1(Halve::CET_MAG);
         nodeFlexibility->InsertNextTuple1(m_flexibility);
@@ -143,13 +146,13 @@ void CatheterMould::makeDefultGrid(const QList<quint16> &gap) {
     vtkSmartPointer<vtkIntArray> nodeMesh = vtkSmartPointer<vtkIntArray>::New();
     nodeMesh->SetName(NodeMeshIndexName);
     nodeMesh->SetNumberOfComponents(1);
-    nodeMesh->SetNumberOfTuples(points->GetNumberOfPoints());
+    nodeMesh->SetNumberOfTuples(pointCount);
     nodeMesh->FillTypedComponent(0, addNodeMesh(DefaultMeshFile));
 
     vtkSmartPointer<vtkIntArray> perceptions = vtkSmartPointer<vtkIntArray>::New();
     perceptions->SetName(PerceptionsPointDataName);
     perceptions->SetNumberOfComponents(1);
-    m_perceptions.resize(points->GetNumberOfPoints());
+    m_perceptions.resize(pointCount);
     for (qsizetype i = 0; i < m_perceptions.size(); ++i) {
         vtkSmartPointer<CatheterPerception> perc = vtkSmartPointer<CatheterPerception>::New();
         perc->addSpline(i);
@@ -157,7 +160,7 @@ void CatheterMould::makeDefultGrid(const QList<quint16> &gap) {
         perceptions->InsertNextTuple1(i);
     }
     vtkStdString handleColorName = ModelCache::instance()->colorName(Halve::CET_HANDLE);
-    vtkIdType pointId = points->GetNumberOfPoints() - 1;
+    vtkIdType pointId = pointCount - 1;
     colors->SetTypedTuple(pointId, ModelCache::instance()->color3ub(handleColorName).GetData());
     colorNames->SetValue(pointId, handleColorName);
 
@@ -338,6 +341,8 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     }
     m_grid->SetPoints(points);
 
+    vtkIdType numberOfPoints = points->GetNumberOfPoints();
+
     vtkNew<vtkCellArray> cells;
     if (meshJson.contains(ConnectivityPointDataName)) {
         QJsonArray connectivitysJson = meshJson[ConnectivityPointDataName].toArray();
@@ -353,11 +358,13 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     }
     m_grid->SetCells(VTK_POLY_LINE, cells);
 
+    vtkIdType numberOfCells = cells->GetNumberOfCells();
+
     vtkNew<vtkDoubleArray> connectivityRadius;
     connectivityRadius->SetName(ConnectivityRadiusName);
     connectivityRadius->SetNumberOfComponents(1);
-    connectivityRadius->SetNumberOfTuples(cells->GetNumberOfCells());
-    for (qsizetype i = 0; i < cells->GetNumberOfCells(); ++i) {
+    connectivityRadius->SetNumberOfTuples(numberOfCells);
+    for (qsizetype i = 0; i < numberOfCells; ++i) {
         connectivityRadius->SetTuple1(i, CatheterTubeRadius);
     }
     if (meshJson.contains(ConnectivityRadiusName)) {
@@ -372,14 +379,14 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     vtkNew<vtkIntArray> tubeSides;
     tubeSides->SetName(TubeSidesName);
     tubeSides->SetNumberOfComponents(1);
-    tubeSides->SetNumberOfTuples(cells->GetNumberOfCells());
-    for (qsizetype i = 0; i < cells->GetNumberOfCells(); ++i) {
+    tubeSides->SetNumberOfTuples(numberOfCells);
+    for (qsizetype i = 0; i < numberOfCells; ++i) {
         tubeSides->SetTuple1(i, DefaultTubeSide);
     }
     if (meshJson.contains(TubeSidesName)) {
         if (meshJson[TubeSidesName].isDouble()) {
             int tubeSidesValue = meshJson[TubeSidesName].toInt();
-            for (qsizetype i = 0; i < cells->GetNumberOfCells(); ++i) {
+            for (qsizetype i = 0; i < numberOfCells; ++i) {
                 tubeSides->SetTuple1(i, tubeSidesValue);
             }
         } else {
@@ -395,14 +402,14 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     vtkNew<vtkIntArray> resolution;
     resolution->SetName(ResolutionName);
     resolution->SetNumberOfComponents(1);
-    resolution->SetNumberOfTuples(cells->GetNumberOfCells());
-    for (qsizetype i = 0; i < cells->GetNumberOfCells(); ++i) {
+    resolution->SetNumberOfTuples(numberOfCells);
+    for (qsizetype i = 0; i < numberOfCells; ++i) {
         resolution->SetTuple1(i, DefaultTubeResolution);
     }
     if (meshJson.contains(ResolutionName)) {
         if (meshJson[ResolutionName].isDouble()) {
             int resolutionValue = meshJson[ResolutionName].toInt();
-            for (qsizetype i = 0; i < cells->GetNumberOfCells(); ++i) {
+            for (qsizetype i = 0; i < numberOfCells; ++i) {
                 resolution->SetTuple1(i, resolutionValue);
             }
         } else {
@@ -417,13 +424,13 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     vtkSmartPointer<vtkIntArray> nodeMeshIndex = vtkSmartPointer<vtkIntArray>::New();
     nodeMeshIndex->SetName(NodeMeshIndexName);
     nodeMeshIndex->SetNumberOfComponents(1);
-    nodeMeshIndex->SetNumberOfTuples(points->GetNumberOfPoints());
-    for (qsizetype i = 0; i < points->GetNumberOfPoints(); ++i) {
+    nodeMeshIndex->SetNumberOfTuples(numberOfPoints);
+    for (qsizetype i = 0; i < numberOfPoints; ++i) {
         nodeMeshIndex->SetTuple1(i, 0);
     }
     if (meshJson.contains(NodeMeshIndexName)) {
         QJsonArray nodeMeshIndexJson = meshJson[NodeMeshIndexName].toArray();
-        for (qsizetype i = 0; i < points->GetNumberOfPoints(); ++i) {
+        for (qsizetype i = 0; i < numberOfPoints; ++i) {
             nodeMeshIndex->SetTuple1(i, nodeMeshIndexJson[i].toInt());
         }
     }
@@ -432,13 +439,13 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     vtkSmartPointer<vtkDoubleArray> nodeFlexibility = vtkSmartPointer<vtkDoubleArray>::New();
     nodeFlexibility->SetName(FlexibilityName);
     nodeFlexibility->SetNumberOfComponents(1);
-    nodeFlexibility->SetNumberOfTuples(points->GetNumberOfPoints());
-    for (qsizetype i = 0; i < points->GetNumberOfPoints(); ++i) {
+    nodeFlexibility->SetNumberOfTuples(numberOfPoints);
+    for (qsizetype i = 0; i < numberOfPoints; ++i) {
         nodeFlexibility->SetTuple1(i, m_flexibility);
     }
     if (meshJson.contains(FlexibilityName)) {
         QJsonArray nodeFlexibilityJson = meshJson[FlexibilityName].toArray();
-        for (qsizetype i = 0; i < points->GetNumberOfPoints(); ++i) {
+        for (qsizetype i = 0; i < numberOfPoints; ++i) {
             nodeFlexibility->SetTuple1(i, nodeFlexibilityJson[i].toDouble());
         }
     }
@@ -447,13 +454,13 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     vtkSmartPointer<vtkIntArray> types = vtkSmartPointer<vtkIntArray>::New();
     types->SetName(TypesPointDataName);
     types->SetNumberOfComponents(1);
-    types->SetNumberOfTuples(points->GetNumberOfPoints());
-    for(qsizetype i = 0; i < points->GetNumberOfPoints(); ++i) {
+    types->SetNumberOfTuples(numberOfPoints);
+    for(qsizetype i = 0; i < numberOfPoints; ++i) {
         types->SetTuple1(i, Halve::CatheterElectrodeType::CET_MAG);
     }
     if (meshJson.contains(TypesPointDataName)) {
         QJsonArray scalarsJson = meshJson[TypesPointDataName].toArray();
-        auto cnt = std::min(scalarsJson.size(), points->GetNumberOfPoints());
+        auto cnt = std::min(scalarsJson.size(), numberOfPoints);
         for(qsizetype i = 0; i < cnt; ++i) {
             types->SetTuple1(i, scalarsJson[i].toInt());
         }
@@ -463,16 +470,15 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     vtkSmartPointer<vtkIntArray> perceptionsIdx = vtkSmartPointer<vtkIntArray>::New();
     perceptionsIdx->SetName(PerceptionsPointDataName);
     perceptionsIdx->SetNumberOfComponents(1);
-    perceptionsIdx->SetNumberOfTuples(points->GetNumberOfPoints());
-    m_perceptions.resize(points->GetNumberOfPoints());
-    for (qsizetype i = 0; i < points->GetNumberOfPoints(); ++i) {
+    perceptionsIdx->SetNumberOfTuples(numberOfPoints);
+    m_perceptions.resize(numberOfPoints);
+    for (qsizetype i = 0; i < numberOfPoints; ++i) {
         m_perceptions[i] = vtkSmartPointer<CatheterPerception>::New();
-		m_perceptions[i]->addSpline(i);
         perceptionsIdx->SetTuple1(i, 0);
     }
     if (meshJson.contains(PerceptionsPointDataName)) {
         QJsonArray scalarsJson = meshJson[PerceptionsPointDataName].toArray();
-        auto cnt = std::min(scalarsJson.size(), points->GetNumberOfPoints());
+        auto cnt = std::min(scalarsJson.size(), numberOfPoints);
         for (qsizetype i = 0; i < cnt; ++i) {
 			perceptionsIdx->SetTuple1(i, i);
             m_perceptions[i]->FromJson(scalarsJson[i].toObject());
@@ -483,7 +489,7 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     vtkSmartPointer<vtkStringArray> colorNames = vtkSmartPointer<vtkStringArray>::New();
     colorNames->SetName(ColorNamesPointDataName);
     vtkStdString msgColorName = ModelCache::instance()->colorName(Halve::CET_MAG);
-    for (qsizetype i = 0; i < points->GetNumberOfPoints(); ++i) {
+    for (qsizetype i = 0; i < numberOfPoints; ++i) {
         colorNames->InsertNextValue(msgColorName);
     }
     if (meshJson.contains(ColorNamesPointDataName)) {
@@ -497,12 +503,12 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     vtkSmartPointer<vtkUnsignedCharArray> colors = vtkSmartPointer<vtkUnsignedCharArray>::New();
     colors->SetName(ColorsPointDataName);
     colors->SetNumberOfComponents(3);
-    for(qsizetype i = 0; i < points->GetNumberOfPoints(); ++i) {
+    for(qsizetype i = 0; i < numberOfPoints; ++i) {
         auto colorName =  ModelCache::instance()->colorName((Halve::CatheterElectrodeType)types->GetTuple1(i));
         colors->InsertNextTypedTuple(ModelCache::instance()->color3ub(colorName).GetData());
     }
     if (colorNames->GetNumberOfTuples() > 0) {
-        auto cnt = std::min(colorNames->GetNumberOfTuples(), points->GetNumberOfPoints());
+        auto cnt = std::min(colorNames->GetNumberOfTuples(), numberOfPoints);
         for(qsizetype i = 0; i < cnt; ++i) {
             const vtkStdString &colorName = colorNames->GetValue(i);
             if (!colorName.empty()) {

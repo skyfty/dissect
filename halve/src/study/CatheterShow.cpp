@@ -19,6 +19,8 @@
 #include "CatheterShow.h"
 #include "utility/Thread.h"
 #include "catheter/Catheter.h"
+#include "vtkPointData.h"
+#include "catheter/CatheterPerception.h"
 
 
 class CatheterShowData : public vtkObject
@@ -81,9 +83,9 @@ void CatheterShow::setMouseInteractorStyle(CatheterShowData* userData) {
     userData->interactor->SetInteractorStyle(userData->mouseInteractorStyle);
 }
 constexpr double scalev = 1;
-void CatheterShow::createTextFollower(CatheterShowData* userData, vtkIdType id, double pos[3]) {
+void CatheterShow::createTextFollower(CatheterShowData* userData, const QString &label, double pos[3]) {
     vtkSmartPointer<vtkVectorText> text = vtkSmartPointer<vtkVectorText>::New();
-    text->SetText(QString::number(id + 1).toStdString().c_str());
+    text->SetText(label.toStdString().c_str());
     vtkNew<vtkPolyDataMapper> mapper;
     mapper->SetInputConnection(text->GetOutputPort());
 
@@ -103,6 +105,7 @@ void CatheterShow::resetRender() {
     CatheterMould* catheterMould = m_catheter->catheterMould();
     vtkUnstructuredGrid* grid = catheterMould->grid();
     auto meshPolyDatas = catheterMould->getNodePolyDatas();
+    vtkIntArray* sourcePerceptions = dynamic_cast<vtkIntArray*>(grid->GetPointData()->GetArray(PerceptionsPointDataName));
 
     dispatch_async([this, grid, meshPolyDatas, catheterMould](vtkRenderWindow*, vtkUserData vtkObject) {
         CatheterShowData* userData = CatheterShowData::SafeDownCast(vtkObject);
@@ -123,7 +126,14 @@ void CatheterShow::resetRender() {
         userData->renderer->AddActor(userData->tubeActor);
 
         for(vtkIdType id = 0; id < grid->GetNumberOfPoints(); ++id) {
-            createTextFollower(userData, id, grid->GetPoint(id));
+            QString label = QString::number(id + 1);
+            vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(id);
+            if (perception->mode() == 0) {
+                vtkIdType splineValue = -1;
+                perception->getSpline(splineValue);
+                label.append(QString(":%1").arg(splineValue + 1));
+            }
+            createTextFollower(userData, label, grid->GetPoint(id));
         }
         userData->renderer->ResetCamera();
     });

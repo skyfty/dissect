@@ -203,7 +203,7 @@ void CatheterTrackWidget::checkCatheterTrack(Catheter* catheter, const QList<Cat
     vtkSmartPointer<vtkUnstructuredGrid> targetGrid = vtkSmartPointer<vtkUnstructuredGrid>::New();
     targetGrid->ShallowCopy(vtkUnstructuredGrid::SafeDownCast(transformFilter->GetOutput()));
 
-   vtkIntArray* targetPerceptions = dynamic_cast<vtkIntArray*>(targetGrid->GetPointData()->GetArray(PerceptionsPointDataName));
+    vtkIntArray* targetPerceptions = dynamic_cast<vtkIntArray*>(targetGrid->GetPointData()->GetArray(PerceptionsPointDataName));
     for (vtkIdType numberOfPerceptions = 0; numberOfPerceptions < targetPerceptions->GetNumberOfValues(); ++numberOfPerceptions) {
         vtkIdType perceptionIdx = targetPerceptions->GetValue(numberOfPerceptions);
 		vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(perceptionIdx);

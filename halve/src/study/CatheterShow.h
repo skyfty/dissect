@@ -36,7 +36,7 @@ signals:
     void catheterChanged();
 
 private:
-    void createTextFollower(CatheterShowData* userData, vtkIdType id, double pos[3]);
+    void createTextFollower(CatheterShowData* userData, const QString& label, double pos[3]);
     vtkUserData initializeVTK(vtkRenderWindow* renderWindow) override;
     void destroyingVTK(vtkRenderWindow* renderWindow, vtkUserData userData) override;
 

@@ -11,7 +11,6 @@ using namespace Eigen;
 vtkStandardNewMacro(CatheterPerception);
 
 CatheterPerception::CatheterPerception() {
-	m_spline = vtkSmartPointer<vtkIntArray>::New();
 }
 void CatheterPerception::FromJson(const QJsonObject& json) {
 	if (json.contains("mode")) {
@@ -20,24 +19,22 @@ void CatheterPerception::FromJson(const QJsonObject& json) {
     if (json.contains("spline")) {
         if (json["spline"].isArray()) {
             QJsonArray splineJson = json["spline"].toArray();
-			m_spline->SetNumberOfComponents(1);
-			m_spline->SetNumberOfTuples(splineJson.size());
 			for (qsizetype i = 0; i < splineJson.size(); ++i) {
-				m_spline->SetValue(i, splineJson[i].toInt());
+				m_splines.push_back(splineJson[i].toInt());
 			}
 		}
 		else if (json["spline"].isDouble()) {
-			m_spline->InsertNextTuple1(json["spline"].toInt());
+            m_splines.push_back(json["spline"].toInt());
         }
     }
 
-	if (json.contains("du") && m_spline->GetNumberOfValues() > 2) {
+	if (json.contains("du") && m_splines.size() > 2) {
 		QJsonArray duJson = json["du"].toArray();
-		if (duJson.size() % m_spline->GetNumberOfValues() == 0) {
+		if (duJson.size() % m_splines.size() == 0) {
 			qsizetype i = 0;
 			while (i < duJson.size()) {
 				std::vector<vtkVector3d> du;
-				for (int j = 0; j < m_spline->GetNumberOfValues(); ++j) {
+				for (int j = 0; j < m_splines.size(); ++j) {
 					QJsonArray duItem = duJson[i + j].toArray();
 					if (duItem.size() != 3) {
 						continue;
@@ -47,7 +44,7 @@ void CatheterPerception::FromJson(const QJsonObject& json) {
 					du.push_back(point);
 				}
 				m_du.push_back(du);
-				i += m_spline->GetNumberOfValues();;
+				i += m_splines.size();;
 			}
 		}
 	}	
@@ -56,12 +53,12 @@ void CatheterPerception::FromJson(const QJsonObject& json) {
 void CatheterPerception::ToJson(QJsonObject& json) const {
 	json["mode"] = m_mode;
 
-	if (m_spline->GetNumberOfTuples() == 1) {
-		json["spline"] = m_spline->GetValue(0);
+	if (m_splines.size() == 1) {
+		json["spline"] = m_splines[0];
 	} else {
 		QJsonArray splineJson;
-		for (vtkIdType i = 0; i < m_spline->GetNumberOfTuples(); ++i) {
-			splineJson.append(m_spline->GetValue(i));
+		for (vtkIdType i = 0; i < m_splines.size(); ++i) {
+			splineJson.append(m_splines[i]);
 		}
 		json["spline"] = splineJson;
 	}
@@ -84,18 +81,13 @@ void CatheterPerception::ToJson(QJsonObject& json) const {
 }
 
 
-void  CatheterPerception::getSpline(vtkIdType& idx) const {
-	Q_ASSERT(m_spline != nullptr);
-	idx = m_spline->GetValue(0);
+void  CatheterPerception::getSpline(vtkIdType& value, vtkIdType idx) const {
+    Q_ASSERT(idx < m_splines.size());
+	value = m_splines[idx];
 }
 
-void  CatheterPerception::getSpline(vtkSmartPointer<vtkIntArray>& spline) const {
-	Q_ASSERT(spline != nullptr);
-	Q_ASSERT(m_spline != nullptr);
-	spline->DeepCopy(m_spline);
-}
-void CatheterPerception::addSpline(vtkIdType idx) {
-	m_spline->InsertNextTuple1(idx);
+void CatheterPerception::addSpline(vtkIdType value) {
+	m_splines.push_back(value);
 }
 
 // 多项式特征扩展
@@ -181,12 +173,12 @@ bool CatheterPerception::train() {
 }
 
 bool CatheterPerception::predict(const vtkSmartPointer<vtkPoints>& points, vtkVector3d &targetPoint) {
-	if (m_spline->GetNumberOfValues() < 2 || !m_trained) {
+	if (m_splines.size() < 2 || !m_trained) {
 		return false;
 	}
 	vtkVector3d p1, p2;
-	points->GetPoint(m_spline->GetValue(0), p1.GetData());
-	points->GetPoint(m_spline->GetValue(1), p2.GetData());
+	points->GetPoint(m_splines[1], p1.GetData());
+	points->GetPoint(m_splines[2], p2.GetData());
 
 	Vector3d A, B;
 	A << p1.GetX(), p1.GetY(), p1.GetZ();

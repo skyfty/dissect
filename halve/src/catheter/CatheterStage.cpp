@@ -32,6 +32,7 @@
 #include <vtkPLYWriter.h>
 #include <vtkAppendPolyData.h>
 #include <vtkGeometryFilter.h>
+#include "catheter/CatheterPerception.h"
 
 class CatheterStage;
 
@@ -115,9 +116,9 @@ void CatheterStage::cleanTextFollower(CatheterStageData* userData) {
 }
 
 constexpr double scalev = 0.6;
-vtkSmartPointer<vtkFollower> CatheterStage::createCatheterLabelFollower(vtkIdType id, double pos[3]) {
+vtkSmartPointer<vtkFollower> CatheterStage::createCatheterLabelFollower(const QString& label, double pos[3]) {
     vtkSmartPointer<vtkVectorText> text = vtkSmartPointer<vtkVectorText>::New();
-    text->SetText(QString::number(id + 1).toStdString().c_str());
+    text->SetText(label.toStdString().c_str());
     vtkNew<vtkPolyDataMapper> mapper;
     mapper->SetInputConnection(text->GetOutputPort());
     vtkSmartPointer<vtkFollower> follower = vtkSmartPointer<vtkFollower>::New();
@@ -128,17 +129,27 @@ vtkSmartPointer<vtkFollower> CatheterStage::createCatheterLabelFollower(vtkIdTyp
     return follower;
 }
 
-QList<vtkSmartPointer<vtkFollower>> CatheterStage::createCatheterLabelFollower(vtkUnstructuredGrid* grid) {
+QList<vtkSmartPointer<vtkFollower>> CatheterStage::createCatheterLabelFollower(CatheterMould* catheterMould, vtkUnstructuredGrid* grid) {
+    vtkIntArray* sourcePerceptions = dynamic_cast<vtkIntArray*>(grid->GetPointData()->GetArray(PerceptionsPointDataName));
     QList<vtkSmartPointer<vtkFollower>> followers;
     for(vtkIdType id = 0; id < grid->GetNumberOfPoints(); ++id) {
-        followers.append(createCatheterLabelFollower(id, grid->GetPoint(id)));
+        QString label = QString::number(id + 1);
+        vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(id);
+        if (perception->mode() == 0) {
+            vtkIdType splineValue = -1;
+            perception->getSpline(splineValue);
+            label.append(QString(":%1").arg(splineValue + 1));
+        }
+        followers.append(createCatheterLabelFollower(label, grid->GetPoint(id)));
     }
     return followers;
 }
 
 void CatheterStage::resetTextFollower(CatheterStageData* userData,const QList<vtkSmartPointer<vtkFollower>> &followers) {
     cleanTextFollower(userData);
-    for(const vtkSmartPointer<vtkFollower> &follower:followers) {
+  
+    for (vtkIdType id = 0; id < followers.size(); ++id) {
+        vtkSmartPointer<vtkFollower> follower = followers[id];
         userData->rendererFollower->AddActor(follower);
         follower->SetCamera(userData->renderer->GetActiveCamera());
     }
@@ -228,8 +239,9 @@ void CatheterStage::refreshCatheterTube() {
     if (VtkRenderThreadHandle == nullptr) {
         return;
     }
-    vtkSmartPointer<vtkUnstructuredGrid> grid = m_catheter->catheterMould()->grid(true);
-    QList<vtkSmartPointer<vtkFollower>> followers = createCatheterLabelFollower(grid);
+    CatheterMould* catheterMould = m_catheter->catheterMould();
+    vtkSmartPointer<vtkUnstructuredGrid> grid = catheterMould->grid(true);
+    QList<vtkSmartPointer<vtkFollower>> followers = createCatheterLabelFollower(catheterMould, grid);
     refreshCatheterTube(grid, followers);
 }
 

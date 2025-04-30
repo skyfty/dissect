@@ -17,9 +17,9 @@ class CatheterMould : public QObject
 {
     Q_OBJECT
 public:
-    CatheterMould(const QString &meshPath, const QList<quint16> &gap,double flexibility, QObject *parent = nullptr);
+    CatheterMould(quint16 amount,const QString &meshPath, const QList<quint16> &gap,double flexibility, QObject *parent = nullptr);
     ~CatheterMould() = default;
-    void load(const QString &meshPath, const QList<quint16> &gap, double flexibility);
+    void load(quint16 amount,const QString &meshPath, const QList<quint16> &gap, double flexibility);
     void reload();
     Halve::CatheterElectrodeType getType(vtkIdType id) const;
     vtkDataArray* getTypeData() const;
@@ -43,6 +43,7 @@ private:
     vtkIdType addNodeMesh(const QString& meshPath);
 
 private:
+    quint16 m_amount;
     QString m_meshName;
     QList<quint16> m_gap;
     double m_flexibility = 0.0;
