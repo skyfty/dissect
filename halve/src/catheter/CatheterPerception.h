@@ -18,6 +18,12 @@ struct ElectrodeData {
 class CatheterPerception : public vtkObject
 { // VTK 类型系统宏
 public:
+    enum PerceptionMode{
+        EXPLICIT = 0,
+        RIGIDBODY = 1,
+        PREDICT =2
+    };
+public:
     vtkTypeMacro(CatheterPerception, vtkObject);
 
         // 创建实例的静态方法
@@ -27,10 +33,10 @@ public:
 
     bool train();
     bool predict(const vtkSmartPointer<vtkPoints>& points, vtkVector3d& targetPoint);
-    vtkIdType mode() const {
+    PerceptionMode mode() const {
 		return m_mode;
     }
-    void setMode(vtkIdType mode) {
+    void setMode(PerceptionMode mode) {
         m_mode = mode;
     }
 	void setDu(const std::vector<std::vector<vtkVector3d>>& du) {
@@ -57,7 +63,7 @@ private:
     bool m_trained = false;
 	int m_degree = 2;
     Eigen::MatrixXd m_w;
-    vtkIdType m_mode = 0;
+    PerceptionMode m_mode = EXPLICIT;
     std::vector<vtkIdType> m_splines;
 	std::vector<std::vector<vtkVector3d>> m_du;
 };

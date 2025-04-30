@@ -14,7 +14,7 @@ CatheterPerception::CatheterPerception() {
 }
 void CatheterPerception::FromJson(const QJsonObject& json) {
 	if (json.contains("mode")) {
-		m_mode = json["mode"].toInt();
+		m_mode = (PerceptionMode)json["mode"].toInt();
 	}
     if (json.contains("spline")) {
         if (json["spline"].isArray()) {
