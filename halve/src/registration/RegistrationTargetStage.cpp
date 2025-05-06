@@ -10,46 +10,62 @@
 #include <vtkProperty.h>
 #include <vtkRendererCollection.h>
 #include <utility/Thread.h>
+#include <QVTKInteractor.h>
+#include <vtkCamera.h>
+#include <vtkLookupTable.h>
+#include <vtkDataSetMapper.h>
+#include <vtkPointPicker.h>
+#include <vtkVertexGlyphFilter.h>
+#include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkPointData.h>
+#include "HalveType.h"
 #include "RegistrationTargetStage.h"
+#include "profile/Profile.h"
+#include "reseau/Reseau.h"
+#include <vtkSTLReader.h>
+#include "RegistrationInteractorStyle.h"
+#include "profile/Profile.h"
 
 extern Qt::HANDLE VtkRenderThreadHandle;
 
-RegistrationTargetStage::RegistrationTargetStage(QQuickItem* parent) : QQuickVTKItem(parent) {
+namespace
+{
+	class RegistrationTargetStageData : public RegistrationStageData
+	{
+	public:
+		static RegistrationTargetStageData* New();
+		vtkTypeMacro(RegistrationTargetStageData, RegistrationStageData);
+	};
+	vtkStandardNewMacro(RegistrationTargetStageData);
 }
 
 void RegistrationTargetStage::resetRender()
 {
-    if (auto renderWindow = this->m_renderWindow) {
-        vtkNew<vtkRenderer> renderer;
-
-        // 创建测试立方体
-        vtkNew<vtkCubeSource> cube;
-        cube->SetXLength(1.0);
-        cube->SetYLength(0.5);
-        cube->SetZLength(0.8);
-
-        vtkNew<vtkPolyDataMapper> mapper;
-        mapper->SetInputConnection(cube->GetOutputPort());
-
-        vtkNew<vtkActor> actor;
-        actor->SetMapper(mapper);
-        actor->GetProperty()->SetColor(1, 0.5, 0); // 橙色
-
-        // 配置渲染器
-        renderer->AddActor(actor);
-        renderer->SetBackground(0.2, 0.3, 0.4); // 深蓝背景
-        renderer->ResetCamera();
-
-        renderWindow->AddRenderer(renderer);
-        renderWindow->Render();
-    }
+	Reseau* reseau = m_profile->getCurrentReseau();
+	vtkSmartPointer<vtkPolyData> polyData = reseau->polyData();
+	dispatch_async([this, polyData](vtkRenderWindow*, vtkUserData vtkObject) {
+		RegistrationTargetStageData* userData = RegistrationTargetStageData::SafeDownCast(vtkObject);
+		vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+		mapper->SetInputData(polyData);
+		m_processor->m_targetPolyData = polyData;
+		vtkNew<vtkActor> actor;
+		actor->SetMapper(mapper);
+		userData->defaultRenderer->AddActor(actor);
+		userData->defaultRenderer->ResetCamera();
+		});
 }
 
 QQuickVTKItem::vtkUserData RegistrationTargetStage::initializeVTK(vtkRenderWindow* renderWindow) {
-    VtkRenderThreadHandle = m_vtkRenderThreadId = Thread::currentThreadId();
-    m_renderWindow = renderWindow;
-    resetRender();
-    return nullptr;
+	VtkRenderThreadHandle = Thread::currentThreadId();
+	vtkSmartPointer<RegistrationTargetStageData> userData = vtkNew<RegistrationTargetStageData>();
+	userData->renderWindow = renderWindow;
+
+	initializeInteractorStyle(userData);
+
+	m_processor->m_targetPoints = userData->pickedPoints;
+	resetRender();
+
+	return userData;
 }
 
 void RegistrationTargetStage::destroyingVTK(vtkRenderWindow* renderWindow, vtkUserData userData)

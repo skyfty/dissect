@@ -138,6 +138,8 @@
 
 #include "registration/RegistrationSourceStage.h"
 #include "registration/RegistrationTargetStage.h"
+#include "registration/CtDataStorage.h"
+#include "registration/RegistrationProcessor.h"
 
 
 Q_DECLARE_METATYPE(QAbstractSeries *);
@@ -298,5 +300,7 @@ void qmlRegisterTypes() {
     qmlRegisterType<MappingSetting>("Halve",1,0,"MappingSetting");
     qmlRegisterType<RegistrationSourceStage>("Halve", 1, 0, "RegistrationSourceStage");
     qmlRegisterType<RegistrationTargetStage>("Halve", 1, 0, "RegistrationTargetStage");
+    qmlRegisterType<CtDataStorage>("Halve", 1, 0, "CtDataStorage");
+    qmlRegisterType<RegistrationProcessor>("Halve", 1, 0, "RegistrationProcessor");
 }
 

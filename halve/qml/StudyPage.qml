@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
 import QtQuick.Layouts
+import QtQuick.Dialogs
 
 import Halve 1.0
 import com.kdab.dockwidgets 2.0 as KDDW
@@ -113,6 +114,17 @@ Study {
         mappingSetting:root.profile.mappingSetting
     }
 
+    CtDataStorage{
+        id:ctDataStorage
+    }    
+    FolderDialog {
+        id: cacheCtDataFolderDialog
+        onAccepted: {
+            var fileUrl = new String(cacheCtDataFolderDialog.currentFolder);
+            ctDataStorage.convertCtDataToNifti(fileUrl.substring(8));
+        }
+    }
+
     Hotkey {
         profile:root.profile
     }
@@ -218,8 +230,6 @@ Study {
                         }
 
                         
-
-
                         ToolButton {
                             Layout.margins: 3
                             icon {
@@ -478,6 +488,22 @@ Study {
                             ToolTip.visible: hovered
                             ToolTip.text: qsTr("Album")
                         }
+                        
+                        ToolButton {
+                            
+                            icon {
+                                source: "qrc:/assets/images/cache_ct_data.png"
+                                height: 30
+                                width:30
+                            }
+                            Layout.margins: 3
+                            onClicked:  {
+                                cacheCtDataFolderDialog.open();
+                            }
+                            hoverEnabled: true
+                            ToolTip.visible: hovered
+                            ToolTip.text: qsTr("Cache CT Data")
+                        } 
 
                         ToolButton {
                             icon {
@@ -1099,13 +1125,6 @@ Study {
                         anchors.fill: parent
                         profile:root.profile
                         obscurity:currentObscurity
-                        combined:root.combined
-                        channel: root.channel
-                        reseauListModel:reseauListModel
-                        options:root.profile.stageSettings.getOptions(dockStageLeftView.uniqueName)
-                        //stageScalar:currentStageScalar
-                        //scalarModel:currentScalarModel
-                        //azimuthModel:azimuthModel
                     }
                 }
 

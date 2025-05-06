@@ -306,7 +306,7 @@ public:
 
     MeltOptions *meltOptions();
     MeltOptionsDb *meltOptionsDb();
-
+    
     void setCurrentMeltOptions(qint64 id);
     qint64 currentMeltOptions() const;
     MeltSetting *meltSetting();
@@ -390,7 +390,6 @@ protected:
     QPointer<DissolveOptions> m_dissolveOptions;
     QPointer<ScalarOptions> m_scalarOptions;
     QPointer<MeltOptionsDb> m_meltOptionsDb;
-
     QPointer<OscillograpOptions> m_oscillograpOptions;
     QPointer<ReseauDb> m_reseauDb;
     qint64 m_currentReseauId = 0;

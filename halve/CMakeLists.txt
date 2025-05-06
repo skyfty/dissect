@@ -21,7 +21,10 @@ qt_standard_project_setup(REQUIRES 6.6)
 find_package(TBB REQUIRED)
 
 find_package(VTK REQUIRED)
+
 set(VTK_INCLUDE_DIRS "${VTK_PREFIX_PATH}/include/vtk-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
+
+find_package(ITK REQUIRED)
 
 find_package(VTKm REQUIRED QUIET)
 
@@ -85,11 +88,16 @@ target_link_libraries(halve
         ${CUDA_LIBRARIES}
         ${CUDA_CUDART_LIBRARY}
         ${CUDA_cudadevrt_LIBRARY}
+        ${ITK_LIBRARIES}
+        ITKCommon
+        ITKIOImageBase
         ys
         kddockwidgets
         breakpad
         sqlite_orm
-        screengrab)
+        screengrab
+        onnxruntime
+        jsonhpp)
 
 target_include_directories(halve
     PRIVATE
