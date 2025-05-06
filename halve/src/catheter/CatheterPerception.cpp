@@ -137,7 +137,7 @@ MatrixXd CatheterPerception::polynomialFeatures(const MatrixXd& X) {
 // 训练线性回归模型
 MatrixXd CatheterPerception::trainModel(const std::vector<ElectrodeData>& data) {
 	int n_samples = data.size();
-	MatrixXd features(n_samples, 4);
+	MatrixXd features(n_samples, 7);
 
 	for (int i = 0; i < n_samples; ++i) {
 		Vector3d M = (data[i].p1 + data[i].p2) / 2;
@@ -193,7 +193,7 @@ bool CatheterPerception::predict(const vtkSmartPointer<vtkPoints>& points, vtkVe
 	Vector3d u = (B - A) / d;
 
 	// 将特征转换为行向量 (1x7)
-	MatrixXd features(1, 4);
+	MatrixXd features(1, 7);
 	features << M.transpose(), d, u.transpose();
 	//features << d, u.transpose();
 

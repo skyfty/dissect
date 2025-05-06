@@ -82,10 +82,10 @@ void CatheterMould::reload() {
 }
 
 
+static double origin[3] = { 0.0, 0.0, 0.0 };
 
 vtkSmartPointer<vtkPoints> CatheterMould::makeLinnerPoints(const QList<quint16> &gap) {
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
-    static double origin[3] = { 0.0, 0.0, 0.0 };
     points->InsertNextPoint(origin);
     quint16 step = 0;
     for(quint16 v:gap) {
@@ -101,7 +101,6 @@ vtkSmartPointer<vtkPoints> CatheterMould::makeLinnerPoints(const QList<quint16> 
     transformFilter->SetTransform(transform);
     transformFilter->Update();
     points = transformFilter->GetOutput()->GetPoints();
-    points->InsertNextPoint(origin);
     return points;
 }
 vtkIdType CatheterMould::addNodeMesh(const QString& meshPath) {
@@ -142,7 +141,8 @@ void CatheterMould::makeDefultGrid(const QList<quint16> &gap) {
 
     vtkSmartPointer<vtkPoints> points = makeLinnerPoints(gap);
     vtkIdType pointCount = points->GetNumberOfPoints();
-    m_originPointId = pointCount - 1;
+    m_originPointId = pointCount / 2;
+    points->InsertPoint(m_originPointId, origin);
 
     vtkStdString msgColorName = ModelCache::instance()->colorName(Halve::CET_MAG);
     vtkColor3ub magColor = ModelCache::instance()->color3ub(msgColorName);

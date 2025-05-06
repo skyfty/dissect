@@ -33,6 +33,9 @@ public:
 
     vtkSmartPointer<vtkUnstructuredGrid> grid(bool deepCopy = false);
     vtkSmartPointer<CatheterPerception> getPerception(vtkIdType id);
+    QList< vtkSmartPointer<CatheterPerception>>& getPerceptions() {
+        return m_perceptions;
+    }
     vtkIdType getOriginPointId() const;
 
 signals:
