@@ -137,14 +137,14 @@ MatrixXd CatheterPerception::polynomialFeatures(const MatrixXd& X) {
 // 训练线性回归模型
 MatrixXd CatheterPerception::trainModel(const std::vector<ElectrodeData>& data) {
 	int n_samples = data.size();
-	MatrixXd features(n_samples, 4);
+	MatrixXd features(n_samples, 7);
 
 	for (int i = 0; i < n_samples; ++i) {
-		//Vector3d M = (data[i].p1 + data[i].p2) / 2;
+		Vector3d M = (data[i].p1 + data[i].p2) / 2;
 		double d = (data[i].p2 - data[i].p1).norm();
 		Vector3d u = (data[i].p2 - data[i].p1) / d;
-		//features.row(i) << M.transpose(), d, u.transpose();
-		features.row(i) << d, u.transpose();
+		features.row(i) << M.transpose(), d, u.transpose();
+		//features.row(i) << d, u.transpose();
 	}
 
 	MatrixXd X_poly = polynomialFeatures(features);
@@ -188,14 +188,14 @@ bool CatheterPerception::predict(const vtkSmartPointer<vtkPoints>& points, vtkVe
 	B << p2.GetX(), p2.GetY(), p2.GetZ();
 
 	// 特征工程
-	//Vector3d M = (A + B) / 2;
+	Vector3d M = (A + B) / 2;
 	double d = (B - A).norm();
 	Vector3d u = (B - A) / d;
 
 	// 将特征转换为行向量 (1x7)
-	MatrixXd features(1, 4);
-	//features << M.transpose(), d, u.transpose();
-	features << d, u.transpose();
+	MatrixXd features(1, 7);
+	features << M.transpose(), d, u.transpose();
+	//features << d, u.transpose();
 
 	// 生成多项式特征 (1 x n_poly_features)
 	MatrixXd X_poly = polynomialFeatures(features);
