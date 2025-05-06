@@ -33,6 +33,7 @@ public:
 
     vtkSmartPointer<vtkUnstructuredGrid> grid(bool deepCopy = false);
     vtkSmartPointer<CatheterPerception> getPerception(vtkIdType id);
+    vtkIdType getOriginPointId() const;
 
 signals:
     void changed();
@@ -47,6 +48,7 @@ private:
     QString m_meshName;
     QList<quint16> m_gap;
     double m_flexibility = 0.0;
+    vtkIdType m_originPointId = -1;
     QList<QPair<QString,vtkSmartPointer<vtkPolyData>>> m_meshPolyDatas;
     vtkSmartPointer<vtkUnstructuredGrid> m_grid;
 	QList< vtkSmartPointer<CatheterPerception>> m_perceptions;

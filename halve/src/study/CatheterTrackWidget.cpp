@@ -207,23 +207,34 @@ void CatheterTrackWidget::checkCatheterTrack(Catheter* catheter, const QList<Cat
         }
 	}
  
-    for (vtkIdType pointId = 0; pointId < targetGrid->GetNumberOfPoints(); ++pointId) {
-        vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(pointId);
-        if (perception->mode() == CatheterPerception::PREDICT && perception->train()) {
-            vtkVector3d predictPoint;
-            if (perception->predict(targetGrid->GetPoints(), predictPoint)) {
-                vtkVector3d sourcePoint{0.0,0.0, 0.0};
-                mouldGrid->GetPoint(pointId, sourcePoint.GetData());
-                vtkMath::Subtract(predictPoint.GetData(), sourcePoint.GetData(), sourcePoint.GetData());
+    if (catheterMould->getOriginPointId() != -1) {
+        for (vtkIdType pointId = 0; pointId < targetGrid->GetNumberOfPoints(); ++pointId) {
+            vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(pointId);
+            if (perception->mode() == CatheterPerception::PREDICT && perception->train()) {
+                vtkNew<vtkPoints> points;
+                vtkVector3d originPoint;
+                targetGrid->GetPoint(catheterMould->getOriginPointId(), originPoint.GetData());
+                for (vtkIdType i = 0; i < targetGrid->GetNumberOfPoints(); ++i) {
+                    vtkVector3d point;
+                    targetGrid->GetPoint(i, point.GetData());
+                    vtkMath::Subtract(point.GetData(), originPoint.GetData(), point.GetData());
+                    points->InsertNextPoint(point.GetData());
+                }
 
-                vtkVector3d targetPoint;
-                targetGrid->GetPoint(pointId, targetPoint.GetData());
-                vtkMath::Add(targetPoint.GetData(), sourcePoint.GetData(), targetPoint.GetData());
-                //targetGrid->GetPoints()->SetPoint(numberOfPerceptions, targetPoint.GetData());
+                vtkVector3d predictPoint;
+                if (perception->predict(points, predictPoint)) {
+                    vtkVector3d sourcePoint{ 0.0,0.0, 0.0 };
+                    mouldGrid->GetPoint(pointId, sourcePoint.GetData());
+                    vtkMath::Subtract(predictPoint.GetData(), sourcePoint.GetData(), sourcePoint.GetData());
+
+                    vtkVector3d targetPoint;
+                    targetGrid->GetPoint(pointId, targetPoint.GetData());
+                    vtkMath::Add(targetPoint.GetData(), sourcePoint.GetData(), targetPoint.GetData());
+                    //targetGrid->GetPoints()->SetPoint(numberOfPerceptions, targetPoint.GetData());
+                }
             }
         }
     }
-
     refreshCatheterTube(catheter, targetGrid);
 
 }

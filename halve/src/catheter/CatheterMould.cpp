@@ -49,6 +49,7 @@ const char* TubeSidesName = "sides";
 const char* FlexibilityName = "flexibility";
 const char* ResolutionName = "resolution";
 const char* PointDirectionName = "Direction";
+const char* OriginPointIdName = "origin";
 
 CatheterMould::CatheterMould(quint16 amount,const QString &meshName, const QList<quint16> &gap, double flexibility, QObject *parent)
     : QObject{parent}
@@ -80,23 +81,28 @@ void CatheterMould::reload() {
     emit changed();
 }
 
+
+
 vtkSmartPointer<vtkPoints> CatheterMould::makeLinnerPoints(const QList<quint16> &gap) {
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
-    points->InsertNextPoint(0, 0, 0);
+    static double origin[3] = { 0.0, 0.0, 0.0 };
+    points->InsertNextPoint(origin);
     quint16 step = 0;
     for(quint16 v:gap) {
         step += v;
-        points->InsertNextPoint(0, step, 0);
+        points->InsertNextPoint(0.0, step, 0.0);
     }
     vtkNew<vtkPolyData> polyData;
     polyData->SetPoints(points);
     vtkNew<vtkTransform> transform;
-    transform->Translate(0, -(step / 2), 0);
+    transform->Translate(0.0, -(step / 2), 0.0);
     vtkNew<vtkTransformPolyDataFilter> transformFilter;
     transformFilter->SetInputData(polyData);
     transformFilter->SetTransform(transform);
     transformFilter->Update();
-    return transformFilter->GetOutput()->GetPoints();
+    points = transformFilter->GetOutput()->GetPoints();
+    points->InsertNextPoint(origin);
+    return points;
 }
 vtkIdType CatheterMould::addNodeMesh(const QString& meshPath) {
     std::string content = loadMeshFile(meshPath).toStdString();
@@ -113,6 +119,9 @@ vtkIdType CatheterMould::addNodeMesh(const QString& meshPath) {
     }
     m_meshPolyDatas.append(std::make_pair(meshPath, polyData));
 	return m_meshPolyDatas.size() - 1;
+}
+vtkIdType CatheterMould::getOriginPointId() const {
+    return m_originPointId;
 }
 
 void CatheterMould::makeDefultGrid(const QList<quint16> &gap) {
@@ -133,6 +142,7 @@ void CatheterMould::makeDefultGrid(const QList<quint16> &gap) {
 
     vtkSmartPointer<vtkPoints> points = makeLinnerPoints(gap);
     vtkIdType pointCount = points->GetNumberOfPoints();
+    m_originPointId = pointCount - 1;
 
     vtkStdString msgColorName = ModelCache::instance()->colorName(Halve::CET_MAG);
     vtkColor3ub magColor = ModelCache::instance()->color3ub(msgColorName);
@@ -222,7 +232,8 @@ void CatheterMould::toJson(QJsonObject &meshJson) const {
 		meshPolyDatasJson.append(pair.first);
 	}
     meshJson[NodeMeshName] = meshPolyDatasJson;
-    
+    meshJson[OriginPointIdName] = m_originPointId;
+
     QJsonArray pointsJson;
     for(vtkIdType i = 0; i < m_grid->GetNumberOfPoints(); ++i) {
         QJsonArray pointJson;
@@ -324,7 +335,9 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     } else {
         addNodeMesh(DefaultMeshFile);
     }
-
+    if (meshJson.contains(OriginPointIdName)) {
+        m_originPointId = meshJson[OriginPointIdName].toInt();
+    }
     vtkNew<vtkPoints> points;
     if (meshJson.contains(PointsPointDataName)) {
         QJsonArray pointsJson = meshJson[PointsPointDataName].toArray();
