@@ -148,15 +148,17 @@ void CatheterMould::makeDefultGrid(const QList<quint16> &gap) {
     vtkIdType pointCount = points->GetNumberOfPoints();
     m_originPointId = pointCount / 2;
 
-    vtkStdString msgColorName = ModelCache::instance()->colorName(Halve::CET_MAG);
-    vtkColor3ub magColor = ModelCache::instance()->color3ub(msgColorName);
     for (qsizetype i = 0; i < pointCount; ++i) {
+        Halve::CatheterElectrodeType type = i == m_originPointId? Halve::CET_ORIGIN: Halve::CET_MAG;
         polyLine->GetPointIds()->InsertNextId(i);
-        types->InsertNextTuple1(Halve::CET_MAG);
         nodeFlexibility->InsertNextTuple1(m_flexibility);
+        types->InsertNextTuple1(type);
+        vtkStdString msgColorName = ModelCache::instance()->colorName(type);
+        vtkColor3ub magColor = ModelCache::instance()->color3ub(msgColorName);
         colorNames->InsertNextValue(msgColorName);
         colors->InsertNextTypedTuple(magColor.GetData());
     }
+
     vtkSmartPointer<vtkIntArray> nodeMesh = vtkSmartPointer<vtkIntArray>::New();
     nodeMesh->SetName(NodeMeshIndexName);
     nodeMesh->SetNumberOfComponents(1);
@@ -164,9 +166,16 @@ void CatheterMould::makeDefultGrid(const QList<quint16> &gap) {
     nodeMesh->FillTypedComponent(0, addNodeMesh(DefaultMeshFile));
 
     m_perceptions.resize(pointCount);
+
+    vtkIdType spline = 0;
     for (qsizetype i = 0; i < m_perceptions.size(); ++i) {
         vtkSmartPointer<CatheterPerception> perc = vtkSmartPointer<CatheterPerception>::New();
-        perc->addSpline(i);
+        if (i == m_originPointId) {
+            perc->setMode(CatheterPerception::RIGIDBODY);
+        } else {
+            perc->setMode(CatheterPerception::EXPLICIT);
+            perc->addSpline(spline++);
+        }
 		m_perceptions[i] = perc;
     }
     vtkStdString handleColorName = ModelCache::instance()->colorName(Halve::CET_HANDLE);

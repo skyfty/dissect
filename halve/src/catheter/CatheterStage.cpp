@@ -136,8 +136,9 @@ QList<vtkSmartPointer<vtkFollower>> CatheterStage::createCatheterLabelFollower(C
         vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(id);
         if (perception->mode() == CatheterPerception::EXPLICIT) {
             vtkIdType splineValue = -1;
-            perception->getSpline(splineValue);
-            label.append(QString(":%1").arg(splineValue + 1));
+            if (perception->getSpline(splineValue) && splineValue != -1) {
+                label.append(QString(":%1").arg(splineValue + 1));
+            }
         }
         followers.append(createCatheterLabelFollower(label, grid->GetPoint(id)));
     }
