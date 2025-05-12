@@ -5,6 +5,7 @@
 #include <vtkIntArray.h>
 #include <vtkVector.h>
 #include <Eigen/Dense>
+#include <qstring.h>
 
 class QJsonObject;
 class vtkPoints;
@@ -30,6 +31,7 @@ public:
     static CatheterPerception* New();
     void FromJson(const QJsonObject&scalarsJson);
 	void ToJson(QJsonObject& scalarsJson) const;
+    QString formatLabel(vtkIdType id) const;
 
     bool train();
     bool predict(const vtkSmartPointer<vtkPoints>& points, vtkVector3d& targetPoint);
@@ -51,6 +53,7 @@ public:
     }
 
     bool getSpline(vtkIdType& value,vtkIdType idx = 0) const;
+    bool getSpline(std::vector<vtkIdType>& values) const;
     void addSpline(vtkIdType value);
 
 protected:

@@ -132,13 +132,8 @@ vtkSmartPointer<vtkFollower> CatheterStage::createCatheterLabelFollower(const QS
 QList<vtkSmartPointer<vtkFollower>> CatheterStage::createCatheterLabelFollower(CatheterMould* catheterMould, vtkUnstructuredGrid* grid) {
     QList<vtkSmartPointer<vtkFollower>> followers;
     for(vtkIdType id = 0; id < grid->GetNumberOfPoints(); ++id) {
-        QString label = QString::number(id + 1);
         vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(id);
-        if (perception->mode() == CatheterPerception::EXPLICIT) {
-            vtkIdType splineValue = -1;
-            perception->getSpline(splineValue);
-            label.append(QString(":%1").arg(splineValue + 1));
-        }
+        QString label = perception->formatLabel(id + 1);
         followers.append(createCatheterLabelFollower(label, grid->GetPoint(id)));
     }
     return followers;
@@ -197,6 +192,9 @@ void CatheterStage::resetCamera() {
     }
     dispatch_async([](vtkRenderWindow*, vtkUserData vtkObject) {
         CatheterStageData* userData = CatheterStageData::SafeDownCast(vtkObject);
+        if (userData->renderer == nullptr) {
+            return;
+        }
         userData->renderer->ResetCamera();
     });
 }
@@ -228,6 +226,9 @@ void CatheterStage::onCatheterDyestuffChanged() {
     }
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         CatheterStageData* userData = CatheterStageData::SafeDownCast(vtkObject);
+        if (userData->tubeFilter == nullptr) {
+            return;
+        }
         userData->tubeFilter->SetColor(m_catheter->getDyestuff3ub());
         userData->tubeFilter->Modified();
     });
@@ -254,6 +255,9 @@ void CatheterStage::refreshCatheterTube(vtkSmartPointer<vtkUnstructuredGrid> gri
 
     dispatch_async([this, grid, meshPolyDatas = std::move(meshPolyDatas), catheterMould, followers = std::move(followers)](vtkRenderWindow*, vtkUserData vtkObject) {
         CatheterStageData* userData = CatheterStageData::SafeDownCast(vtkObject);
+        if (userData->tubeFilter == nullptr) {
+            return;
+        }
         userData->tubeFilter->SetInputData(grid);
         userData->tubeFilter->SetNodePolyDatas(meshPolyDatas);
         userData->tubeFilter->SetColor(m_catheter->getDyestuff3ub());

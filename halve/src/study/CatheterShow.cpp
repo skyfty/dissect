@@ -125,13 +125,8 @@ void CatheterShow::resetRender() {
         userData->renderer->AddActor(userData->tubeActor);
 
         for(vtkIdType id = 0; id < grid->GetNumberOfPoints(); ++id) {
-            QString label = QString::number(id + 1);
             vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(id);
-            if (perception->mode() == CatheterPerception::EXPLICIT) {
-                vtkIdType splineValue = -1;
-                perception->getSpline(splineValue);
-                label.append(QString(":%1").arg(splineValue + 1));
-            }
+            QString label = perception->formatLabel(id + 1);
             createTextFollower(userData, label, grid->GetPoint(id));
         }
         userData->renderer->ResetCamera();

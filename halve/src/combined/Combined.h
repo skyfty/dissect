@@ -108,7 +108,6 @@ private:
                                     Halve::TrackStatus status,
                                   Catheter* catheter,
                                   vtkVector3d &position,QList<CatheterTrack> &catheterTrackList);
-    void adjuestTrackAngle(vtkVector3d &position, const vtkQuaterniond &pant10Quaternion);
     void abruptionTrackData(TrackData::List &currentTrackDataList);
     void electricalTrackData(TrackData::List &currentTrackDataList);
     void blendTrackData(const TrackData::List &currentTrackDataList);
@@ -183,7 +182,6 @@ private:
     bool m_keepSave = false;
     Halve::TrackStatus m_reproductCatheterStatus = Halve::TrackStatus_Invalid;
     QPointer<Catheter> m_pantCatheter;
-    vtkSmartPointer<vtkTransform> m_transform;
     vtkVector3d m_centerPoint{ -1,-1,-1 };
     vtkVector3d m_centerPolemicsPosition{0,0,0};
     vtkVector3d m_lastCenterPolemicsPosition{ -1,-1,-1 };

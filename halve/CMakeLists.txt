@@ -9,11 +9,12 @@ set(VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/version.txt")
 set(RC_FILE "${CMAKE_CURRENT_BINARY_DIR}/halve.rc")  # 现在输出到 build 目录
 set(RC_IN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/halve.rc.in")
 set(HALVE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/halve.ico")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${VERSION_FILE}")
 
 file(READ "${VERSION_FILE}" VERSION_STRING)
 string(STRIP "${VERSION_STRING}" VERSION_STRING)
 string(REPLACE "." "," VERSION_COMMA "${VERSION_STRING}")
-configure_file("${RC_IN_FILE}" "${RC_FILE}")
+configure_file("${RC_IN_FILE}" "${RC_FILE}"  @ONLY)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick Concurrent Charts Core Qml Gui RemoteObjects SerialPort Test LinguistTools)
 qt_standard_project_setup(REQUIRES 6.6)

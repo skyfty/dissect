@@ -114,7 +114,8 @@ public:
         CET_MAG = 1,
         CET_PANT = 2,
         CET_ASSIST = 3,
-        CET_HANDLE = 4
+        CET_ORIGIN = 4,
+        CET_HANDLE
     };
     Q_ENUM(CatheterElectrodeType);
 

@@ -112,107 +112,115 @@ vtkSmartPointer<vtkPoints> BreathSurvey::getEdgeSamplings(const vtkSmartPointer<
 constexpr int MiniumDataSize = 100;
 
 typedef std::vector<std::pair<size_t, double>> DataIndexVector;
+// 计算翻新数据
 bool BreathSurvey::computeRenovatingData() {
+    // 检查数据点数量是否小于最小数据大小
     if (m_pant1Positions->GetNumberOfPoints() < MiniumDataSize || m_positions->GetNumberOfPoints() < MiniumDataSize) {
-        return false;
+        return false; // 数据不足，返回false
     }
     auto pant1PositionSamplings = convertSamplings(m_pant1Positions, 2);
+
+    // 存储采样值的索引
     DataIndexVector pant1PositionSamplingsIndexData;
     for (size_t i = 0; i < pant1PositionSamplings.size(); ++i) {
-        pant1PositionSamplingsIndexData.push_back(std::make_pair(i, pant1PositionSamplings[i]));
+        pant1PositionSamplingsIndexData.push_back(std::make_pair(i, pant1PositionSamplings[i])); // 将索引和采样值配对
     }
-    std::vector<size_t> peaks, valleys;
-    ys::Breath<double> breath(m_samplingRate);
-    breath.FindPeakValley(pant1PositionSamplings.begin(), pant1PositionSamplings.end(), peaks, valleys);
-    if (valleys.size() < 2 || peaks.size() < 2) {
-        return false;
+    
+    std::vector<size_t> peaks, valleys; // 存储峰值和谷值
+    ys::Breath<double> breath(m_samplingRate); // 创建呼吸对象
+    breath.FindPeakValley(pant1PositionSamplings.begin(), pant1PositionSamplings.end(), peaks, valleys); // 查找峰值和谷值
+    if (valleys.size() < 2) {
+        return false; // 如果峰值或谷值数量不足，返回false
     }
-    double breathThresholdRadio = m_breathGatingRatio / 100;
 
+    // 处理采样数据以获取边缘呼吸数据
     std::vector<double> gatingSamplingsIndexData = pant1PositionSamplings;
-    std::sort(gatingSamplingsIndexData.begin(), gatingSamplingsIndexData.end());
+    std::sort(gatingSamplingsIndexData.begin(), gatingSamplingsIndexData.end()); // 排序
     gatingSamplingsIndexData.erase(std::unique(gatingSamplingsIndexData.begin(), gatingSamplingsIndexData.end(),[](double l , double r){
        int nl = l * 10;
        int nr = r * 10;
-       return nl == nr;
+       return nl == nr; // 去重
     }), gatingSamplingsIndexData.end());
+    
     std::vector<double> edgeGatingBreathData;
-    auto gatingSamplingPointCount = gatingSamplingsIndexData.size() * breathThresholdRadio;
+    double breathThresholdRadio = m_breathGatingRatio / 100; // 计算呼吸阈值比例
+    auto gatingSamplingPointCount = gatingSamplingsIndexData.size() * breathThresholdRadio; // 计算边缘采样点数量
     auto gatingminmax = std::minmax_element(gatingSamplingsIndexData.begin(), gatingSamplingsIndexData.begin() + gatingSamplingPointCount);
-    m_breathOptions->setGatingValid(std::make_pair(*(gatingminmax.first), *(gatingminmax.second)));
+    m_breathOptions->setGatingValid(std::make_pair(*(gatingminmax.first), *(gatingminmax.second))); // 设置有效的呼吸阈值
 
+    // 计算呼吸的谷值和峰值
     auto minmaxval = std::minmax_element(pant1PositionSamplings.begin(), pant1PositionSamplings.end());
-    m_breathOptions->setBreatheValley(*(minmaxval.first));
-    m_breathOptions->setBreathePeak(*(minmaxval.second));
-    m_breathOptions->setBreatheBase((m_breathOptions->breathePeak() + m_breathOptions->breatheValley()) / 2);
-    onBreathBoundaryRatioChanged();
-
+    m_breathOptions->setBreatheValley(*(minmaxval.first)); // 设置呼吸谷值
+    m_breathOptions->setBreathePeak(*(minmaxval.second)); // 设置呼吸峰值
+    m_breathOptions->setBreatheBase((m_breathOptions->breathePeak() + m_breathOptions->breatheValley()) / 2); // 计算呼吸基线
     auto breatheLimit = std::abs(m_breathOptions->breathePeak() - m_breathOptions->breatheValley());
-    m_breathOptions->setBreatheLimit(breatheLimit);
+    m_breathOptions->setBreatheLimit(breatheLimit); // 设置呼吸限制
+    onBreathBoundaryRatioChanged(); // 通知呼吸边界比例已改变
 
-    double peakAvg = 0;
+    double peakAvg = 0; // 存储峰值平均值
     for (size_t i = 0; i < peaks.size(); ++i) {
-        peakAvg += pant1PositionSamplings[peaks[i]];
+        peakAvg += pant1PositionSamplings[peaks[i]]; // 计算峰值的平均值
     }
-    peakAvg /= peaks.size();
+    peakAvg /= peaks.size(); // 计算平均值
     peaks.erase(std::remove_if(peaks.begin(), peaks.end(), [&pant1PositionSamplings, peakAvg](size_t idx) {
-        auto validPeakValue = peakAvg - peakAvg * 5 / 100;
-        return pant1PositionSamplings[idx] < validPeakValue;
+        auto validPeakValue = peakAvg - peakAvg * 5 / 100; // 计算有效峰值
+        return pant1PositionSamplings[idx] > validPeakValue; // 移除低于有效峰值的峰
     }), peaks.end());
     if (peaks.empty()) {
-        return false;
+        return false; // 如果没有有效峰值，返回false
     }
-    size_t breathCount = peaks.size() - 1;
-    size_t breathPointCount = 0;
+    
+    size_t breathCount = peaks.size() - 1; // 计算呼吸次数
+    size_t breathPointCount = 0; // 存储呼吸点数量
     for (size_t i = 0; i < breathCount; ++i) {
-        breathPointCount += (peaks[i] - peaks[i + 1]);
+        breathPointCount += (peaks[i + 1] - peaks[i]);
     }
-    breathPointCount /= breathCount;
+    breathPointCount /= breathCount; // 计算平均呼吸点数
     if (breathPointCount >= pant1PositionSamplingsIndexData.size()) {
-      return false;
+      return false; // 如果呼吸点数超过采样数据，返回false
     }
 
-    vtkVector3d compensateBasePoint{};
+    vtkVector3d compensateBasePoint{}; // 存储补偿基点
     for (size_t i = 0; i < breathCount; ++i) {
         DataIndexVector breathIndexData;
-        auto beginIter = pant1PositionSamplingsIndexData.begin() + i * breathPointCount;
-        auto endIter = beginIter + breathPointCount;
-        std::copy(beginIter, endIter, std::back_inserter(breathIndexData));
+        auto beginIter = pant1PositionSamplingsIndexData.begin() + i * breathPointCount; // 获取当前呼吸的起始迭代器
+        auto endIter = beginIter + breathPointCount; // 获取当前呼吸的结束迭代器
+        std::copy(beginIter, endIter, std::back_inserter(breathIndexData)); // 复制数据
         std::sort(breathIndexData.begin(), breathIndexData.end(), [](const auto& l, const auto& r) {
-            return l.second < r.second;
+            return l.second < r.second; // 按照值排序
         });
         DataIndexVector edgeBreathData;
-        auto samplingPointCount = breathIndexData.size() * breathThresholdRadio;
-        std::copy(breathIndexData.begin(), breathIndexData.begin() + samplingPointCount, std::back_inserter(edgeBreathData));
+        auto samplingPointCount = breathIndexData.size() * breathThresholdRadio; // 计算边缘采样点数量
+        std::copy(breathIndexData.begin(), breathIndexData.begin() + samplingPointCount, std::back_inserter(edgeBreathData)); // 复制边缘数据
 
-        vtkSmartPointer<vtkPoints> edgeSamplingPoints = vtkSmartPointer<vtkPoints>::New();
+        vtkSmartPointer<vtkPoints> edgeSamplingPoints = vtkSmartPointer<vtkPoints>::New(); // 创建边缘采样点
         for (auto& data : edgeBreathData) {
-            edgeSamplingPoints->InsertNextPoint(m_positions->GetPoint(data.first));
+            edgeSamplingPoints->InsertNextPoint(m_positions->GetPoint(data.first)); // 插入边缘采样点
         }
-        vtkVector3d edgetBreathBasePoint{};
+        vtkVector3d edgetBreathBasePoint{}; // 存储边缘呼吸基点
         for (int i = 0; i < edgeSamplingPoints->GetNumberOfPoints(); ++i) {
-            vtkMath::Add(edgeSamplingPoints->GetPoint(i), edgetBreathBasePoint, edgetBreathBasePoint);
+            vtkMath::Add(edgeSamplingPoints->GetPoint(i), edgetBreathBasePoint, edgetBreathBasePoint); // 计算边缘呼吸基点
         }
-        vtkMath::MultiplyScalar(edgetBreathBasePoint.GetData(), 1.0 / edgeSamplingPoints->GetNumberOfPoints());
-        vtkMath::Add(edgetBreathBasePoint, compensateBasePoint, compensateBasePoint);
+        vtkMath::MultiplyScalar(edgetBreathBasePoint.GetData(), 1.0 / edgeSamplingPoints->GetNumberOfPoints()); // 计算平均值
+        vtkMath::Add(edgetBreathBasePoint, compensateBasePoint, compensateBasePoint); // 更新补偿基点
     }
-    vtkMath::MultiplyScalar(compensateBasePoint.GetData(), 1.0 / breathCount);
-    m_breathOptions->setCompensateBasePoint(compensateBasePoint);
+    vtkMath::MultiplyScalar(compensateBasePoint.GetData(), 1.0 / breathCount); // 计算最终补偿基点
+    m_breathOptions->setCompensateBasePoint(compensateBasePoint); // 设置补偿基点
 
-    vtkSmartPointer<vtkPoints> compensatePoints = vtkSmartPointer<vtkPoints>::New();
-    vtkSmartPointer<vtkPoints> samplingPoints = arrangeSamplings(m_positions);
-    auto numOfPoint = samplingPoints->GetNumberOfPoints();
+    vtkSmartPointer<vtkPoints> compensatePoints = vtkSmartPointer<vtkPoints>::New(); // 创建补偿点
+    vtkSmartPointer<vtkPoints> samplingPoints = arrangeSamplings(m_positions); // 获取采样点
+    auto numOfPoint = samplingPoints->GetNumberOfPoints(); // 获取采样点数量
     for (auto i = 0; i < numOfPoint / 2; ++i) {
-        vtkVector3d pos{ 0,0,0 }, pos2{ 0,0,0 };
-        samplingPoints->GetPoint(i, pos.GetData());
-        samplingPoints->GetPoint(numOfPoint - 1 - i, pos2.GetData());
-        vtkMath::Add(pos, pos2, pos);
-        vtkMath::MultiplyScalar(pos.GetData(), 0.5);
-        compensatePoints->InsertNextPoint(pos.GetData());
+        vtkVector3d pos{ 0,0,0 }, pos2{ 0,0,0 }; // 创建两个位置向量
+        samplingPoints->GetPoint(i, pos.GetData()); // 获取第i个采样点
+        samplingPoints->GetPoint(numOfPoint - 1 - i, pos2.GetData()); // 获取对称的采样点
+        vtkMath::Add(pos, pos2, pos); // 计算两个点的和
+        vtkMath::MultiplyScalar(pos.GetData(), 0.5); // 计算平均值
+        compensatePoints->InsertNextPoint(pos.GetData()); // 插入补偿点
     }
-    setSplinePoints(compensatePoints);
-    m_breathOptions->setCompensatePoints(compensatePoints);
-    return compensatePoints->GetNumberOfPoints() >= 0 && m_breathOptions->breatheLimit() >= m_breathSamplingValidLimit;
+    setSplinePoints(compensatePoints); // 设置样条点
+    m_breathOptions->setCompensatePoints(compensatePoints); // 设置补偿点
+    return compensatePoints->GetNumberOfPoints() >= 0 && m_breathOptions->breatheLimit() >= m_breathSamplingValidLimit; // 返回是否满足条件
 }
 
 void BreathSurvey::setSplinePoints(vtkPoints* points) {
@@ -489,7 +497,7 @@ void BreathSurvey::setGating(qint32 newGating)
 void BreathSurvey::onCatheterTrackChanged(const QSharedPointer<CatheterTrackPackage> &trackData) {
     auto pantTrack = trackData->getPant(MagnetismPant1Port);
     if (pantTrack) {
-        vtkVector3d position;
+        vtkVector3d position{};
         pantTrack->getPosition(position);
         if (m_profile->renovating()) {
             m_pant1Positions->InsertNextPoint(position.GetData());
@@ -502,21 +510,22 @@ void BreathSurvey::onCatheterTrackChanged(const QSharedPointer<CatheterTrackPack
             disposePantTrackData(position);
         }
     }
-
-    for(Catheter* catheter : trackData->getCatheters()) {
-        if (catheter->isPant()) {
-            continue;
-        }
-        for (const CatheterTrack& track:trackData->getTracks(catheter)) {
-            if (track.status() != Halve::TrackStatus_Valid) {
+    if (m_profile->renovating()) {
+        for (Catheter* catheter : trackData->getCatheters()) {
+            if (catheter->isPant()) {
                 continue;
             }
-            vtkVector3d position;
-            track.getPosition(position);
-            quint16 seatIdx = track.seat() - catheter->bseat();
-            if (m_profile->renovating() && seatIdx == 0) {
-                m_positions->InsertNextPoint(position.GetData());
-                emit positionChanged();
+            for (const CatheterTrack& track : trackData->getTracks(catheter)) {
+                if (track.status() != Halve::TrackStatus_Valid) {
+                    continue;
+                }
+                vtkVector3d position{};
+                track.getPosition(position);
+                quint16 seatIdx = track.seat() - catheter->bseat();
+                if (seatIdx == 0) {
+                    m_positions->InsertNextPoint(position.GetData());
+                    emit positionChanged();
+                }
             }
         }
     }
