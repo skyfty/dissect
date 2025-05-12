@@ -36,17 +36,11 @@ public:
 
 class RegistrationStage : public QQuickVTKItem {
 	Q_OBJECT;
-	Q_PROPERTY(bool enablePick READ enablePick WRITE setEnablePick FINAL);
-	Q_PROPERTY(Profile* profile WRITE setProfile FINAL);
 	Q_PROPERTY(RegistrationProcessor* registrationProcessor WRITE setRegistrationProcessor);
 public:
 	explicit RegistrationStage(QQuickItem* parent = nullptr);
-	~RegistrationStage() override = default;
 
 public:
-	void setProfile(Profile* profile);
-	bool enablePick() const;
-	void setEnablePick(bool enablePick);
 	void setRegistrationProcessor(RegistrationProcessor* registrationProcessor);
 	/// @brief 清空所有的选中点
 	/// @remark RegistrationPage.qml中的Clear Selected Points调用
@@ -62,7 +56,5 @@ protected:
 	void initializeInteractorStyle(vtkSmartPointer<RegistrationStageData> userData);
 	void onPointPicked(vtkObject*, unsigned long, void* callbackData);
 protected:
-	QPointer<Profile> m_profile;
 	RegistrationProcessor* m_processor;
-	bool m_enablePick{ false };
 };

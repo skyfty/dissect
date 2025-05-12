@@ -16,20 +16,20 @@ RegistrationProcessor::RegistrationProcessor(QObject* parent) : QObject(parent)
 {
 }
 
-RegistrationProcessor::~RegistrationProcessor()
-{
-}
-
 bool RegistrationProcessor::startRegistration(Profile* profile, Obscurity* obscurity, QVariantList visibleStates)
 {
-    if (!m_sourcePoints || !m_targetPoints ||
-        m_sourcePoints->GetNumberOfPoints() != m_targetPoints->GetNumberOfPoints()) {
-        //特征点数量不匹配或未初始化
-        return false;
-    }
+    //界面保证点击开始配准时enableRegistration为true。
+    vtkNew<vtkPoints> newSourcePoints;
+    vtkNew<vtkPoints> newTargetPoints;
+    newSourcePoints->DeepCopy(m_sourcePoints);
+    newTargetPoints->DeepCopy(m_targetPoints);
+    vtkIdType minCount = std::min(m_sourcePoints->GetNumberOfPoints(), m_targetPoints->GetNumberOfPoints());
+    newSourcePoints->Resize(minCount);
+    newTargetPoints->Resize(minCount);
+
     auto landmarkTransform = vtkSmartPointer<vtkLandmarkTransform>::New();
-    landmarkTransform->SetSourceLandmarks(m_sourcePoints);
-    landmarkTransform->SetTargetLandmarks(m_targetPoints);
+    landmarkTransform->SetSourceLandmarks(newSourcePoints);
+    landmarkTransform->SetTargetLandmarks(newTargetPoints);
     landmarkTransform->SetModeToRigidBody();
 
     auto appendFilter = vtkSmartPointer<vtkAppendPolyData>::New();
@@ -56,7 +56,7 @@ bool RegistrationProcessor::startRegistration(Profile* profile, Obscurity* obscu
 
     vtkSmartPointer<vtkPolyDataPointSampler> sampler = vtkSmartPointer<vtkPolyDataPointSampler>::New();
     sampler->SetInputConnection(fusedAppendFilter->GetOutputPort());
-    sampler->SetDistance(0.3);
+    sampler->SetDistance(0.2);
     sampler->Update();
     vtkSmartPointer<vtkPolyData> fusedPolyData = sampler->GetOutput();
 
@@ -78,6 +78,7 @@ int RegistrationProcessor::undoType() const
 void RegistrationProcessor::setUndoType(int undoType)
 {
     m_undoStack.push_back(undoType);
+    emit enableUndoChanged();
 }
 
 void RegistrationProcessor::undo()
@@ -106,12 +107,50 @@ void RegistrationProcessor::undo()
         }
     }
     m_undoStack.pop_back();
+    emit enableRegistrationChanged();
+    emit enableUndoChanged();
 }
 
 void RegistrationProcessor::clearUndoStack()
 {
     m_undoStack.clear();
+    emit enableUndoChanged();
 }
+
+bool RegistrationProcessor::enableUndo() const
+{
+    return !m_undoStack.isEmpty();
+}
+
+bool RegistrationProcessor::enableRegistration() const
+{
+    return m_sourcePoints
+        && m_targetPoints
+        && m_sourcePoints->GetNumberOfPoints() > 0
+        && m_targetPoints->GetNumberOfPoints() > 0;
+}
+
+bool RegistrationProcessor::enablePick() const
+{
+    return m_enablePick;
+}
+
+void RegistrationProcessor::setEnablePick(bool enablePick)
+{
+    if (m_enablePick != enablePick) {
+        m_enablePick = enablePick;
+        emit enablePickChanged();
+    }
+}
+
+void RegistrationProcessor::reset()
+{
+    setEnablePick(false);
+    clearUndoStack();
+    m_sourcePolyDatas.clear();
+    emit enableRegistrationChanged();
+}
+
 
 vtkIdType RegistrationProcessor::calcOutlinePointIndex() const
 {
@@ -144,8 +183,8 @@ void RegistrationProcessor::saveFusedPolyData(Profile* profile, Obscurity* obscu
 
     auto reseauDb = profile->reseauDb();
 
-    vtkSmartPointer<vtkPolyData> newPolyData = obscurity->extract(ids);;
-    Reseau* newReseau = reseauDb->add(QDateTime::currentMSecsSinceEpoch(), "fused", QColor(255, 255, 255), ids, fusedPolyData);
+    vtkSmartPointer<vtkPolyData> newPolyData = obscurity->extract(ids);
+    Reseau* newReseau = reseauDb->add(QDateTime::currentMSecsSinceEpoch(), "fused", QColor(255, 255, 255), ids, newPolyData);
     IOWorker::run([newReseau, newPolyData] {
         newReseau->savePolyData(newPolyData);
         newReseau->savePointIds();

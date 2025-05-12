@@ -32,9 +32,9 @@ namespace
 	  {4, {"pulmonary_vein", vtkColor3d(0,0,1)}},//肺静脉
 	  {5, {"heart_atrium_right", vtkColor3d(120 / 255.0,0,0.5)}},//右心房
 	  {6, {"heart_ventricle_right", vtkColor3d(0,0.5,1)}},//右心室
-	  {7, {"pulmonary_artery", vtkColor3d(42 / 255.0,42 / 255.0,0.5)}},//肺动脉
-	  {8, {"aorta", vtkColor3d(205 / 255.0, 235 / 255.0, 1)}},//主动脉
-	  {9, {"aorta", vtkColor3d(205 / 255.0, 235 / 255.0, 1)}},
+	  {7, {"heart_myocardium", vtkColor3d(42 / 255.0,42 / 255.0,0.5)}},//心肌
+	  {8, {"pulmonary_artery", vtkColor3d(205 / 255.0, 235 / 255.0, 1)}},//肺动脉
+	  {9, {"aorta", vtkColor3d(205 / 255.0, 235 / 255.0, 1)}},//主动脉
 	  {10, {"inferior_vena_cava", vtkColor3d(1, 192 / 255.0, 203 / 255.0)}},//下腔静脉
 	  {11, {"superior_vena_cava", vtkColor3d(1, 165 / 255.0, 0)}},//上腔静脉
 	};
@@ -55,6 +55,23 @@ RegistrationSourceStage::RegistrationSourceStage(QQuickItem* parent)
 	m_visibleStates = QVariantList{ true, true, true, true, true, true, true, true, true, true, true };
 }
 
+void RegistrationSourceStage::loadCtData(const QString& dicomDir)
+{
+	if (m_ctDataStorage == nullptr)
+	{
+		return;
+	}
+	QString niftiPath = dicomDir + "/" + kNiftiCacheName;
+	bool suc = m_ctDataStorage->convertCtDataToNifti(dicomDir);
+	if (!suc)
+	{
+		return;
+	}
+	clearAllModels();
+	showNifti(niftiPath);
+	updateVisibleStates();
+}
+
 void RegistrationSourceStage::showNifti(const QString& niftiPath)
 {
 	vtkSmartPointer<vtkNIFTIImageReader> reader = vtkSmartPointer<vtkNIFTIImageReader>::New();
@@ -65,7 +82,7 @@ void RegistrationSourceStage::showNifti(const QString& niftiPath)
 		RegistrationSourceStageData* userData = RegistrationSourceStageData::SafeDownCast(vtkObject);
 
 		vtkImageData* segmentationData = reader->GetOutput();
-		
+
 		for (const auto& [label, info] : kLabelMap) {
 			// 阈值过滤生成二值掩膜
 			vtkNew<vtkImageThreshold> threshold;
@@ -99,19 +116,22 @@ void RegistrationSourceStage::showNifti(const QString& niftiPath)
 
 			userData->defaultRenderer->AddActor(actor);
 		}
-		
+
 		userData->defaultRenderer->ResetCamera();
-		userData->renderWindow->Render();
 		});
 }
 
-void RegistrationSourceStage::loadCtData(const QString& dicomDir)
+void RegistrationSourceStage::clearAllModels()
 {
-	QString niftiPath = dicomDir + "/" + kNiftiCacheName;
-	CtDataStorage dataStorage;
-	dataStorage.convertCtDataToNifti(dicomDir);
-	assert(QFile::exists(niftiPath));
-	showNifti(niftiPath);
+	dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
+		RegistrationSourceStageData* userData = RegistrationSourceStageData::SafeDownCast(vtkObject);
+		vtkSmartPointer<vtkRenderer> renderer = userData->defaultRenderer;
+		vtkActorCollection* actors = renderer->GetActors();
+		actors->InitTraversal();
+		while (vtkActor* actor = actors->GetNextActor()) {
+			renderer->RemoveActor(actor);
+		}
+		});
 }
 
 QQuickVTKItem::vtkUserData RegistrationSourceStage::initializeVTK(vtkRenderWindow* renderWindow) {
@@ -132,8 +152,25 @@ QQuickVTKItem::vtkUserData RegistrationSourceStage::initializeVTK(vtkRenderWindo
 	return userData;
 }
 
-void RegistrationSourceStage::destroyingVTK(vtkRenderWindow* renderWindow, vtkUserData userData)
+void RegistrationSourceStage::updateVisibleStates()
 {
+	dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
+		RegistrationSourceStageData* userData = RegistrationSourceStageData::SafeDownCast(vtkObject);
+		vtkSmartPointer<vtkRenderer> defaultRenderer = userData->defaultRenderer;
+		vtkActorCollection* actors = defaultRenderer->GetActors();
+		actors->InitTraversal();
+
+		userData->renderWindow->SetAbortRender(1);
+
+		for (int i = 0; i < actors->GetNumberOfItems(); ++i) {
+			vtkActor* actor = actors->GetNextActor();
+			if (i < m_visibleStates.count()) {
+				actor->SetVisibility(m_visibleStates.at(i).toBool());
+			}
+		}
+
+		userData->renderWindow->SetAbortRender(0);
+		});
 }
 
 QVariantList RegistrationSourceStage::visibleStates() const { return m_visibleStates; }
@@ -141,25 +178,20 @@ QVariantList RegistrationSourceStage::visibleStates() const { return m_visibleSt
 void RegistrationSourceStage::setVisibleStates(const QVariantList& states) {
 	if (m_visibleStates != states) {
 		m_visibleStates = states;
-		dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
-			RegistrationSourceStageData* userData = RegistrationSourceStageData::SafeDownCast(vtkObject);
-			vtkSmartPointer<vtkRenderer> defaultRenderer = userData->defaultRenderer;
-			vtkActorCollection* actors = defaultRenderer->GetActors();
-			actors->InitTraversal();
-
-			userData->renderWindow->SetAbortRender(1);
-
-			for (int i = 0; i < actors->GetNumberOfItems(); ++i) {
-				vtkActor* actor = actors->GetNextActor();
-				if (i < m_visibleStates.count()) {
-					actor->SetVisibility(m_visibleStates.at(i).toBool());
-				}
-			}
-
-			userData->renderWindow->SetAbortRender(0);
-			userData->renderWindow->Render(); // 必须触发重渲染[8](@ref)
-			userData->renderWindow->Render();
-			});
+		updateVisibleStates();
 		emit visibleStatesChanged();
+	}
+}
+
+CtDataStorage* RegistrationSourceStage::ctDataStorage() const
+{
+	return m_ctDataStorage;
+}
+
+void RegistrationSourceStage::setCtDataStorage(CtDataStorage* ctDataStorage)
+{
+	if (m_ctDataStorage != ctDataStorage)
+	{
+		m_ctDataStorage = ctDataStorage;
 	}
 }

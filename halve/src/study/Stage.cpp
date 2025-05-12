@@ -208,6 +208,7 @@ void Stage::setPeep(bool newPeep)
         }
     });
 }
+
 void Stage::onLeftButtonPress(int x, int y) {
 
     emit clicked(x, y);

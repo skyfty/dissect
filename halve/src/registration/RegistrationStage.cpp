@@ -14,26 +14,6 @@ RegistrationStage::RegistrationStage(QQuickItem* parent)
 	: QQuickVTKItem(parent) {
 }
 
-void RegistrationStage::setProfile(Profile* profile)
-{
-	if (m_profile == profile) {
-		return;
-	}
-	m_profile = profile;
-}
-
-bool RegistrationStage::enablePick() const
-{
-	return m_enablePick;
-}
-
-void RegistrationStage::setEnablePick(bool enablePick)
-{
-	if (m_enablePick != enablePick) {
-		m_enablePick = enablePick;
-	}
-}
-
 void RegistrationStage::setRegistrationProcessor(RegistrationProcessor* registrationProcessor)
 {
 	if (m_processor == registrationProcessor)
@@ -51,9 +31,9 @@ void RegistrationStage::clearSelectedPoints()
 		userData->pickedPoints->Modified();
 		userData->outlinePoints->Initialize();
 		userData->outlinePoints->Modified();
-		userData->renderWindow->Render();
+		emit m_processor->enableRegistrationChanged();
+		m_processor->clearUndoStack();
 		});
-	m_processor->clearUndoStack();
 }
 
 void RegistrationStage::updateOutlineStatus()
@@ -97,7 +77,7 @@ void RegistrationStage::initializeInteractorStyle(vtkSmartPointer<RegistrationSt
 	userData->interactor = vtkSmartPointer<QVTKInteractor>::New();
 	userData->interactor->SetRenderWindow(userData->renderWindow);
 	userData->mouseInteractorStyle = vtkNew<RegistrationInteractorStyle>();
-	userData->mouseInteractorStyle->setRegistrationStage(this);
+	userData->mouseInteractorStyle->setRegistrationProcessor(m_processor);
 	userData->mouseInteractorStyle->SetAutoAdjustCameraClippingRange(true);
 	userData->mouseInteractorStyle->SetDefaultRenderer(userData->defaultRenderer);
 	userData->mouseInteractorStyle->AddObserver(RegistrationInteractorStyle::RegistrationPointPickedEvent, this, &RegistrationStage::onPointPicked);
@@ -153,6 +133,7 @@ void RegistrationStage::initializeInteractorStyle(vtkSmartPointer<RegistrationSt
 	light->SetPosition(1, 1, 1);
 	light->SetIntensity(0.8);
 	userData->pickedRenderer->AddLight(light);
+	m_processor->reset();
 }
 
 void RegistrationStage::onPointPicked(vtkObject*, unsigned long, void* callbackData) {
@@ -169,11 +150,15 @@ void RegistrationStage::onPointPicked(vtkObject*, unsigned long, void* callbackD
 		polyData->GetPoint(pickData.pointId, pos);
 
 		auto colorCount = userData->pickedColorTable->GetNumberOfTableValues();
-		userData->pickedColorIndices->InsertNextValue(userData->pickedPoints->GetNumberOfPoints() % colorCount);
+		vtkIdType pickedPointsCount = userData->pickedPoints->GetNumberOfPoints();
+		//pickedColorIndices的数量始终和当前选择的点的数量保持一致。因为撤销或者清空点的功能，会改变当前选择的点的数量
+		//目前pickedColorIndices不方便传到RegistrationProcessor中,撤销或清空点之后，不必立刻改pickedColorIndices的数量,等下次选点再改亦可
+		userData->pickedColorIndices->SetNumberOfTuples(pickedPointsCount);
+		userData->pickedColorIndices->InsertNextValue(pickedPointsCount % colorCount);
 		userData->pickedColorIndices->Modified();
 		userData->pickedPoints->InsertNextPoint(pos);
 		userData->pickedPoints->Modified();
-		
 		emit pickFinished();
+		emit m_processor->enableRegistrationChanged();
 		});
 }

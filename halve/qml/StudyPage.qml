@@ -114,16 +114,16 @@ Study {
         mappingSetting:root.profile.mappingSetting
     }
 
-    CtDataStorage{
-        id:ctDataStorage
-    }    
-    FolderDialog {
-        id: cacheCtDataFolderDialog
-        onAccepted: {
-            var fileUrl = new String(cacheCtDataFolderDialog.currentFolder);
-            ctDataStorage.convertCtDataToNifti(fileUrl.substring(8));
-        }
-    }
+    //CtDataStorage{
+    //    id:ctDataStorage
+    //}    
+    //FolderDialog {
+    //    id: cacheCtDataFolderDialog
+    //    onAccepted: {
+    //        var fileUrl = new String(cacheCtDataFolderDialog.currentFolder);
+    //        ctDataStorage.convertCtDataToNifti(fileUrl.substring(8));
+    //    }
+    //}
 
     Hotkey {
         profile:root.profile
@@ -488,9 +488,8 @@ Study {
                             ToolTip.visible: hovered
                             ToolTip.text: qsTr("Album")
                         }
-                        
+                        /*
                         ToolButton {
-                            
                             icon {
                                 source: "qrc:/assets/images/cache_ct_data.png"
                                 height: 30
@@ -504,7 +503,7 @@ Study {
                             ToolTip.visible: hovered
                             ToolTip.text: qsTr("Cache CT Data")
                         } 
-
+                        */
                         ToolButton {
                             icon {
                                 source: "qrc:/assets/images/registration.png"

@@ -2,25 +2,27 @@
 
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkCommand.h>
-#include <QSharedPointer>
+#include "study/MouseInteractorStyle.h"
+#include <vtkSetGet.h>
+#include <vtkActor.h>
 
-class Profile;
-class RegistrationStage;
+class RegistrationProcessor;
 struct RegistrationPickedData {
 	vtkIdType pointId;
 	vtkActor* pickedActor{ nullptr };
 };
-class RegistrationInteractorStyle : public vtkInteractorStyleTrackballCamera
+/// @brief 待优化 直接使用MouseInteractorStyle
+class RegistrationInteractorStyle : public MouseInteractorStyle
 {
 public:
 	static RegistrationInteractorStyle* New();
-	vtkTypeMacro(RegistrationInteractorStyle, vtkInteractorStyleTrackballCamera);
+	vtkTypeMacro(RegistrationInteractorStyle, MouseInteractorStyle);
 	static const unsigned int RegistrationPointPickedEvent = vtkCommand::UserEvent + 1;
 
 	void OnLeftButtonDown() override;
 public:
-	void setRegistrationStage(RegistrationStage* stage);
+	void setRegistrationProcessor(RegistrationProcessor* processor);
 private:
 	RegistrationPickedData m_pickedData;
-	RegistrationStage* m_registrationStage;
+	RegistrationProcessor* m_processor{ nullptr };
 };

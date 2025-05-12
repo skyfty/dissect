@@ -1,6 +1,6 @@
 #include "onnxinference.h"
-
-
+#include "registration/ProgressReporter.h"
+#include <QString>
 
 ONNXInference::ONNXInference(QObject *parent) : QObject(parent)
 {
@@ -118,13 +118,11 @@ void ONNXInference::runInference(const QString& outputPath){
     if(!session)
         return;
 
-    auto inputShape = std::array<int64_t, 5> {1,
+    std::vector<int64_t> inputShapeVec{ 1,
                                              static_cast<int64_t>(m_numInputChannels),
                                              static_cast<int64_t>(m_patchSize[0]),
                                              static_cast<int64_t>(m_patchSize[1]),
                                              static_cast<int64_t>(m_patchSize[2]) };
-
-    std::vector<int64_t> inputShapeVec(inputShape.begin(), inputShape.end());
 
     //  定义推理回调函数
     auto inferenceFunc = [&](const std::vector<float>& patchData) -> std::vector<float> {
@@ -153,17 +151,37 @@ void ONNXInference::runInference(const QString& outputPath){
         std::vector<float> outputVector(outputData, outputData + outputSize);
         return outputVector;
     };
+    
+    try
+    {
+        auto segmentationMask = processLargeImage(m_inputImage, inferenceFunc);
 
-    auto segmentationMask = processLargeImage(m_inputImage, inferenceFunc);
-
-    // 9. 保存分割结果
-    using WriterType = itk::ImageFileWriter<MaskType>;
-    auto writer = WriterType::New();
-    writer->SetFileName(outputPath.toStdString().c_str());
-    writer->SetInput(segmentationMask);
-    writer->Update();
-
-    qDebug() << "Segmentation completed successfully!";
+        // 9. 保存分割结果
+        if (m_progressReporter)
+        {
+            m_progressReporter->setStepWeight(0.1);
+            m_progressReporter->setProgressText("writing results...");
+        }
+        using WriterType = itk::ImageFileWriter<MaskType>;
+        auto writer = WriterType::New();
+        writer->SetFileName(outputPath.toStdString().c_str());
+        writer->SetInput(segmentationMask);
+        writer->Update();
+        if (m_progressReporter)
+        {
+            m_progressReporter->setProgressText("loading finished");
+            m_progressReporter->complete();
+        }
+    }
+    catch (const std::exception& e)
+    {
+        if (m_progressReporter)
+        {
+            m_progressReporter->setProgressText(QString("error occurred:%1").arg(e.what()));
+            m_progressReporter->complete();
+        }
+    }
+    
     return;
 }
 
@@ -184,22 +202,23 @@ MaskPointer ONNXInference::processLargeImage (const ImagePointer& inputImage,
     // 4. 为每个补丁运行推理
     std::vector<std::vector<float>> patchResults;
     int patchCount = patches.size();
-    int pacth_index = 0;
-    std::cout << "patches count:" << patchCount << std::endl;
+    int patchIndex = 0;
+    m_progressReporter->setStepWeight(0.35);
     for (const auto& patch : patches) {
         std::vector<float> result = inferenceFunc(patch);
         patchResults.push_back(result);
-        std::cout << "patch index:" << pacth_index << std::endl;
-        pacth_index++;
-
+        patchIndex++;
+        if (m_progressReporter)
+        {
+            m_progressReporter->setProgressText("running inference function...");
+            m_progressReporter->setStepProgressValue(patchIndex / (float)patchCount);
+        }
     }
+    m_progressReporter->completeStep();
 
     // 5. 合并结果创建概率图
     const ImageType::RegionType& region = normalizedImage->GetLargestPossibleRegion();
     const ImageType::SizeType& imageSize = region.GetSize();
-
-    std::cout << "PossibleRegion image size: " << imageSize[0] << "," << imageSize[1] << "," << imageSize[2] << std::endl;
-
     // 为每个类别创建一个概率图
     std::vector<ImagePointer> probabilityMaps(m_numClasses);
     std::vector<ImagePointer> weightMaps(m_numClasses);
@@ -233,9 +252,6 @@ MaskPointer ONNXInference::processLargeImage (const ImagePointer& inputImage,
     // 计算滑动窗口数量
     std::array<size_t, 3> numSteps;
     for (size_t i = 0; i < 3; i++) {
-        //// Original
-        //    numSteps[i] = 1 + (imageSize[i] - patchSize[i]) / steps[i];
-        // Fixed (add ceiling division)
         numSteps[i] = 1 + (imageSize[i] - m_patchSize[i] + steps[i] - 1) / steps[i];
         if (imageSize[i] <= m_patchSize[i]) numSteps[i] = 1;
     }
@@ -247,11 +263,17 @@ MaskPointer ONNXInference::processLargeImage (const ImagePointer& inputImage,
     auto zStarts = getAdjustedStarts(imageSize[2], m_patchSize[2], steps[2]);
 
     size_t patchIdx = 0;
+    m_progressReporter->setStepWeight(0.35);
     for (auto z : zStarts) {
         for (auto y : yStarts) {
             for (auto x : xStarts) {
                 if (patchIdx >= patchResults.size()) continue;
 
+                if (m_progressReporter)
+                {
+                    m_progressReporter->setProgressText("merging patches...");
+                    m_progressReporter->setStepProgressValue(patchIdx / (float)patchCount);
+                }
                 ImageType::IndexType startIndex = { static_cast<long>(x),
                                                    static_cast<long>(y),
                                                    static_cast<long>(z) };
@@ -261,14 +283,7 @@ MaskPointer ONNXInference::processLargeImage (const ImagePointer& inputImage,
 
                 for (int classIdx = 0; classIdx < m_numClasses; classIdx++) {
                     size_t pixelOffset = classIdx * (m_patchSize[0] * m_patchSize[1] * m_patchSize[2]);
-
-                    //for (size_t pz = 0; pz < patchSize[2]; pz++) {
-                    //    for (size_t py = 0; py < patchSize[1]; py++) {
-                    //        for (size_t px = 0; px < patchSize[0]; px++) {
-                    //            size_t linearIdx = px + py * patchSize[0] + pz * patchSize[0] * patchSize[1];
-                    //ImageType::IndexType pixelIndex = { static_cast<long>(x + px),
-                    //                static_cast<long>(y + py),
-                    //                static_cast<long>(z + pz) };
+                    
                     for (size_t pz = 0; pz < m_patchSize[2]; pz++) {
                         size_t zz = z + pz;
                         if (zz >= imageSize[2]) continue;
@@ -298,6 +313,7 @@ MaskPointer ONNXInference::processLargeImage (const ImagePointer& inputImage,
             }
         }
     }
+    m_progressReporter->completeStep();
     // Create the finalMask properties
     auto finalMask = MaskType::New();
     finalMask->SetRegions(region);
@@ -368,6 +384,14 @@ ImagePointer ONNXInference::resampleToTargetSpacing(const ImagePointer& inputIma
     for (size_t i = 0; i < 3; i++) {
         outputSize[i] = static_cast<size_t>(
             std::ceil(inputSize[i] * inputSpacing[i] / outputSpacing[i]));
+    }
+    auto minSize = *std::min_element(outputSize.begin(), outputSize.end());
+    if (minSize <m_patchSize[0])
+    {
+        for (size_t i = 0; i < 3; i++) {
+            outputSize[i] *= (128.0 / minSize);
+            outputSpacing[i] = (inputSize[i] * inputSpacing[i] / outputSize[i]);
+        }
     }
 
     resampleFilter->SetOutputSpacing(outputSpacing);
@@ -607,18 +631,11 @@ std::vector<std::vector<float>> ONNXInference::createSlidingWindowPatches(const 
     const ImageType::RegionType& region = inputImage->GetLargestPossibleRegion();
     const ImageType::SizeType& imageSize = region.GetSize();
 
-    //float overlapFactor = 0.0f;
     std::array<size_t, 3> steps;
     for (size_t i = 0; i < 3; i++) {
         steps[i] = static_cast<size_t>(m_patchSize[i] * (1 - m_overlapFactor));
         if (steps[i] == 0) steps[i] = 1;
     }
-
-    //// --------------------新的遍历-----------------------
-    //auto xStarts = getPatchStartPositions(imageSize[0], patchSize[0], steps[0]);
-    //auto yStarts = getPatchStartPositions(imageSize[1], patchSize[1], steps[1]);
-    //auto zStarts = getPatchStartPositions(imageSize[2], patchSize[2], steps[2]);
-    // 更新后的起始位置计算
 
     auto xStarts = getAdjustedStarts(imageSize[0], m_patchSize[0], steps[0]);
     auto yStarts = getAdjustedStarts(imageSize[1], m_patchSize[1], steps[1]);
@@ -736,4 +753,9 @@ void ONNXInference::onnxModelInference(const QString& filePath,const QString& ou
 
     /// 运行onnx模型推理
     this->runInference(outputPath);
+}
+
+void ONNXInference::setProgressReporter(ProgressReporter* reporter)
+{
+    m_progressReporter = reporter;
 }

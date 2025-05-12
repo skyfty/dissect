@@ -40,12 +40,10 @@ using MaskPointer = MaskType::Pointer;
 */
 
 
-
+class ProgressReporter;
 class ONNXInference : public QObject
 {
-
     Q_OBJECT
-
 public:
     explicit ONNXInference(QObject * parent = nullptr);
 
@@ -55,7 +53,7 @@ public:
     Q_INVOKABLE void runInference(const QString& outputPath);
 
     Q_INVOKABLE void onnxModelInference(const QString& filePath,const QString& outputPath);
-
+    void setProgressReporter(ProgressReporter* reporter);
 private:
     MaskPointer processLargeImage (const ImagePointer& inputImage,
                                    std::function<std::vector<float>(const std::vector<float>&)> inferenceFunc);
@@ -99,7 +97,7 @@ private:
     Ort::Session session{nullptr};
 
     size_t m_numOutputNodes;
-
+    ProgressReporter* m_progressReporter{ nullptr };
 };
 
 #endif // ONNXINFERENCE_H

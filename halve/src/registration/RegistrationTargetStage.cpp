@@ -1,30 +1,17 @@
 #include <QVTKRenderWindowAdapter.h>
 #include <QTimer>
 #include <vtkActor.h>
-#include <vtkFollower.h>
-#include <vtkObjectFactory.h>
 #include <vtkPolyDataMapper.h>
-#include <vtkCubeSource.h>
-#include <vtkRenderer.h>
-#include <vtkRenderWindow.h>
 #include <vtkProperty.h>
-#include <vtkRendererCollection.h>
 #include <utility/Thread.h>
 #include <QVTKInteractor.h>
 #include <vtkCamera.h>
-#include <vtkLookupTable.h>
-#include <vtkDataSetMapper.h>
-#include <vtkPointPicker.h>
-#include <vtkVertexGlyphFilter.h>
-#include <vtkInteractorStyleTrackballCamera.h>
-#include <vtkPointData.h>
-#include "HalveType.h"
 #include "RegistrationTargetStage.h"
 #include "profile/Profile.h"
 #include "reseau/Reseau.h"
-#include <vtkSTLReader.h>
 #include "RegistrationInteractorStyle.h"
-#include "profile/Profile.h"
+#include <vtkPolyData.h>
+#include <vtkRenderWindow.h>
 
 extern Qt::HANDLE VtkRenderThreadHandle;
 
@@ -39,7 +26,20 @@ namespace
 	vtkStandardNewMacro(RegistrationTargetStageData);
 }
 
-void RegistrationTargetStage::resetRender()
+void RegistrationTargetStage::setProfile(Profile* profile)
+{
+	if (m_profile == profile) {
+		return;
+	}
+	m_profile = profile;
+}
+
+Profile* RegistrationTargetStage::profile() const
+{
+	return m_profile;
+}
+
+void RegistrationTargetStage::showCurrentReseau()
 {
 	Reseau* reseau = m_profile->getCurrentReseau();
 	vtkSmartPointer<vtkPolyData> polyData = reseau->polyData();
@@ -63,11 +63,8 @@ QQuickVTKItem::vtkUserData RegistrationTargetStage::initializeVTK(vtkRenderWindo
 	initializeInteractorStyle(userData);
 
 	m_processor->m_targetPoints = userData->pickedPoints;
-	resetRender();
+	showCurrentReseau();
 
 	return userData;
 }
 
-void RegistrationTargetStage::destroyingVTK(vtkRenderWindow* renderWindow, vtkUserData userData)
-{
-}

@@ -515,6 +515,10 @@
         <translation>相册</translation>
     </message>
 	<message>
+        <source>Cache CT Data</source>
+        <translation>缓存CT数据</translation>
+    </message>
+	<message>
         <source>Registration</source>
         <translation>配准</translation>
     </message>
@@ -2311,12 +2315,110 @@
         <translation>开始配准</translation>
     </message>
 	<message>
-        <source>Open File</source>
-        <translation>选择基准文件</translation>
+        <source>Open CT Data</source>
+        <translation>选择CT数据</translation>
     </message>
 	<message>
         <source>Select Points</source>
         <translation>开始选点</translation>
     </message>
+	<message>
+        <source>Clear Selected Points</source>
+        <translation>清空选中点</translation>
+    </message>
+	<message>
+        <source>heart_atrium_left</source>
+        <translation>左心房</translation>
+    </message>
+	<message>
+        <source>atrial_appendage_left</source>
+        <translation>左心耳</translation>
+    </message>
+	<message>
+        <source>heart_ventricle_left</source>
+        <translation>左心室</translation>
+    </message>
+	<message>
+        <source>pulmonary_vein</source>
+        <translation>肺静脉</translation>
+    </message>
+	<message>
+        <source>heart_atrium_right</source>
+        <translation>右心房</translation>
+    </message>
+	<message>
+        <source>heart_ventricle_right</source>
+        <translation>右心室</translation>
+    </message>
+	<message>
+        <source>heart_myocardium</source>
+        <translation>心肌</translation>
+    </message>
+	<message>
+        <source>pulmonary_artery</source>
+        <translation>肺动脉</translation>
+    </message>
+	<message>
+        <source>aorta</source>
+        <translation>主动脉</translation>
+    </message>
+	<message>
+        <source>inferior_vena_cava</source>
+        <translation>下腔静脉</translation>
+    </message>
+	<message>
+        <source>superior_vena_cava</source>
+        <translation>上腔静脉</translation>
+    </message>
+	<message>
+        <source>Segments</source>
+        <translation>解剖标签</translation>
+    </message>
+	<message>
+        <source>Open CT Folder</source>
+        <translation>打开CT路径</translation>
+    </message>
+	<message>
+        <source>Undo</source>
+        <translation>撤销选点</translation>
+    </message>
+	<message>
+        <source>Loading CT data (Please wait...)</source>
+        <translation>正在加载CT数据(请稍后...)</translation>
+    </message>
+	<message>
+        <source>reading dicom data...</source>
+        <translation>正在读取CT数据...</translation>
+    </message>
+	<message>
+        <source>writing results...</source>
+        <translation>正在保存分割结果...</translation>
+    </message>
+	<message>
+        <source>loading finished</source>
+        <translation>加载完成</translation>
+    </message>
+	<message>
+        <source>failed to read CT data</source>
+        <translation>读取CT数据失败</translation>
+    </message>
+	<message>
+        <source>writing dicom nifti...</source>
+        <translation>正在生成nifti数据...</translation>
+    </message>
+	<message>
+		<source>running inference function...</source>
+		<translation>推理函数执行中...</translation>
+	</message>
+	<message>
+		<source>error occurred:%1</source>
+		<translation>错误:%1</translation>
+	</message>
+	<message>
+		<source>merging patches...</source>
+		<translation>正在合并分块...</translation>
+	</message>
+	
 </context>
+
 </TS>

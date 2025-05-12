@@ -11,32 +11,46 @@ Item {
     id:root
     required property var profile
     required property var obscurity
-
+    property bool isRegistrationRuning: false
+    property bool isLoadingCtData: false
     FolderDialog {
         id: folderDialog
         onAccepted: {
             var fileUrl = new String(folderDialog.currentFolder);
+            isLoadingCtData = true;
             registrationSourceStage.loadCtData(fileUrl.substring(8))
+            isLoadingCtData = false;
         }
     }
     
     RegistrationProcessor {
-        id:regProc
+        id:registrationProcessorInstance
     }
 
-    readonly property var segmentNames: [
-        qsTr("heart_atrium_left"),          // 左心房
-        qsTr("atrial_appendage_left"),      // 左心耳
-        qsTr("heart_ventricle_left"),       // 左心室
-        qsTr("pulmonary_vein"),             // 肺静脉
-        qsTr("heart_atrium_right"),         // 右心房
-        qsTr("heart_ventricle_right"),      // 右心室
-        qsTr("heart_myocardium"),
-        qsTr("pulmonary_artery"),          // 肺动脉
-        qsTr("aorta"),                      // 主动脉
-        qsTr("inferior_vena_cava"),         // 下腔静脉
-        qsTr("superior_vena_cava")          // 上腔静脉
-    ]
+    ProgressReporter{
+        id:progressReporterInstance
+    }
+
+    CtDataStorage {
+        id:ctDataStorageInstance
+        progressReporter:progressReporterInstance
+    }
+
+    function getDynamicSegmentNames() {
+        return [
+            "heart_atrium_left",          // 左心房
+            "atrial_appendage_left",      // 左心耳
+            "heart_ventricle_left",       // 左心室
+            "pulmonary_vein",             // 肺静脉
+            "heart_atrium_right",         // 右心房
+            "heart_ventricle_right",      // 右心室
+            "heart_myocardium",           //心肌
+            "pulmonary_artery",           //肺动脉
+            "aorta",                      // 主动脉
+            "inferior_vena_cava",         // 下腔静脉
+            "superior_vena_cava"          // 上腔静脉
+        ]
+    }
     
     StackView {
         id: stackView
@@ -59,23 +73,23 @@ Item {
                         onClicked:  {
                             folderDialog.open();
                         }
+                        enabled:!isLoadingCtData
                         hoverEnabled: true
                         ToolTip.visible: hovered
-                        ToolTip.text: qsTr("Open CT Folder")
+                        ToolTip.text: isLoadingCtData ? qsTr("Loading CT data (Please wait...)"):qsTr("Open CT Folder")
                     }
 
                     ToolButton {
                         id: pointSelectBtn
                         checkable: true  
-                        checked: registrationSourceStage.enablePick 
+                        checked: registrationProcessorInstance.enablePick 
                         icon {
                             source: "qrc:/assets/images/select_points.png"
                             height: 25
                             width:25
                         }
                         onClicked:  {
-                            registrationSourceStage.enablePick = !registrationSourceStage.enablePick;
-                            registrationTargetStage.enablePick = !registrationTargetStage.enablePick;
+                            registrationProcessorInstance.enablePick = !registrationProcessorInstance.enablePick;
                         }
                         hoverEnabled: true
                         ToolTip.visible: hovered
@@ -107,10 +121,11 @@ Item {
                             width:25
                         }
                         onClicked:  {
-                            regProc.undo();
+                            registrationProcessorInstance.undo();
                             registrationSourceStage.updateOutlineStatus();
                             registrationTargetStage.updateOutlineStatus();
                         }
+                        enabled:registrationProcessorInstance.enableUndo
                         hoverEnabled: true
                         ToolTip.visible: hovered
                         ToolTip.text: qsTr("Undo")
@@ -128,8 +143,8 @@ Item {
                 
                 RegistrationSourceStage {
                     id: registrationSourceStage
-                    profile:root.profile
-                    registrationProcessor:regProc
+                    registrationProcessor:registrationProcessorInstance
+                    ctDataStorage:ctDataStorageInstance
                     SplitView.preferredWidth: parent.width*0.5
                     SplitView.minimumWidth: 100
                     Rectangle {
@@ -144,7 +159,7 @@ Item {
                         // 展开状态控制
                         property bool isExpanded: true
                         property int collapsedHeight: 35
-                        property int expandedHeight: 265
+                        property int expandedHeight: 275
                         height: isExpanded ? expandedHeight : collapsedHeight
 
                         Behavior on height {
@@ -162,7 +177,7 @@ Item {
                                     anchors.fill: parent
                                     onClicked: segmentsPanel.isExpanded = !segmentsPanel.isExpanded
                                 }
-                                text: segmentsPanel.isExpanded ? "Segments ▼" : "Segments ▶"
+                                text: segmentsPanel.isExpanded ? qsTr("Segments") + " ▼" : qsTr("Segments") + " ▶"
                                 font.bold: true
                                 font.pixelSize: 18
                                 horizontalAlignment: Text.AlignHCenter
@@ -176,20 +191,22 @@ Item {
 
                                 ListView {
                                     anchors.fill: parent
+                                    interactive: false 
                                     model: ListModel {
                                         id: segmentModel
                                         Component.onCompleted: {
-                                            for (let i = 0; i < root.segmentNames.length; i++) {
+                                            let names = getDynamicSegmentNames()
+                                            for (let i = 0; i < names.length; i++) {
                                                 append({
                                                     "isChecked": registrationSourceStage.visibleStates[i],
-                                                    "segmentName": root.segmentNames[i]
+                                                    "segmentName": names[i] 
                                                 })
                                             }
                                         }
                                     }
                                     delegate: CheckBox {
                                         width: ListView.view.width
-                                        text: model.segmentName
+                                        text: qsTr(model.segmentName)
                                         font { pixelSize: 17; bold: true }
                                         checked: model.isChecked
                                         onCheckedChanged: registrationSourceStage.visibleStates[index] = checked
@@ -205,19 +222,19 @@ Item {
                     onPickFinished : {
                         registrationSourceStage.updateOutlineStatus();
                         registrationTargetStage.updateOutlineStatus();
-                        regProc.undoType = 1; 
+                        registrationProcessorInstance.undoType = 1; 
                     }
                 }
                 RegistrationTargetStage {
                     id: registrationTargetStage
                     profile:root.profile
-                    registrationProcessor:regProc
+                    registrationProcessor:registrationProcessorInstance
                     SplitView.fillWidth: true 
                     SplitView.minimumWidth: 100
                     onPickFinished : { 
                         registrationSourceStage.updateOutlineStatus();
                         registrationTargetStage.updateOutlineStatus();
-                        regProc.undoType = -1; 
+                        registrationProcessorInstance.undoType = -1;
                     }
                 }
             }
@@ -231,7 +248,7 @@ Item {
                         id: registrationProgress
                         Layout.fillWidth: true
                         Layout.preferredHeight: 20
-                        value: 0.5
+                        value: progressReporterInstance.progressValue
                         background: Rectangle {
                             implicitHeight: 8
                             radius: 4
@@ -247,12 +264,28 @@ Item {
                                     GradientStop { position: 1.0; color: "#81C784" }
                                 }
                             }
+                            Text {
+                                anchors.centerIn: parent
+                                text: qsTr(progressReporterInstance.progressText)
+                                color: "#333333" 
+                                font.pixelSize: 12
+                                font.bold: true
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
                         }
                     }
                     Button {
                         text: qsTr("Start Registration")
                         flat: false
-                        onClicked: { regProc.startRegistration(profile,obscurity,registrationSourceStage.visibleStates); }
+                        enabled:registrationProcessorInstance.enableRegistration&&(!isRegistrationRuning)
+                        onClicked: { 
+                            isRegistrationRuning = true;
+                            Qt.callLater(function() { //refresh UI
+                                registrationProcessorInstance.startRegistration(profile,obscurity,registrationSourceStage.visibleStates);
+                                isRegistrationRuning=false;
+                            });
+                        }
                         ToolTip.visible: hovered
                         ToolTip.text: qsTr("Start Registration")
                         font {

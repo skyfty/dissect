@@ -1,21 +1,19 @@
 #include "RegistrationInteractorStyle.h"
-#include "profile/Profile.h"
-#include <vtkPointPicker.h>
 #include <vtkCellPicker.h>
 #include <vtkRenderWindowInteractor.h>
-#include <vtkActor.h>
-#include "RegistrationStage.h"
+#include <vtkObjectFactory.h>
+#include "RegistrationProcessor.h"
 
 vtkStandardNewMacro(RegistrationInteractorStyle);
 
 void RegistrationInteractorStyle::OnLeftButtonDown() {
 	Superclass::OnLeftButtonDown();
 
-	if (m_registrationStage == nullptr)
+	if (m_processor == nullptr)
 	{
 		return;
 	}
-	bool enablePick = m_registrationStage->enablePick();
+	bool enablePick = m_processor->enablePick();
 	if (enablePick)
 	{
 		int* clickPos = GetInteractor()->GetEventPosition();
@@ -33,11 +31,7 @@ void RegistrationInteractorStyle::OnLeftButtonDown() {
 	}
 }
 
-void RegistrationInteractorStyle::setRegistrationStage(RegistrationStage* stage)
+void RegistrationInteractorStyle::setRegistrationProcessor(RegistrationProcessor* processor)
 {
-	if (m_registrationStage == stage)
-	{
-		return;
-	}
-	m_registrationStage = stage;
+	m_processor = processor;
 }

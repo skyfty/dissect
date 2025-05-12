@@ -23,39 +23,37 @@ QList<TrackData> Combined::convertTrackData(const ChannelTrackData &dataInput) {
         return trackDataList;
     const auto& d1 = m_inputBuffer.front();
     const auto& d2 = m_inputBuffer.back();
-
     // 重新拼接数据
     ChannelTrackData dataBuffer;
     dataBuffer.m_id = d2.m_id;
     dataBuffer.m_time = d2.m_time;
     std::memcpy(dataBuffer.m, d2.m, sizeof(d2.m));
     std::memcpy(dataBuffer.n, d1.n, sizeof(d1.n));
-
-    switch(m_channel->mode()) {
-    case Halve::CHANNELMODE_ELECTRICAL: {
-        int breathGateSync = electricCSMapping(dataBuffer);
-        trackDataList = convertElectricalTrackData(dataBuffer, breathGateSync);
-        break;
-    }
-    case Halve::CHANNELMODE_MAGNETIC: {
-        trackDataList = convertMagneticTrackData(dataBuffer);
-        break;
-    }
-    case Halve::CHANNELMODE_BLEND: {
-        {
-            static qint64 startTime = 0;
-            if (QDateTime::currentMSecsSinceEpoch() - startTime > 500) {
-                startTime = QDateTime::currentMSecsSinceEpoch();
-                blendUpdateBloodPoolImpedance(dataBuffer);
+    switch (m_channel->mode()) {
+        case Halve::CHANNELMODE_ELECTRICAL: {
+            int breathGateSync = electricCSMapping(dataBuffer);
+            trackDataList = convertElectricalTrackData(dataBuffer, breathGateSync);
+            break;
+        }
+        case Halve::CHANNELMODE_MAGNETIC: {
+            trackDataList = convertMagneticTrackData(dataBuffer);
+            break;
+        }
+        case Halve::CHANNELMODE_BLEND: {
+            {
+                static qint64 startTime = 0;
+                if (QDateTime::currentMSecsSinceEpoch() - startTime > 500) {
+                    startTime = QDateTime::currentMSecsSinceEpoch();
+                    blendUpdateBloodPoolImpedance(dataBuffer);
+                }
             }
+            if (m_training) {
+                trackDataList = convertBlendTraningTrackData(dataBuffer);
+            } else {
+                trackDataList = convertBlendTrackData(dataBuffer);
+            }
+            break;
         }
-        if (m_training) {
-            trackDataList = convertBlendTraningTrackData(dataBuffer);
-        } else {
-            trackDataList = convertBlendTrackData(dataBuffer);
-        }
-        break;
-    }
     }
     return trackDataList;
 }
@@ -69,7 +67,7 @@ QList<TrackData> Combined::convertMagneticTrackData(const ChannelTrackData &data
         } else {
             catheterList = m_catheterDb->getDatasAtPort(port);
         }
-        for(auto catheter : catheterList) {
+        for (auto catheter : catheterList) {
             const ChannelTrackN& nPoint = dataBuffer.n[port];
             TrackData trackData(catheter, port);
             trackData.setPosition(nPoint.reversal());
@@ -82,7 +80,7 @@ QList<TrackData> Combined::convertMagneticTrackData(const ChannelTrackData &data
 }
 int Combined::electricCSMapping(ChannelTrackData& dataBuffer) {
     int breathGateSync = 1;
-    QList<Catheter*> csCatheters = m_catheterDb->getCSDatas();
+    QList<Catheter *> csCatheters = m_catheterDb->getCSDatas();
     Catheter* reproduceCatheter = m_catheterDb->getData(m_reproduceOptions->catheterId());
     if (reproduceCatheter == nullptr || !reproduceCatheter->employ() || m_reproductCatheterStatus != Halve::TrackStatus_Valid || csCatheters.size() == 0) {
         return breathGateSync;
@@ -101,7 +99,7 @@ int Combined::electricCSMapping(ChannelTrackData& dataBuffer) {
             respiratoryMode = RESPIRATORY_MODE::GATING;
         }
     }
-    float position_zero_out[2]{};
+    float position_zero_out[2] {};
     std::vector<ChannelTrackM> tempdata = mdata;
     m_electricMappingAlgorithm->Electric_field_mapping_algorithm_all(
         m_profile->state() == Profile::Reproduce ? OPERATION_STATE::MODELING : OPERATION_STATE::MAPPING,
@@ -110,12 +108,11 @@ int Combined::electricCSMapping(ChannelTrackData& dataBuffer) {
         csCatheter->bseat(),
         csCatheter->getAmount(),
         respiratoryMode,
-        const_cast<float*>(mdata[0].pos.GetData()),
+        const_cast<float *>(mdata[0].pos.GetData()),
         &breathGateSync,
-        reinterpret_cast<float*>(tempdata[0].pos.GetData()),
+        reinterpret_cast<float *>(tempdata[0].pos.GetData()),
         &m_bloodPoolImpedance,
         position_zero_out);
-
     return breathGateSync;
 }
 
@@ -129,7 +126,7 @@ QList<TrackData> Combined::convertElectricalTrackData(const ChannelTrackData &da
         const ChannelTrackM &m = dataBuffer.m[seat];
         TrackData trackData(catheter, seat);
         trackData.setFlags(breathGateSync == 0 ? TrackData::ELECTRICAL_IMPEDANCE : 0);
-        trackData.setStatus(m.valid()?Halve::TrackStatus_Valid:Halve::TrackStatus_Invalid);
+        trackData.setStatus(m.valid() ? Halve::TrackStatus_Valid : Halve::TrackStatus_Invalid);
         vtkVector3<float> mpos = m.reversal();
         mpos[0] /= m_coefficient[0];
         mpos[1] /= m_coefficient[1];
@@ -155,7 +152,7 @@ QList<TrackData> Combined::convertBlendTraningTrackData(const ChannelTrackData& 
 
 QList<TrackData> Combined::convertBlendTrackData(const ChannelTrackData &dataBuffer) {
     QList<TrackData> trackDataList;
-    for(quint16 port : {MagnetismPant0Port,MagnetismPant1Port}) {
+    for (quint16 port : {MagnetismPant0Port, MagnetismPant1Port}) {
         const ChannelTrackN &n = dataBuffer.n[port];
         TrackData trackData(m_pantCatheter, port);
         trackData.setPosition(n.reversal());
@@ -163,13 +160,12 @@ QList<TrackData> Combined::convertBlendTrackData(const ChannelTrackData &dataBuf
         trackData.setStatus(n.status);
         trackDataList.push_back(trackData);
     }
-
-    for(auto &channelBlend : m_blendsMagnetism) {
+    for (auto &channelBlend : m_blendsMagnetism) {
         quint16 port = channelBlend.first->port();
         if (TrackData::convertStatus(dataBuffer.n[port].status) != Halve::TrackStatus_Valid) {
             continue;
         }
-        trackDataList.append(channelBlend.second->process(dataBuffer, &m_dnn));
+        trackDataList.append(channelBlend.second->process(dataBuffer));
     }
     if (m_blendsMagnetism.size() > 0 && m_blendsDint.size() > 0) {
         auto magnetism = m_blendsMagnetism.front();
@@ -177,12 +173,11 @@ QList<TrackData> Combined::convertBlendTrackData(const ChannelTrackData &dataBuf
         if (TrackData::convertStatus(dataBuffer.n[port].status) == Halve::TrackStatus_Valid) {
             if (magnetism.second->trained()) {
                 auto elecIdentify = magnetism.second->getElecIdentify();
-                auto updater = magnetism.second->getUpdater();
                 auto [consultSeat, targetSeat] = magnetism.second->getMagnetismSeat();
                 auto mag = magnetism.second->getMagnetism();
                 qint32 port = magnetism.first->port();
                 for (auto& channelBlend : m_blendsDint) {
-                    trackDataList.append(channelBlend.second->process(elecIdentify, updater, port, consultSeat,targetSeat, dataBuffer, &m_dnn));
+                    trackDataList.append(channelBlend.second->process(elecIdentify, port, consultSeat, targetSeat, dataBuffer));
                 }
             }
         }
@@ -190,17 +185,15 @@ QList<TrackData> Combined::convertBlendTrackData(const ChannelTrackData &dataBuf
     return trackDataList;
 }
 
-bool Combined::training() const
-{
+bool Combined::training() const {
     return m_training;
 }
 
-void Combined::setTraining(bool newTraining)
-{
+void Combined::setTraining(bool newTraining) {
     if (m_training == newTraining)
         return;
     m_training = newTraining;
-    for(auto &channelBlend : m_blendsMagnetism) {
+    for (auto &channelBlend : m_blendsMagnetism) {
         if (newTraining) {
             channelBlend.second->startTrain();
         } else {

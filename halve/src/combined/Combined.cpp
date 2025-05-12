@@ -748,7 +748,6 @@ vtkVector3d Combined::getCenterPolemicsShifting() const {
     return result;
 }
 
-
 void Combined::setInterval(int newInterval) {
     if (m_interval == newInterval)
         return;
