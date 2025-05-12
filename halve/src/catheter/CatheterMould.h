@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <vtkSmartPointer.h>
+#include <vtkLandmarkTransform.h>
 #include "HalveType.h"
 
 class vtkUnstructuredGrid;
@@ -23,6 +24,7 @@ public:
     void reload();
     Halve::CatheterElectrodeType getType(vtkIdType id) const;
     vtkDataArray* getTypeData() const;
+    vtkIdType getMode() const { return m_mode; }
 
     QList<vtkSmartPointer<vtkPolyData>> getNodePolyDatas() const;
 
@@ -51,6 +53,7 @@ private:
     QString m_meshName;
     QList<quint16> m_gap;
     double m_flexibility = 0.0;
+    vtkIdType m_mode = VTK_LANDMARK_AFFINE;
     vtkIdType m_originPointId = -1;
     QList<QPair<QString,vtkSmartPointer<vtkPolyData>>> m_meshPolyDatas;
     vtkSmartPointer<vtkUnstructuredGrid> m_grid;

@@ -50,6 +50,7 @@ const char* FlexibilityName = "flexibility";
 const char* ResolutionName = "resolution";
 const char* PointDirectionName = "Direction";
 const char* OriginPointIdName = "origin";
+const char* ModeName = "mode";
 
 CatheterMould::CatheterMould(quint16 amount,const QString &meshName, const QList<quint16> &gap, double flexibility, QObject *parent)
     : QObject{parent}
@@ -246,6 +247,7 @@ void CatheterMould::toJson(QJsonObject &meshJson) const {
 	}
     meshJson[NodeMeshName] = meshPolyDatasJson;
     meshJson[OriginPointIdName] = m_originPointId;
+    meshJson[ModeName] = m_mode;
 
     QJsonArray pointsJson;
     for(vtkIdType i = 0; i < m_grid->GetNumberOfPoints(); ++i) {
@@ -350,6 +352,9 @@ void CatheterMould::fromJson(const QJsonObject &meshJson) {
     }
     if (meshJson.contains(OriginPointIdName)) {
         m_originPointId = meshJson[OriginPointIdName].toInt();
+    }
+    if (meshJson.contains(ModeName)) {
+        m_mode = meshJson[ModeName].toInt();
     }
     vtkNew<vtkPoints> points;
     if (meshJson.contains(PointsPointDataName)) {

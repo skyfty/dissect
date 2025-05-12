@@ -69,14 +69,8 @@ void Stage::createDetectorTextFollower(Catheter *catheter, vtkSmartPointer<Detec
     vtkUnstructuredGrid* grid = catheterMould->grid();
 
     for(vtkIdType i = 0; i < grid->GetNumberOfPoints(); ++i) {
-        QString label =QString::number(i + 1);
         vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(i);
-        if (perception->mode() == CatheterPerception::EXPLICIT) {
-            vtkIdType splineValue = -1;
-            if (perception->getSpline(splineValue) && splineValue != -1) {
-                label.append(QString(":%1").arg(splineValue + 1));
-            }
-        }
+        QString label = perception->formatLabel(i + 1);
         vtkSmartPointer<vtkFollower> follower = createTextFollower(label);
         follower->SetVisibility(visibility);
         detectorPair->textFollower.append(follower);
