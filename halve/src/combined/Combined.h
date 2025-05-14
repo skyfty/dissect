@@ -4,7 +4,6 @@
 #include <vtkSmartPointer.h>
 #include <vtkVector.h>
 #include <vtkQuaternion.h>
-#include <DynamicNearestNeighbor.h>
 #include "TrackData.h"
 #include "vtkBoundingBox.h"
 #include "CatheterTrack.h"
@@ -197,5 +196,4 @@ private:
     Electric_field_mapping_algorithm * m_electricMappingAlgorithm = nullptr;
 
     QList<ChannelTrackData> m_inputBuffer;
-    ys::DynamicNearestNeighbor m_dnn;
 };

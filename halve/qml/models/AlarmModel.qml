@@ -48,6 +48,10 @@ ListModel {
         text: qsTr("Please note that the storage space has exceeded the predetermined value")
         value:Halve.AN_STORAGE_FULL_ERROR
     }
+    ListElement {
+        text: qsTr("Modeling training ok. Please stop training and start modeling.");
+        value:Halve.AN_MAGNETIC_ELECTRIC_TRAINNING_OK
+    }
 
     function getTextByValue(v) {
         for (var i = 0; i < listModel.count; i++) {

@@ -32,6 +32,7 @@ private:
         quint16 consultSeat,
         quint16 targetSeat,
         const ChannelTrackData& dataBuffer);
+    bool matrixPerfect(const Matrix3x4d& matrix);
 
 private:
     bool m_trained = true;
@@ -39,7 +40,7 @@ private:
     std::chrono::milliseconds m_trainInterval{std::chrono::seconds(5)};
     std::shared_ptr<ys::ElecIdentify> m_elecIdentify;
     QVector<ys::InputParameter> m_trainDatas;
-    CatheterMagnetism *m_magnetism;
+    CatheterMagnetism *m_magnetism;    
 };
 
 #endif // CHANNELBLENDMAGNETISM_H

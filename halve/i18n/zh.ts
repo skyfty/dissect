@@ -2292,6 +2292,10 @@
         <source>The catheter port is reused</source>
         <translation>导管端口被重复使用</translation>
     </message>
+    <message>
+        <source>Modeling training ok. Please stop training and start modeling.</source>
+        <translation>磁电建模训练完成，请停止训练，开始建模。</translation>
+    </message>
 </context>
 <context>
     <name>RespiratorModeModel</name>
