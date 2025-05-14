@@ -22,7 +22,7 @@ public:
     enum PerceptionMode{
         EXPLICIT = 0,
         RIGIDBODY = 1,
-        PREDICT =2
+        PREDICT = 2
     };
 public:
     vtkTypeMacro(CatheterPerception, vtkObject);

@@ -39,7 +39,7 @@ private:
 
 
 private:
-    quint16 m_samplingRate = 2048;
+    quint16 m_samplingRate = 2000;
     const ChannelData::List &m_samplingDatas;
 };
 
