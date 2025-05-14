@@ -85,13 +85,13 @@ QString CatheterPerception::formatLabel(vtkIdType id) const {
 	case CatheterPerception::EXPLICIT: {
 		vtkIdType splineValue = -1;
 		if (getSpline(splineValue) && splineValue != -1) {
-			label.append(QString(":%1").arg(splineValue + 1));
+			//label.append(QString(":%1").arg(splineValue + 1));
 		}
 		break;
 	}
 	case CatheterPerception::PREDICT: {
 		if (m_splines.size() == 3) {
-			label.append(QString(":%1:%2").arg(m_splines[1] + 1).arg(m_splines[2] + 1));
+			//label.append(QString(":%1:%2").arg(m_splines[1] + 1).arg(m_splines[2] + 1));
 		}
 		break;
     }

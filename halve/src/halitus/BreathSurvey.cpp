@@ -115,10 +115,31 @@ typedef std::vector<std::pair<size_t, double>> DataIndexVector;
 // 计算翻新数据
 bool BreathSurvey::computeRenovatingData() {
     // 检查数据点数量是否小于最小数据大小
-    if (m_pant1Positions->GetNumberOfPoints() < MiniumDataSize || m_positions->GetNumberOfPoints() < MiniumDataSize) {
+    vtkIdType pant1num = m_pant1Positions->GetNumberOfPoints();
+    vtkIdType posnum = m_positions->GetNumberOfPoints();
+    if (pant1num < MiniumDataSize || posnum < MiniumDataSize) {
         return false; // 数据不足，返回false
     }
+
     auto pant1PositionSamplings = convertSamplings(m_pant1Positions, 2);
+
+ /*   ys::BiDirectionFilterPipe<double> pipe;
+    pipe.AddLowPass(8, m_samplingRate, 0.6);
+    pant1PositionSamplings = pipe.ProcessNoState(pant1PositionSamplings.begin(), pant1PositionSamplings.end());*/
+
+    //{
+    //    QFile f("d:\\a1.csv");
+    //    f.open(QFile::ReadWrite | QFile::Truncate);
+    //    QTextStream ts(&f);
+    //    for (int i = 0; i < m_pant1Positions->GetNumberOfPoints(); ++i) {
+    //        double p[3];
+    //        m_pant1Positions->GetPoint(i, p);
+    //        double p2[3];
+    //        m_positions->GetPoint(i, p2);
+
+    //        ts <<  p2[2] << "," << p[2] << "," << pant1PositionSamplings[i] << "\r\n";
+    //    }
+    //}
 
     // 存储采样值的索引
     DataIndexVector pant1PositionSamplingsIndexData;
@@ -129,7 +150,7 @@ bool BreathSurvey::computeRenovatingData() {
     std::vector<size_t> peaks, valleys; // 存储峰值和谷值
     ys::Breath<double> breath(m_samplingRate); // 创建呼吸对象
     breath.FindPeakValley(pant1PositionSamplings.begin(), pant1PositionSamplings.end(), peaks, valleys); // 查找峰值和谷值
-    if (valleys.size() < 2) {
+    if (valleys.size() < 3) {
         return false; // 如果峰值或谷值数量不足，返回false
     }
 
@@ -166,7 +187,7 @@ bool BreathSurvey::computeRenovatingData() {
         auto validPeakValue = peakAvg - peakAvg * 5 / 100; // 计算有效峰值
         return pant1PositionSamplings[idx] > validPeakValue; // 移除低于有效峰值的峰
     }), peaks.end());
-    if (peaks.empty()) {
+    if (peaks.size() < 3) {
         return false; // 如果没有有效峰值，返回false
     }
     

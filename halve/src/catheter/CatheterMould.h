@@ -5,6 +5,7 @@
 #include <vtkSmartPointer.h>
 #include <vtkLandmarkTransform.h>
 #include "HalveType.h"
+#include <vtkIdList.h>
 
 class vtkUnstructuredGrid;
 class vtkPolyData;
@@ -38,7 +39,9 @@ public:
     QList< vtkSmartPointer<CatheterPerception>>& getPerceptions() {
         return m_perceptions;
     }
-    vtkIdType getOriginPointId() const;
+    vtkSmartPointer<vtkIdList> getLandmarkIds() const {
+        return m_landmarkIds;
+    }
 
 signals:
     void changed();
@@ -53,11 +56,11 @@ private:
     QString m_meshName;
     QList<quint16> m_gap;
     double m_flexibility = 0.0;
-    vtkIdType m_mode = VTK_LANDMARK_AFFINE;
-    vtkIdType m_originPointId = -1;
+    vtkIdType m_mode = VTK_LANDMARK_RIGIDBODY;
     QList<QPair<QString,vtkSmartPointer<vtkPolyData>>> m_meshPolyDatas;
     vtkSmartPointer<vtkUnstructuredGrid> m_grid;
 	QList< vtkSmartPointer<CatheterPerception>> m_perceptions;
+    vtkSmartPointer<vtkIdList> m_landmarkIds;
 };
 
 #endif // CATHETERPOINTMARK_H

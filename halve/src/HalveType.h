@@ -212,6 +212,7 @@ extern const char* TubeSidesName;
 extern const char* FlexibilityName;
 extern const char* ResolutionName;
 extern const char* PointDirectionName;
+extern const char* LandmarkName;
 
 enum LookupTableName {
     LTN_CATHETER,

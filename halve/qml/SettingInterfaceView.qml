@@ -288,6 +288,9 @@ Rectangle{
                 Layout.alignment: Qt.AlignLeft
                 value: AppSettings.breathGatingRatio
                 Layout.fillWidth: true
+                onValueModified: {
+                    AppSettings.breathGatingRatio = breathGatingRatio.value
+                }
             }
 
 

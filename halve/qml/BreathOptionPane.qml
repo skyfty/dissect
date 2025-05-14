@@ -34,6 +34,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 enabled:root.combined.state === ChannelReplica.State_Tracking && !timer.running
                 onClicked:  {
+                    root.combined.channel.trackRate = 100;
                     root.profile.renovating = true;
                     root.notebookDataSource.autoRecord("CRD " + new Date().toLocaleString(locale, "hh:mm:ss"));
                 }
@@ -84,6 +85,7 @@ ColumnLayout {
             onTriggered: {
                 if (timerInterval++ >= root.duration) {
                     root.profile.renovating = false;
+                    combined.channel.trackRate = AppSettings.catheterTrackRate;
                 }
             }
         }

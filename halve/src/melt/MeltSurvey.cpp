@@ -112,6 +112,7 @@ ElectrodeNodeFruit MeltSurvey::calculateSamplingData(const ElectrodeNode* electr
     qint32 lat = -1, latDataIndex = -1;
     qint32 dataCount = m_samplingDatas.size() - 1;
     MeltSurvey samplingSurvey(m_samplingDatas);
+    samplingSurvey.setSamplingRate(m_samplingRate);
     auto leftDataIndex = meltSetting->leftIndex() + centerBaseWidth;
     if (centerBaseWidth > 0 && leftDataIndex > 0) {
         leftDataIndex = std::max(std::min(leftDataIndex, consultDataIndex), 0);
@@ -138,6 +139,7 @@ ElectrodeNodeFruit MeltSurvey::calculateSamplingData(const ElectrodeNode* electr
         latDataIndex = samplingEndDataIndex;
     }
 
+   
     if (latDataIndex == -1) {
         qint32 minLeftDataIndex = leftDataIndex;
         qint32 minRightDataIndex = rightDataIndex;
