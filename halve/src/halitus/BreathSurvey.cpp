@@ -183,10 +183,10 @@ bool BreathSurvey::computeRenovatingData() {
         peakAvg += pant1PositionSamplings[peaks[i]]; // 计算峰值的平均值
     }
     peakAvg /= peaks.size(); // 计算平均值
-    peaks.erase(std::remove_if(peaks.begin(), peaks.end(), [&pant1PositionSamplings, peakAvg](size_t idx) {
-        auto validPeakValue = peakAvg - peakAvg * 5 / 100; // 计算有效峰值
-        return pant1PositionSamplings[idx] > validPeakValue; // 移除低于有效峰值的峰
-    }), peaks.end());
+    //peaks.erase(std::remove_if(peaks.begin(), peaks.end(), [&pant1PositionSamplings, peakAvg](size_t idx) {
+    //    auto validPeakValue = peakAvg - peakAvg * 5 / 100; // 计算有效峰值
+    //    return pant1PositionSamplings[idx] > validPeakValue; // 移除低于有效峰值的峰
+    //}), peaks.end());
     if (peaks.size() < 3) {
         return false; // 如果没有有效峰值，返回false
     }
