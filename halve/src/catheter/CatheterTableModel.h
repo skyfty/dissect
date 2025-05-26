@@ -56,6 +56,7 @@ public:
         Builtin,
         MagnetismDescription,
         Port,
+        Nodes,
         Last
     };
     Q_ENUM(DataRoles)

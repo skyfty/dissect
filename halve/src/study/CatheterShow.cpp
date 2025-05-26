@@ -19,6 +19,8 @@
 #include "CatheterShow.h"
 #include "utility/Thread.h"
 #include "catheter/Catheter.h"
+#include "vtkPointData.h"
+#include "catheter/CatheterPerception.h"
 
 
 class CatheterShowData : public vtkObject
@@ -81,9 +83,9 @@ void CatheterShow::setMouseInteractorStyle(CatheterShowData* userData) {
     userData->interactor->SetInteractorStyle(userData->mouseInteractorStyle);
 }
 constexpr double scalev = 1;
-void CatheterShow::createTextFollower(CatheterShowData* userData, vtkIdType id, double pos[3]) {
+void CatheterShow::createTextFollower(CatheterShowData* userData, const QString &label, double pos[3]) {
     vtkSmartPointer<vtkVectorText> text = vtkSmartPointer<vtkVectorText>::New();
-    text->SetText(QString::number(id + 1).toStdString().c_str());
+    text->SetText(label.toStdString().c_str());
     vtkNew<vtkPolyDataMapper> mapper;
     mapper->SetInputConnection(text->GetOutputPort());
 
@@ -123,7 +125,9 @@ void CatheterShow::resetRender() {
         userData->renderer->AddActor(userData->tubeActor);
 
         for(vtkIdType id = 0; id < grid->GetNumberOfPoints(); ++id) {
-            createTextFollower(userData, id, grid->GetPoint(id));
+            vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(id);
+            QString label = perception->formatLabel(id + 1);
+            createTextFollower(userData, label, grid->GetPoint(id));
         }
         userData->renderer->ResetCamera();
     });

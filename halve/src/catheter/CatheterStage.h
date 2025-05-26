@@ -17,6 +17,7 @@ class vtkPoints;
 class Catheter;
 class vtkLookupTable;
 class vtkFollower;
+class CatheterMould;
 
 class CatheterStage : public QQuickVTKItem
 {
@@ -51,10 +52,10 @@ private:
     void destroyingVTK(vtkRenderWindow* renderWindow, vtkUserData userData) override;
     void refreshCatheterTube(vtkSmartPointer<vtkUnstructuredGrid> tubeMesh, const QList<vtkSmartPointer<vtkFollower>> &followers);
     void refreshCatheterTube();
-    void resetTextFollower(CatheterStageData* userData,const QList<vtkSmartPointer<vtkFollower>> &followers);
+    void resetTextFollower(CatheterStageData* userData, const QList<vtkSmartPointer<vtkFollower>> &followers);
     void cleanTextFollower(CatheterStageData* userData);
-    vtkSmartPointer<vtkFollower> createCatheterLabelFollower(vtkIdType id, double pos[3]);
-    QList<vtkSmartPointer<vtkFollower>> createCatheterLabelFollower(vtkUnstructuredGrid* grid);
+    vtkSmartPointer<vtkFollower> createCatheterLabelFollower(const QString &text, double pos[3]);
+    QList<vtkSmartPointer<vtkFollower>> createCatheterLabelFollower(CatheterMould* catheterMould,vtkUnstructuredGrid* grid);
 
 private:
     QPointer<Catheter> m_catheter;

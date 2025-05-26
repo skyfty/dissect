@@ -4,7 +4,6 @@
 #include <vtkSmartPointer.h>
 #include <vtkVector.h>
 #include <vtkQuaternion.h>
-#include <DynamicNearestNeighbor.h>
 #include "TrackData.h"
 #include "vtkBoundingBox.h"
 #include "CatheterTrack.h"
@@ -102,13 +101,12 @@ public:
     void setBloodPoolImpedance(double newBloodPoolImpedance);
 
 private:
-    vtkSmartPointer<vtkPoints> produceElectricityPoints(vtkUnstructuredGrid* grid, vtkVector3d &position, const vtkQuaterniond& quaternion);
+    vtkSmartPointer<vtkPoints> produceElectricityPoints(vtkPoints* points, vtkVector3d &position, const vtkQuaterniond& quaternion);
     CatheterTrack createCatheterTrack(quint16 seat, Halve::CatheterElectrodeType type, Halve::TrackStatus status, const vtkVector3d &position, const vtkQuaterniond& quaternion, const QString &id);
     void appendElectrodeTrackData(const TrackData &trackData,
                                     Halve::TrackStatus status,
                                   Catheter* catheter,
                                   vtkVector3d &position,QList<CatheterTrack> &catheterTrackList);
-    void adjuestTrackAngle(vtkVector3d &position, const vtkQuaterniond &pant10Quaternion);
     void abruptionTrackData(TrackData::List &currentTrackDataList);
     void electricalTrackData(TrackData::List &currentTrackDataList);
     void blendTrackData(const TrackData::List &currentTrackDataList);
@@ -183,7 +181,6 @@ private:
     bool m_keepSave = false;
     Halve::TrackStatus m_reproductCatheterStatus = Halve::TrackStatus_Invalid;
     QPointer<Catheter> m_pantCatheter;
-    vtkSmartPointer<vtkTransform> m_transform;
     vtkVector3d m_centerPoint{ -1,-1,-1 };
     vtkVector3d m_centerPolemicsPosition{0,0,0};
     vtkVector3d m_lastCenterPolemicsPosition{ -1,-1,-1 };
@@ -199,5 +196,4 @@ private:
     Electric_field_mapping_algorithm * m_electricMappingAlgorithm = nullptr;
 
     QList<ChannelTrackData> m_inputBuffer;
-    ys::DynamicNearestNeighbor m_dnn;
 };

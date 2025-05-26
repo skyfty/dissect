@@ -1,50 +1,31 @@
 #pragma once
 
 #include <QSharedPointer>
-#include <QQuickVTKItem.h>
+#include <QVariantList>
+#include "RegistrationStage.h"
 
-class vtkCamera;
-class vtkRenderWindow;
-class vtkActor;
-class vtkPolyDataMapper;
-class vtkQuaterniond;
-class vtkRenderer;
-class vtkPolyData;
-class vtkCubeAxesActor;
-class vtkGlyph3D;
-class vtkImageData;
-class vtkScalarBarActor;
-class vtkOrientationMarkerWidget;
-class vtkVector3d;
-class vtkVector4d;
-class vtkPoints;
-class vtkMatrix4x4;
-class vtkUnsignedCharArray;
-class vtkIdList;
-class vtkProperty;
-class vtkEventQtSlotConnect;
-class vtkDataSet;
-class vtkSelection;
-class vtkVectorText;
-class vtkUnstructuredGrid;
-
-class RegistrationSourceStage : public QQuickVTKItem {
+class CtDataStorage;
+class RegistrationSourceStage : public RegistrationStage {
 	Q_OBJECT;
-
+	Q_PROPERTY(QVariantList visibleStates READ visibleStates WRITE setVisibleStates NOTIFY visibleStatesChanged);
+	Q_PROPERTY(CtDataStorage* ctDataStorage READ ctDataStorage WRITE setCtDataStorage);
 public:
 	explicit RegistrationSourceStage(QQuickItem* parent = nullptr);
 	~RegistrationSourceStage() override = default;
-	Q_INVOKABLE void resetRender();
-
+	Q_INVOKABLE void loadCtData(const QString& dicomDir);
 private:
+	void showNifti(const QString& niftiPath);
+	void clearAllModels();
 	vtkUserData initializeVTK(vtkRenderWindow* renderWindow) override;
-	void destroyingVTK(vtkRenderWindow* renderWindow, vtkUserData userData) override;
-
+	void updateVisibleStates();
+public:
+	QVariantList visibleStates() const;
+	void setVisibleStates(const QVariantList& states);
+	CtDataStorage* ctDataStorage() const;
+	void setCtDataStorage(CtDataStorage* ctDataStorage);
+signals:
+	void visibleStatesChanged();
 private:
-	Qt::HANDLE m_vtkRenderThreadId;
-	vtkSmartPointer<vtkCamera> m_camera;
-	qint32 m_highlightTimerTick = 0;
-	qint32 m_hightlight = 0;
-	friend class CameraModifiedCallback;
-	vtkRenderWindow* m_renderWindow{ nullptr };
+	QVariantList m_visibleStates;
+	CtDataStorage* m_ctDataStorage{ nullptr };
 };

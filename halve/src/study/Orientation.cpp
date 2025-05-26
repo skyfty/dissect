@@ -36,7 +36,6 @@ Orientation::Orientation(QQuickItem *parent)
 {
 }
 
-
 void Orientation::setProfile(Profile* profile) {
     if (m_profile == profile) {
         return;
@@ -58,7 +57,7 @@ QQuickVTKItem::vtkUserData Orientation::initializeVTK(vtkRenderWindow *renderWin
     userData->renderer = vtkSmartPointer<vtkRenderer>::New();
     userData->renderer->InteractiveOff();
     userData->renderer->SetUseDepthPeeling(true);
-    userData->renderer->SetBackground(0.0, 0.0, 0.0); // 白色背景
+    userData->renderer->SetBackground(0.0, 0.0, 0.0);
     userData->renderer->SetBackgroundAlpha(0); // 完全透明
     renderWindow->AddRenderer(userData->renderer);
     renderWindow->SetAlphaBitPlanes(true);

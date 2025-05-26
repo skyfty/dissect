@@ -22,11 +22,12 @@ set(VERSION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/version.txt")
 set(RC_FILE "${CMAKE_CURRENT_BINARY_DIR}/halve.rc")  # 现在输出到 build 目录
 set(RC_IN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/halve.rc.in")
 set(HALVE_ICON "${CMAKE_CURRENT_SOURCE_DIR}/halve.ico")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${VERSION_FILE}")
 
 file(READ "${VERSION_FILE}" VERSION_STRING)
 string(STRIP "${VERSION_STRING}" VERSION_STRING)
 string(REPLACE "." "," VERSION_COMMA "${VERSION_STRING}")
-configure_file("${RC_IN_FILE}" "${RC_FILE}")
+configure_file("${RC_IN_FILE}" "${RC_FILE}"  @ONLY)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick Concurrent Charts Core Qml Gui RemoteObjects SerialPort Test LinguistTools)
 qt_standard_project_setup(REQUIRES 6.6)
@@ -34,11 +35,20 @@ qt_standard_project_setup(REQUIRES 6.6)
 find_package(TBB REQUIRED)
 find_package(VTKm REQUIRED)
 find_package(VTK REQUIRED)
+
 set(VTK_INCLUDE_DIRS "${VTK_PREFIX_PATH}/include/vtk-${VTK_MAJOR_VERSION}.${VTK_MINOR_VERSION}")
 
 list(INSERT CMAKE_MODULE_PATH 0
   "${VTK_INCLUDE_DIRS}/ThirdParty/vtkm/vtkvtkm/vtk-m/CMake")
   
+find_package(ITK REQUIRED)
+
+find_package(VTKm REQUIRED QUIET)
+
+if (POLICY CMP0146)
+    cmake_policy(SET CMP0146 OLD)
+endif()
+
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/config.h.in"
     "${CMAKE_CURRENT_BINARY_DIR}/config.h"
@@ -91,18 +101,20 @@ target_link_libraries(halve
         Qt::RemoteObjectsPrivate
         Qt::SerialPort
         ${VTK_LIBRARIES}
-        vtkm::cont
-        vtkm::io
-        vtkm::worklet
-        vtkm::filter
+        ${VTKM_LIBRARIES}
         ${CUDA_LIBRARIES}
         ${CUDA_CUDART_LIBRARY}
         ${CUDA_cudadevrt_LIBRARY}
+        ${ITK_LIBRARIES}
+        ITKCommon
+        ITKIOImageBase
         ys
         kddockwidgets
         breakpad
         sqlite_orm
-        screengrab)
+        screengrab
+        onnxruntime
+        jsonhpp)
 
 target_include_directories(halve
     PRIVATE

@@ -414,6 +414,9 @@
         <file>assets/images/open_file.png</file>
         <file>assets/images/registration.png</file>
         <file>assets/images/select_points.png</file>
+        <file>assets/images/clear_select_points.png</file>
+        <file>assets/images/cache_ct_data.png</file>
+	
         <file>assets/model/catheter_node.ply</file>
         <file>assets/images/refresh.svg</file>
         <file>assets/model/catheter_pfa18.json</file>

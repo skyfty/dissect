@@ -254,7 +254,7 @@ int main(int argc, char* argv[]) {
 #ifdef NDEBUG
     initBreakpad();
 #endif
-
+    //QMessageBox::information(nullptr, "debug", "debug");//调试进程启动失败时打开
     QCommandLineParser parser;
     parser.setApplicationDescription("The Halve");
     parser.addHelpOption();

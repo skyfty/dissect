@@ -114,7 +114,8 @@ public:
         CET_MAG = 1,
         CET_PANT = 2,
         CET_ASSIST = 3,
-        CET_HANDLE = 4
+        CET_ORIGIN = 4,
+        CET_HANDLE
     };
     Q_ENUM(CatheterElectrodeType);
 
@@ -134,6 +135,7 @@ public:
         AN_REPRODUCE_CATHETER_TRACKDATA_ERROR = AN_REPRODUCE_CATHETER_MISSED_ERROR|AN_REPRODUCE_CATHETER_NOT_RECEICE_DATA_ERROR,
         AN_REPRODUCE_CATHETER_ERROR = AN_REPRODUCE_CATHETER_TRACKDATA_ERROR|AN_REPRODUCE_CATHETER_CONFIGURATION_ERROR|AN_REPRODUCE_CATHETER_CONSULT_TARGET_CONFIG_ERROR|AN_REPRODUCE_CATHETER_NOT_IN_CASKET_ERROR,
         AN_STORAGE_FULL_ERROR = 0x1 << 10,
+        AN_MAGNETIC_ELECTRIC_TRAINNING_OK = 0x1 << 11,
     };
     Q_ENUM(AlarmName);
 
@@ -211,6 +213,7 @@ extern const char* TubeSidesName;
 extern const char* FlexibilityName;
 extern const char* ResolutionName;
 extern const char* PointDirectionName;
+extern const char* LandmarkName;
 
 enum LookupTableName {
     LTN_CATHETER,

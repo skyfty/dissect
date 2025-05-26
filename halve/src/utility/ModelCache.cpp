@@ -140,6 +140,7 @@ static std::pair<Halve::CatheterElectrodeType, vtkStdString> CatheterElectrodeCo
     {Halve::CET_MAG, "Red"},
     {Halve::CET_PANT, "Yellow"},
     {Halve::CET_ASSIST, "DarkSeaGreen"},
+    {Halve::CET_ORIGIN, "LightCyan"},
     {Halve::CET_HANDLE, "Green"},
 };
 

@@ -211,7 +211,7 @@ int CatheterTubeFilter::RequestData(vtkInformation * vtkNotUsed(request),
     auto pointMeshDirectionKeys = pointMeshDirections.keys();
     auto pointDirectionsFuture = QtConcurrent::mapped(pointMeshDirectionKeys, [&](vtkIdType meshIndex) {
         vtkSmartPointer<vtkPolyData> polyData = nullptr;
-        if (meshIndex == -1) {
+        if (meshIndex == -1 || meshIndex >= m_meshPolyDatas.size()) {
             return polyData;
         }
         const QMap<vtkIdType, vtkVector3d>& pointDirectionsList = pointMeshDirections[meshIndex];

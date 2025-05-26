@@ -37,6 +37,7 @@
 #include <vtkFollower.h>
 #include <vtkVectorText.h>
 #include "study/CatheterShowFilter.h"
+#include "catheter/CatheterPerception.h"
 
 
 extern Qt::HANDLE VtkRenderThreadHandle;
@@ -45,6 +46,10 @@ vtkSmartPointer<vtkFollower> Stage::createTextFollower(const char *label) {
     vtkSmartPointer<vtkVectorText> text = vtkSmartPointer<vtkVectorText>::New();
     text->SetText(label);
     return createTextFollower(text);
+}
+vtkSmartPointer<vtkFollower> Stage::createTextFollower(const QString& label) {
+    auto stdstring = label.toStdString();
+    return createTextFollower(stdstring.c_str());
 }
 
 constexpr double scalev = 0.7;
@@ -60,10 +65,13 @@ vtkSmartPointer<vtkFollower> Stage::createTextFollower(vtkVectorText *text) {
 
 void Stage::createDetectorTextFollower(Catheter *catheter, vtkSmartPointer<DetectorPair> &detectorPair, bool visibility) {
     Q_ASSERT(catheter != nullptr);
-    vtkIdType cnt = catheter->catheterMould()->grid()->GetNumberOfPoints();
-    for(vtkIdType i = 0; i < cnt ; ++i) {
-        std::string label =QString::number(i + 1).toStdString();
-        vtkSmartPointer<vtkFollower> follower = createTextFollower(label.c_str());
+    CatheterMould* catheterMould = catheter->catheterMould();
+    vtkUnstructuredGrid* grid = catheterMould->grid();
+
+    for(vtkIdType i = 0; i < grid->GetNumberOfPoints(); ++i) {
+        vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(i);
+        QString label = perception->formatLabel(i + 1);
+        vtkSmartPointer<vtkFollower> follower = createTextFollower(label);
         follower->SetVisibility(visibility);
         detectorPair->textFollower.append(follower);
     }

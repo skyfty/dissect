@@ -51,7 +51,7 @@ void CatheterRepertoryTableModel::onCatheterAmountChanged(Catheter *catheter) {
     QVector<int> roles ;
     catheter->deleteMesh(file_utils::getCatheterMeshPath(catheter->meshName()));
     catheter->setGap(QList<quint16>(catheter->getAmount() - 1, 2));
-    roles << Gap << Magnetism;
+    roles << Gap << Magnetism << Amount;
     int row = m_catheterDb->index(catheter);
     emit dataChanged(createIndex(row, 0), createIndex(row, columnCount() - 1),  roles);
 }

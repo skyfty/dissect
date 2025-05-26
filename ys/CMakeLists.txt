@@ -11,9 +11,6 @@ find_package(Qt6 REQUIRED COMPONENTS  Core)
 set(SRCS
     "test.cpp"
     "ElecIdentify/ElecIdentify.cpp"
-    "ElecIdentify/Elec2WorldUpdater.cpp"
-    "ElecIdentify/DynamicNearestNeighbor.cpp"
-    "ElecIdentify/ScaleFactorGetter.cpp"
     "ElecIdentify/Matrix3x4d.cpp"
     "filter/TimeSeriesFilter.cpp" "filter/TimeSeriesFilter.h"
     "iir_filter/Electric_field_define.h"

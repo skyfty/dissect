@@ -248,9 +248,9 @@ vtkSmartPointer<vtkPolyData> importPolyData(const QString& filePath) {
 
 vtkVector3d randomUndulation(const vtkVector3d& trackPosition) {
     return vtkVector3d(
-        trackPosition[0] + vtkMath::Random(-0.01, 0.01),
-        trackPosition[1] + vtkMath::Random(-0.01, 0.01),
-        trackPosition[2] + vtkMath::Random(-0.01, 0.01));
+        trackPosition[0] + vtkMath::Random(-0.001, 0.001),
+        trackPosition[1] + vtkMath::Random(-0.001, 0.001),
+        trackPosition[2] + vtkMath::Random(-0.001, 0.001));
 }
 
 }

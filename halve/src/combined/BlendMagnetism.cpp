@@ -3,8 +3,6 @@
 #include <channel/ChannelTrackData.h>
 #include <catheter/Catheter.h>
 #include <vtkMath.h>
-#include <DynamicNearestNeighbor.h>
-#include <ScaleFactorGetter.h>
 
 BlendMagnetism::BlendMagnetism(Profile* profile, Catheter* catheter, QObject* parent)
     : Blend(profile, catheter, parent)
@@ -14,27 +12,10 @@ BlendMagnetism::BlendMagnetism(Profile* profile, Catheter* catheter, QObject* pa
     auto matrix = m_magnetism->matrix();
     m_trained = matrix != Matrix3x4d::Zero();
     m_elecIdentify->SetE2W(matrix);
-    m_scaleFactor = std::make_unique<ys::ScaleFactorGetter>();
 }
 
 bool BlendMagnetism::train(QVector<ys::InputParameter>& trainDatas) {
     return m_elecIdentify->Train(trainDatas.data(), (int)trainDatas.size());
-}
-
-void BlendMagnetism::initUpdater(const ChannelTrackData& dataBuffer, quint16 consultSeat, quint16 targetSeat){
-    m_updater = std::make_shared<ys::Elec2WorldUpdater>();
-    m_updater->SetSize(48);
-    m_updater->SetRefIndex(consultSeat);
-
-    auto ip = makeInputParameter(dataBuffer, m_catheter->port(), consultSeat, targetSeat);
-    auto bseat = m_catheter->bseat();
-    for (quint16 idx = 0; idx < m_catheter->getAmount(); idx++) {
-        quint16 seat = bseat + idx;
-        auto pos = dataBuffer.m[seat].pos;
-        ip.eRef << pos[0], pos[1], pos[2];
-        auto mpos = m_elecIdentify->E2W(ip);
-        m_updater->InitValue(seat, ip.eRef(0), ip.eRef(1), ip.eRef(2), mpos[0], mpos[1], mpos[2]);
-    }
 }
 
 void BlendMagnetism::timerEvent(QTimerEvent*) {
@@ -52,42 +33,12 @@ CatheterMagnetism *BlendMagnetism::getMagnetism() const
     return m_magnetism;
 }
 
-QList<TrackData> BlendMagnetism::process(const ChannelTrackData& dataBuffer, ys::DynamicNearestNeighbor *dnn) {
+QList<TrackData> BlendMagnetism::process(const ChannelTrackData& dataBuffer) {
     QList<TrackData> trackDatas;
     auto [consultSeat, targetSeat] = getMagnetismSeat();
     quint16 port = m_catheter->port();
     trackDatas = convert_20250319(port, consultSeat, targetSeat, dataBuffer);
     return trackDatas;
-}
-
-QList<TrackData> BlendMagnetism::convert_20250226(
-    quint16 port,
-    quint16 consultSeat,
-    quint16 targetSeat,
-    const ChannelTrackData &cd,
-    ys::DynamicNearestNeighbor *dnn)
-{
-    if (m_catheter == nullptr ||
-        m_profile == nullptr)
-        return QList<TrackData>();
-
-    bool isModelingCatheter = m_catheter->id() == m_profile->reproduceOptions()->catheterId();
-
-    ys::KNNCell refCell, tgtCell;
-    if (!fillCell(port, consultSeat, targetSeat, cd, &refCell, &tgtCell))
-        return QList<TrackData>();
-
-    //ä¼ å…¥çš„ç”µåæ ‡æ˜¯å¦å·²ç»è¿˜ç®—è¿‡ï¼Ÿé€‚å½“è°ƒæ•´é˜ˆå€¼
-    const float distanceThreshold = 20;
-    addPoints(dnn, &refCell, distanceThreshold);
-    addPoints(dnn, &tgtCell, distanceThreshold);
-
-    // //ç”¨æœ¬åŒ…æ•°æ®è®¡ç®—kå€¼ï¼Œç”¨å‚è€ƒç‚¹ä½œä¸ºåŸºå‡†æ¥è®¡ç®—å…¶ä»–ç”µæåæ ‡
-    // ys::KNNCell cell;
-    // if (!getK(port, consultSeat, targetSeat, getMagnetism(), cd, &cell))
-    //     return QList<TrackData>();
-    // return convert(cd, &cell);
-    return convert(cd, dnn);
 }
 
 QList<TrackData> BlendMagnetism::convert_20250319(quint16 port, quint16 consultSeat, quint16 targetSeat, const ChannelTrackData &dataBuffer)
@@ -97,69 +48,44 @@ QList<TrackData> BlendMagnetism::convert_20250319(quint16 port, quint16 consultS
     return convert(dataBuffer, getElecIdentify().get());
 }
 
-bool BlendMagnetism::fillCell(
-    quint16 port, quint16 consultSeat, quint16 targetSeat,
-    const ChannelTrackData &cd,
-    ys::KNNCell *refCell,
-    ys::KNNCell *tgtCell)
+bool BlendMagnetism::matrixPerfect(const Matrix3x4d &matrix)
 {
-    //å‚è€ƒç”µ
-    const auto& refE = cd.m[consultSeat];
-    refCell->ep << refE.x, refE.y, refE.z;
-    //å‚è€ƒç£
-    const auto& refM = cd.n[port];
-    Eigen::Quaternionf q(refM.quaternion(0), refM.quaternion(1), refM.quaternion(2), refM.quaternion(3));
-    Eigen::Vector3f refPosInM(0, 0, (float)m_magnetism->consultDistance());
-    Eigen::Vector3f m0InW(refM.x, refM.y, refM.z);
-    refCell->mp = q * refPosInM + m0InW;
+    std::cout << matrix << std::endl << std::endl;
 
-    //ç›®æ ‡ç”µ
-    const auto& tgtE = cd.m[targetSeat];
-    tgtCell->ep << tgtE.x, tgtE.y, tgtE.z;
-    //ç›®æ ‡ç£
-    Eigen::Vector3f tgtPosInM(0, 0, (float)m_magnetism->targetDistance());
-    tgtCell->mp = q * tgtPosInM + m0InW;
+    // ·½·¨£º
+    //   Ã¿ÁĞÖĞËùÓĞÔªËØµÄ3±¶Ğ¡ÓÚ×î´ó¾ø¶ÔÖµµÄÔªËØ
+    //   3ÁĞÖĞ¾ø¶ÔÖµ×î´óÖµĞĞºÅ²»ÄÜÏàµÈ
+    //   3ÁĞÖĞ¾ø¶ÔÖµ×î´óÖµÖ®¼ä²î±ğ²»ÄÜ³¬¹ı1.5±¶
+    double elemMax[3]{0};
+    int maxRowIndex[3]{0};
+    for (int col = 0; col < 3; ++col) {
+        double colMax = std::numeric_limits<double>::lowest();
+        int indexMax = -1;
+        for (int row = 0; row < 3; ++row) {
+            if (std::abs(matrix(row, col)) > colMax) {
+                colMax = std::abs(matrix(row, col));
+                indexMax = row;
+            }
+        }
 
-    //å‚è€ƒã€ç›®æ ‡k
-    const float delta = 0.01;
-    auto de = tgtCell->ep - refCell->ep;
-    auto dm = tgtCell->mp - refCell->mp;
-    if (std::abs(de.x()) < delta ||
-        std::abs(de.y()) < delta ||
-        std::abs(de.z()) < delta ||
-        std::abs(dm.x()) < delta ||
-        std::abs(dm.y()) < delta ||
-        std::abs(dm.z()) < delta)
-        return false;
-    Eigen::Vector3f k = dm.cwiseQuotient(de);
-    if (!m_scaleFactor->AddKToQueue(k))
-        return false;
-    if (!m_scaleFactor->SmoothK(k))
-        return false;
-    refCell->k = tgtCell->k = k;
+        elemMax[col] = colMax;
+        maxRowIndex[col] = indexMax;
 
-    std::cout << k.transpose() << std::endl;
-    return true;
-}
-
-void BlendMagnetism::addPoints(
-    ys::DynamicNearestNeighbor *dnn,
-    ys::KNNCell *inCell,
-    const float distanceThreshold)
-{
-    auto cell = dnn->Query(inCell->ep);
-    if (cell)
-    {
-        auto distance = (inCell->ep - cell->ep).norm();
-        if (distance <= distanceThreshold)
-        {
-            //æŸ¥åˆ°è¿‘é‚»ç‚¹ï¼Œä¸”è·ç¦»å°äºé˜ˆå€¼ï¼Œä¸æ›´æ–°
-            return;
+        // Ã¿ÁĞÔªËØ3±¶ Ğ¡ÓÚ ×î´óÔªËØ£¬·ñÔò½á¹ûÊÇ²»ºÃµÄ
+        for (int row = 0; row < 3; ++row) {
+            if (std::abs(matrix(row, col)) * 3.0 >= std::abs(colMax))
+                return false;
         }
     }
 
-    //æ·»åŠ æ–°ç‚¹
-    dnn->AddPoint(inCell->ep, *inCell);
+    if (maxRowIndex[0] == maxRowIndex[1] || maxRowIndex[0] == maxRowIndex[2] || maxRowIndex[1] == maxRowIndex[2])
+        return false;
+
+    std::sort(elemMax, elemMax + 3);
+    if (elemMax[0] * 2 < elemMax[2] || elemMax[1] * 2 < elemMax[2])
+        return false;
+
+    return true;
 }
 
 void BlendMagnetism::appendTrainData(const ChannelTrackData &dataBuffer) {
@@ -168,13 +94,38 @@ void BlendMagnetism::appendTrainData(const ChannelTrackData &dataBuffer) {
     if (m_magnetism)
         ip.mLocalRef << 0, 0, m_magnetism->consultDistance();
     m_trainDatas.append(ip);
+
+    // Ã¿Ìí¼Ó80¸öÊı¾İ¼ÆËã1´Î¡£
+    // Èç¹ûÑµÁ·²»³É¹¦£¬Èç¹ûÊı¾İÁ¿<1200£¬²»´¦Àí¡£
+    //               Èç¹ûÊı¾İÁ¿>=1200, Çå¿Õ»º³å¡£
+    // Èç¹ûÑµÁ·³É¹¦£¬½á¹ûºÃ£¬ÌáÊ¾ÑµÁ·ok¡£              --ÊÇ·ñ²»ÔÙÏò»º³åÇøÖĞ¼ÓÈëÊı¾İ£¿
+    //             ½á¹û»µ£¬Èç¹ûÊı¾İÁ¿<1200£¬²»´¦Àí¡£
+    //                     Êı¾İÁ¿>=1200£¬Ëæ»ú³éÈ¡300¸ö±£Áô£¬ÆäËüÉ¾³ı¡£
+    if (m_trainDatas.size() % 40 == 0)
+    {
+        bool ok = train(m_trainDatas); qDebug() << ok << m_trainDatas.size();
+        if (!ok)
+        {
+            if (m_trainDatas.size() >= 1200)
+                m_trainDatas.clear();
+            return;
+        }
+
+        const auto& matrix = m_elecIdentify->GetE2W();
+        ok = matrixPerfect(matrix); qDebug() << ok << m_trainDatas.size();
+        if (!ok)
+        {
+            if (m_trainDatas.size() >= 1200)
+                m_trainDatas.erase(m_trainDatas.begin(), m_trainDatas.end() - 300);
+            return;
+        }
+
+        m_profile->alarmDb()->add(Halve::AN_MAGNETIC_ELECTRIC_TRAINNING_OK);
+    }
 }
 
 std::shared_ptr<ys::ElecIdentify> BlendMagnetism::getElecIdentify() {
     return m_elecIdentify;
-}
-std::shared_ptr<ys::Elec2WorldUpdater> BlendMagnetism::getUpdater() {
-    return m_updater;
 }
 
 bool BlendMagnetism::trained() const {
@@ -195,11 +146,11 @@ void BlendMagnetism::startTrainTimer(std::chrono::milliseconds interval) {
 }
 void BlendMagnetism::startTrain() {
     m_trained = false;
-    m_updater = nullptr;
     m_trainDatas.clear();
 }
 
 void BlendMagnetism::finishTrain() {
+    m_profile->alarmDb()->remove(Halve::AN_MAGNETIC_ELECTRIC_TRAINNING_OK);
     m_trained = train(m_trainDatas);
     if (m_trained) {
         m_timerId = -1;

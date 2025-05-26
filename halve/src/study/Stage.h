@@ -290,6 +290,7 @@ private:
     void showMappingLocationActor(StageData* userData);
 
     vtkSmartPointer<vtkFollower> createTextFollower(const char *label);
+    vtkSmartPointer<vtkFollower> createTextFollower(const QString &label);
     vtkSmartPointer<vtkFollower> createTextFollower(vtkVectorText *label);
     vtkSmartPointer<vtkIdList> extractSelectionGrid(StageData* userData, const QPolygon& polygon);
 

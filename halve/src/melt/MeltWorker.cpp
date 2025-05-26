@@ -121,7 +121,8 @@ ChannelData::List MeltWorker::filterChannelData(const ElectrodeNode* electrodeNo
     ChannelDataCalculate channelCalc(electrodeNode);
     ChannelData::List dataList(channelDatas.size());
     std::transform(channelDatas.begin(), channelDatas.end(), dataList.begin(), channelCalc);
-    return meltOptions->id() == 0?m_channelDataFilter->pass(dataList, electrodeNode):m_channelDataFilter->passNoState(dataList, electrodeNode);
+    //return meltOptions->id() == 0?m_channelDataFilter->pass(dataList, electrodeNode):m_channelDataFilter->passNoState(dataList, electrodeNode);
+    return m_channelDataFilter->passNoState(dataList, electrodeNode);
 }
 
 void MeltWorker::setChannelDataFilter(ChannelDataFilter *channelDataFilter) {

@@ -32,6 +32,7 @@
 #include <vtkPLYWriter.h>
 #include <vtkAppendPolyData.h>
 #include <vtkGeometryFilter.h>
+#include "catheter/CatheterPerception.h"
 
 class CatheterStage;
 
@@ -115,9 +116,9 @@ void CatheterStage::cleanTextFollower(CatheterStageData* userData) {
 }
 
 constexpr double scalev = 0.6;
-vtkSmartPointer<vtkFollower> CatheterStage::createCatheterLabelFollower(vtkIdType id, double pos[3]) {
+vtkSmartPointer<vtkFollower> CatheterStage::createCatheterLabelFollower(const QString& label, double pos[3]) {
     vtkSmartPointer<vtkVectorText> text = vtkSmartPointer<vtkVectorText>::New();
-    text->SetText(QString::number(id + 1).toStdString().c_str());
+    text->SetText(label.toStdString().c_str());
     vtkNew<vtkPolyDataMapper> mapper;
     mapper->SetInputConnection(text->GetOutputPort());
     vtkSmartPointer<vtkFollower> follower = vtkSmartPointer<vtkFollower>::New();
@@ -128,17 +129,21 @@ vtkSmartPointer<vtkFollower> CatheterStage::createCatheterLabelFollower(vtkIdTyp
     return follower;
 }
 
-QList<vtkSmartPointer<vtkFollower>> CatheterStage::createCatheterLabelFollower(vtkUnstructuredGrid* grid) {
+QList<vtkSmartPointer<vtkFollower>> CatheterStage::createCatheterLabelFollower(CatheterMould* catheterMould, vtkUnstructuredGrid* grid) {
     QList<vtkSmartPointer<vtkFollower>> followers;
     for(vtkIdType id = 0; id < grid->GetNumberOfPoints(); ++id) {
-        followers.append(createCatheterLabelFollower(id, grid->GetPoint(id)));
+        vtkSmartPointer<CatheterPerception> perception = catheterMould->getPerception(id);
+        QString label = perception->formatLabel(id + 1);
+        followers.append(createCatheterLabelFollower(label, grid->GetPoint(id)));
     }
     return followers;
 }
 
 void CatheterStage::resetTextFollower(CatheterStageData* userData,const QList<vtkSmartPointer<vtkFollower>> &followers) {
     cleanTextFollower(userData);
-    for(const vtkSmartPointer<vtkFollower> &follower:followers) {
+  
+    for (vtkIdType id = 0; id < followers.size(); ++id) {
+        vtkSmartPointer<vtkFollower> follower = followers[id];
         userData->rendererFollower->AddActor(follower);
         follower->SetCamera(userData->renderer->GetActiveCamera());
     }
@@ -187,6 +192,9 @@ void CatheterStage::resetCamera() {
     }
     dispatch_async([](vtkRenderWindow*, vtkUserData vtkObject) {
         CatheterStageData* userData = CatheterStageData::SafeDownCast(vtkObject);
+        if (userData->renderer == nullptr) {
+            return;
+        }
         userData->renderer->ResetCamera();
     });
 }
@@ -218,6 +226,9 @@ void CatheterStage::onCatheterDyestuffChanged() {
     }
     dispatch_async([this](vtkRenderWindow*, vtkUserData vtkObject) {
         CatheterStageData* userData = CatheterStageData::SafeDownCast(vtkObject);
+        if (userData->tubeFilter == nullptr) {
+            return;
+        }
         userData->tubeFilter->SetColor(m_catheter->getDyestuff3ub());
         userData->tubeFilter->Modified();
     });
@@ -228,8 +239,9 @@ void CatheterStage::refreshCatheterTube() {
     if (VtkRenderThreadHandle == nullptr) {
         return;
     }
-    vtkSmartPointer<vtkUnstructuredGrid> grid = m_catheter->catheterMould()->grid(true);
-    QList<vtkSmartPointer<vtkFollower>> followers = createCatheterLabelFollower(grid);
+    CatheterMould* catheterMould = m_catheter->catheterMould();
+    vtkSmartPointer<vtkUnstructuredGrid> grid = catheterMould->grid(true);
+    QList<vtkSmartPointer<vtkFollower>> followers = createCatheterLabelFollower(catheterMould, grid);
     refreshCatheterTube(grid, followers);
 }
 
@@ -243,6 +255,9 @@ void CatheterStage::refreshCatheterTube(vtkSmartPointer<vtkUnstructuredGrid> gri
 
     dispatch_async([this, grid, meshPolyDatas = std::move(meshPolyDatas), catheterMould, followers = std::move(followers)](vtkRenderWindow*, vtkUserData vtkObject) {
         CatheterStageData* userData = CatheterStageData::SafeDownCast(vtkObject);
+        if (userData->tubeFilter == nullptr) {
+            return;
+        }
         userData->tubeFilter->SetInputData(grid);
         userData->tubeFilter->SetNodePolyDatas(meshPolyDatas);
         userData->tubeFilter->SetColor(m_catheter->getDyestuff3ub());

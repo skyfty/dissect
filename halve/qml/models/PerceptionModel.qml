@@ -14,11 +14,11 @@ ListModel {
         value:Halve.Min
     }
     ListElement {
-        text: qsTr("-dVdt")
+        text: qsTr("+dVdt")
         value:Halve.PlusdVdt
     }
     ListElement {
-        text: qsTr("+dVdt")
+        text: qsTr("-dVdt")
         value:Halve.MinusdVdt
     }
     ListElement {
